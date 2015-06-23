@@ -3,8 +3,6 @@ package no.vimond.RealTimeArchitecture.Topology;
 import java.util.Map;
 
 import no.vimond.RealTimeArchitecture.Bolt.SimpleBolt;
-import no.vimond.RealTimeArchitecture.Spout.KafkaAPI;
-import no.vimond.RealTimeArchitecture.Spout.KafkaSpout07;
 import no.vimond.RealTimeArchitecture.Spout.SpoutCreator;
 
 import org.slf4j.Logger;
@@ -18,6 +16,8 @@ public class StormTopologyBuilder
 {
 	private static Logger LOG = LoggerFactory
 			.getLogger(StormTopologyBuilder.class);
+	
+	private static final long DEFAULT_RUNNING_TIME_IN_MS = 60000;
 
 	private Map<String, String> args;
 
@@ -44,9 +44,11 @@ public class StormTopologyBuilder
 		cluster.submitTopology("RealTimeTopology", topConfig,
 				builder.createTopology());
 		
+		long time = (this.args.get("running_time") != null) ? Long.parseLong(this.args.get("running_time")) : DEFAULT_RUNNING_TIME_IN_MS;
+		
 		try
 		{
-			Thread.sleep(60000);
+			Thread.sleep(time);
 			cluster.shutdown();
 		} catch (InterruptedException e)
 		{

@@ -18,6 +18,7 @@ public class App
 		parser.addArgument("-z", "--zookeeper").help("Zookeeper node address and port").type(String.class).required(false).dest("zookeeper");
 		parser.addArgument("-t", "--topic").help("Topic where to write the message").type(String.class).required(false).dest("topic");
 		parser.addArgument("-a", "--kafkaAPI").help("Version of Kafka API").type(String.class).required(false).dest("api");
+		parser.addArgument("-ms", "--milliseconds").help("Running time of cluster").type(String.class).required(false).dest("time");
 		
 		try
 		{
@@ -25,6 +26,7 @@ public class App
 			String zkHost = namespace.getString("zookeeper");
 			String topic = namespace.getString("topic");
 			String api = namespace.getString("api");
+			String time = namespace.getString("time");
 			
 			Map<String, String> arguments = new HashMap<String, String>();
 			if(zkHost != null)
@@ -33,6 +35,8 @@ public class App
 				arguments.put("topic", topic);
 			if(api != null)
 				arguments.put("kafka_api_version", api);
+			if(time != null)
+				arguments.put("running_time", time);
 			
 			StormTopologyBuilder topologyBuilder = new StormTopologyBuilder(arguments);
 			
