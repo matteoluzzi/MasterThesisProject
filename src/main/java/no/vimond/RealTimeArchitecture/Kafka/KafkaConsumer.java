@@ -1,5 +1,7 @@
 package no.vimond.RealTimeArchitecture.Kafka;
 
+import no.vimond.RealTimeArchitecture.Utils.StormEvent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +12,7 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerService;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 
-public class KafkaConsumer extends KafkaConsumerService<String> implements KafkaConsumerStreamProducer 
+public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements KafkaConsumerStreamProducer 
 {
 	
 	private static Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
@@ -44,7 +46,7 @@ public class KafkaConsumer extends KafkaConsumerService<String> implements Kafka
 		}
 	}
 
-	public String take()
+	public StormEvent take()
 	{
 		try
 		{

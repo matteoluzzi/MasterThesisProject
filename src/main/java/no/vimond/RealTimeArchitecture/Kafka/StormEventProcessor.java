@@ -4,35 +4,37 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import kafka.serializer.Decoder;
-import kafka.serializer.StringDecoder;
+import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.kafka07.consumer.JsonDecoder;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 import com.vimond.firehose.api.events.views.UserViewProgressEvent;
 
-public class StormEventProcessor implements MessageProcessor<String>
+public class StormEventProcessor implements MessageProcessor<StormEvent>
 {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(StormEventProcessor.class);
 
-	private StringDecoder decoder = new StringDecoder();
-	private BlockingQueue<String> queue;
+	private JsonDecoder<StormEvent> jsonDecoder;
+	private BlockingQueue<StormEvent> queue;
 
 	public StormEventProcessor()
 	{
-		this.queue = new LinkedBlockingDeque<String>();
+		this.jsonDecoder = new JsonDecoder<StormEvent>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
+		this.queue = new LinkedBlockingDeque<StormEvent>();
 	}
 
-	public Decoder<String> getDecoderSingleton()
+	public Decoder<StormEvent> getDecoderSingleton()
 	{
-		return decoder;
+		return jsonDecoder;
 	}
 
-	public boolean process(String message, int retryCount)
+	public boolean process(StormEvent message, int retryCount)
 	{
 		if (message != null)
 			try
@@ -49,9 +51,8 @@ public class StormEventProcessor implements MessageProcessor<String>
 		return false;
 	}
 	
-	public BlockingQueue<String> getQueue()
+	public BlockingQueue<StormEvent> getQueue()
 	{
 		return queue;
 	}
-
 }

@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import no.vimond.RealTimeArchitecture.Kafka.KafkaConsumer;
 import no.vimond.RealTimeArchitecture.Kafka.StormEventProcessor;
+import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,7 @@ public class KafkaSpout07 extends BaseRichSpout
 
 	public void nextTuple()
 	{
-		String message = this.consumer.take();
+		StormEvent message = this.consumer.take();
 		Values output = new Values(message);
 		this.collector.emit(output, UUID.randomUUID());	
 		LOG.info("Received message " + this.count.getAndIncrement() + " " + message);

@@ -1,36 +1,22 @@
 package no.vimond.RealTimeArchitecture.Bolt;
 
-import java.util.Map;
+import org.elasticsearch.storm.EsBolt;
 
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.BasicOutputCollector;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 
-public class ElasticSearchBolt extends BaseBasicBolt
+public class ElasticSearchBolt extends EsBolt
 {
-
 	private static final long serialVersionUID = 1L;
 
+	public ElasticSearchBolt(String target)
+	{
+		super(target);
+	}
 
 	@Override
-	public void prepare(Map stormConf, TopologyContext context)
+	public void execute(Tuple input)
 	{
-		
-	}
-	
-	public void execute(Tuple input, BasicOutputCollector collector)
-	{
-		
-		
-	}
-
-	
-	public void declareOutputFields(OutputFieldsDeclarer declarer)
-	{
-		
-		
+		super.execute(input);
 	}
 
 }

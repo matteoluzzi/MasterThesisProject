@@ -1,9 +1,14 @@
 package no.vimond.RealTimeArchitecture.Topology;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import no.vimond.RealTimeArchitecture.Bolt.ElasticSearchBolt;
+import no.vimond.RealTimeArchitecture.Bolt.GeoLookUpBolt;
 import no.vimond.RealTimeArchitecture.Bolt.SimpleBolt;
 import no.vimond.RealTimeArchitecture.Spout.SpoutCreator;
+import no.vimond.RealTimeArchitecture.Utils.Constants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +39,15 @@ public class StormTopologyBuilder
 
 		builder.setBolt("simple-bolt", new SimpleBolt(), 3).shuffleGrouping(
 				"kafka-spout");
+		builder.setBolt("geo-bolt", new GeoLookUpBolt(), 2).shuffleGrouping("simple-bolt", Constants.IP_STREAM);
+		
+		builder.setBolt("el-bolt", new ElasticSearchBolt("storm/player-events"), 3)
+		.shuffleGrouping("simple-bolt")
+		.shuffleGrouping("geo-bolt", Constants.IP_STREAM)
+		.addConfiguration("es.storm.bolt.write.ack", true);
 
-		Config topConfig = new Config();
-		topConfig.setDebug(true);
-		topConfig.setNumWorkers(2);
-		topConfig.setMessageTimeoutSecs(10);
+		Config topConfig = getTopologyConfiguration();
+		
 
 		LocalCluster cluster = new LocalCluster("localhost", new Long(2181));
 		cluster.submitTopology("RealTimeTopology", topConfig,
@@ -49,13 +58,40 @@ public class StormTopologyBuilder
 		try
 		{
 			Thread.sleep(time);
-			cluster.shutdown();
 		} catch (InterruptedException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		finally
+		{
+			cluster.shutdown();
+		}
 
+	}
+	
+	public static Config getTopologyConfiguration()
+	{
+		Config conf = new Config();
+		
+		conf.setDebug(true);
+		conf.setNumWorkers(2);
+		conf.setMessageTimeoutSecs(10);
+		
+		//ElasticSearch bolt configuration
+		conf.put("s.storm.spout.reliable.queue.size", 100);
+		conf.put("es.storm.spout.reliable", true);
+		conf.put("es.storm.spout.reliable.handle.tuple.failure", "strict");
+		conf.put("es.index.auto.create", "true");
+		conf.put("es.nodes", "localhost");
+		conf.put("es.port", "9200");
+		conf.put("es.input.json", "true");
+		
+		//custom serialization
+		List<String> customSerializationClasses = new ArrayList<String>();
+		customSerializationClasses.add("no.vimond.RealTimeArchitecture.Utils.StormEvent");
+		conf.put("topology.kryo.register",customSerializationClasses);
+		
+		return conf;
 	}
 
 }
