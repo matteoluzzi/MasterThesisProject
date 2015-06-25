@@ -21,8 +21,6 @@ public class SpoutCreator
 	{
 		KafkaAPI api_version = (args.get("kafka_api_version") != null) ? KafkaAPI
 				.valueOf(args.get("kafka_api_version")) : KafkaAPI.DEFAULT;
-		String zkAddr = args.get("zkHost");
-		String topic = args.get("topic");
 
 		switch (api_version)
 		{

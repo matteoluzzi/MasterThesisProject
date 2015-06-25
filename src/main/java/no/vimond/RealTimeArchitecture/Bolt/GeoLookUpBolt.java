@@ -7,6 +7,7 @@ import java.util.Map;
 
 import no.vimond.RealTimeArchitecture.Utils.Constants;
 import no.vimond.RealTimeArchitecture.Utils.GeoIP;
+import no.vimond.RealTimeArchitecture.Utils.GeoInfo;
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.record.Country;
+import com.maxmind.geoip2.record.Location;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 /**
  * Storm bolt which adds is responsible to inject a country name fields, if found, according to the ip address
@@ -61,10 +63,20 @@ public class GeoLookUpBolt implements IRichBolt
 		StormEvent message = (StormEvent) input.getValue(0);
 		String ipAddress = (String) input.getValue(1);
 		
-		String country = this.getCountryFromIp(ipAddress);
-		if(country != null)
-			message.setCountryName(country);
+		GeoInfo geoInfo = this.getCountryAndCoordinatesFromIp(ipAddress);
 		
+		if(geoInfo != null)
+		{
+			if(geoInfo.getCountry() != null)
+				message.setCountryName(geoInfo.getCountry());
+			if(geoInfo.getCity() != null)
+				message.setCity(geoInfo.getCity());
+			if(geoInfo.getLatitute() != null)
+				message.setLatitude(geoInfo.getLatitute());
+			if(geoInfo.getLongitude() != null)
+				message.setLongitude(geoInfo.getLongitude());
+		}
+						
 		emit(Constants.IP_STREAM, message, input);
 	}
 
@@ -110,19 +122,22 @@ public class GeoLookUpBolt implements IRichBolt
 	}
 
 	/**
-	 * Ip address - country conversion made by MaxMind database
+	 * Ip address - geoInfo conversion made by MaxMind database
 	 * @param ipAddress
 	 * @return returns the name of the country the <b>ipAddress</b> belongs to, <b>null</b> otherwise
 	 */
-	public String getCountryFromIp(String ipAddress)
+	public GeoInfo getCountryAndCoordinatesFromIp(String ipAddress)
 	{
+		Object[] ret = new Object[3];
 		try
 		{
 			InetAddress ipAddr = InetAddress.getByName(ipAddress);
 
 			CountryResponse response = this.dbReader.country(ipAddr);
 			Country country = response.getCountry();
-			return country.getIsoCode();
+			//Location location = response.getLocation();
+			
+			return new GeoInfo(country.getIsoCode());
 
 		} catch (UnknownHostException e)
 		{

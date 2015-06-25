@@ -85,7 +85,6 @@ public class SimpleBolt implements IRichBolt
 			 value = mapper.writeValueAsString(message);
 		} catch (JsonProcessingException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if(value != null)

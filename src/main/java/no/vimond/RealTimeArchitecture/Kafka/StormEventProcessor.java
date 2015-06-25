@@ -9,11 +9,9 @@ import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.kafka07.consumer.JsonDecoder;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.shared.ObjectMapperConfiguration;
-import com.vimond.firehose.api.events.views.UserViewProgressEvent;
 
 public class StormEventProcessor implements MessageProcessor<StormEvent>
 {

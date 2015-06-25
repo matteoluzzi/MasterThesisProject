@@ -40,7 +40,7 @@ public class App
 			
 			StormTopologyBuilder topologyBuilder = new StormTopologyBuilder(arguments);
 			
-			topologyBuilder.buildAndRun();
+			topologyBuilder.buildAndRun(arguments);
 			
 		} catch (ArgumentParserException e1)
 		{

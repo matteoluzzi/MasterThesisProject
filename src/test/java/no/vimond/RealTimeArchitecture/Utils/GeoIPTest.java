@@ -42,7 +42,7 @@ public class GeoIPTest extends TestCase
 		
 		try
 		{
-			InetAddress ipAddress = InetAddress.getByName("83.97.14.252");
+			InetAddress ipAddress = InetAddress.getByName("10.10.9.92");
 			CountryResponse response = dbReader.country(ipAddress);
 			Country country = response.getCountry();
 			

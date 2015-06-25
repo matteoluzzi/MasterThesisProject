@@ -31,7 +31,7 @@ public class StormTopologyBuilder
 		this.args = args;
 	}
 
-	public void buildAndRun()
+	public void buildAndRun(Map<String, String> args)
 	{
 		TopologyBuilder builder = new TopologyBuilder();
 
@@ -48,6 +48,7 @@ public class StormTopologyBuilder
 
 		Config topConfig = getTopologyConfiguration();
 		
+		topConfig.putAll(args);
 
 		LocalCluster cluster = new LocalCluster("localhost", new Long(2181));
 		cluster.submitTopology("RealTimeTopology", topConfig,
