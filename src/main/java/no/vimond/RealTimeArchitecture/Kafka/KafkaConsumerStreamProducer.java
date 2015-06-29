@@ -11,4 +11,6 @@ public interface KafkaConsumerStreamProducer
 	
 	public StormEvent take();
 	
+	public StormEvent takeNoBlock();
+	
 }
