@@ -44,18 +44,23 @@
 		</plugins>
 
 	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
-			<scope>test</scope>
+
 		</dependency>
 		<dependency>
 			<groupId>com.vimond.common</groupId>
 			<artifactId>vimond-kafka-0.7</artifactId>
-			<version>3.0.1</version>
+			<version>3.2.29</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.jmx</groupId>
+					<artifactId>jmxri</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.vimond.service</groupId>
@@ -72,10 +77,29 @@
 			<artifactId>elasticsearch</artifactId>
 			<version>1.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-core</artifactId>
+			<version>3.1.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-healthchecks</artifactId>
+			<version>3.1.2</version>
+			<scope>runtime</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.apache.storm</groupId>
 			<artifactId>storm-core</artifactId>
+			<version>0.9.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.storm</groupId>
+			<artifactId>storm-kafka</artifactId>
 			<version>0.9.5</version>
 		</dependency>
 		<dependency>
@@ -99,8 +123,6 @@
 			<artifactId>geoip2</artifactId>
 			<version>2.1.0</version>
 		</dependency>
-
 	</dependencies>
-
 
 </project>

@@ -13,10 +13,11 @@ import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.BasicOutputCollector;
+import backtype.storm.topology.FailedException;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
@@ -27,27 +28,24 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.record.Country;
-import com.maxmind.geoip2.record.Location;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 /**
  * Storm bolt which adds is responsible to inject a country name fields, if found, according to the ip address
  * @author matteoremoluzzi
  *
  */
-public class GeoLookUpBolt implements IRichBolt
+public class GeoLookUpBolt extends BaseBasicBolt
 {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = LoggerFactory.getLogger(GeoLookUpBolt.class);
 
 	private DatabaseReader dbReader;
-	private OutputCollector collector;
 	private ObjectMapper mapper;
 
-	public void prepare(Map stormConf, TopologyContext context,
-			OutputCollector collector)
+	@SuppressWarnings("rawtypes")
+	public void prepare(Map stormConf, TopologyContext context)
 	{
 		this.dbReader = GeoIP.getDbReader();
-		this.collector = collector;
 		this.mapper = ObjectMapperConfiguration.configure();
 	}
 	
@@ -58,7 +56,7 @@ public class GeoLookUpBolt implements IRichBolt
 	 * 	<li>pos 1 = Ip address
 	 * </ul>
 	 */
-	public void execute(Tuple input)
+	public void execute(Tuple input, BasicOutputCollector collector)
 	{
 		StormEvent message = (StormEvent) input.getValue(0);
 		String ipAddress = (String) input.getValue(1);
@@ -77,7 +75,7 @@ public class GeoLookUpBolt implements IRichBolt
 				message.setLongitude(geoInfo.getLongitude());
 		}
 						
-		emit(Constants.IP_STREAM, message, input);
+		emit(message, collector);
 	}
 
 	public void cleanup()
@@ -91,7 +89,6 @@ public class GeoLookUpBolt implements IRichBolt
 			LOG.error("Error while closing the connection with database");
 			e.printStackTrace();
 		}
-
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer)
@@ -104,7 +101,7 @@ public class GeoLookUpBolt implements IRichBolt
 		return null;
 	}
 	
-	private void emit(String stream, StormEvent message, Tuple input)
+	private void emit(StormEvent message, BasicOutputCollector collector)
 	{
 		String value = null;
 		try
@@ -116,9 +113,11 @@ public class GeoLookUpBolt implements IRichBolt
 			e.printStackTrace();
 		}
 		if(value != null)
-			collector.emit(stream, new Values(value));
+		{
+			collector.emit(Constants.IP_STREAM, new Values(value));
+		}
 		else
-			collector.fail(input);
+			throw new FailedException(); //i.e. fail on processing tuple
 	}
 
 	/**
@@ -128,7 +127,6 @@ public class GeoLookUpBolt implements IRichBolt
 	 */
 	public GeoInfo getCountryAndCoordinatesFromIp(String ipAddress)
 	{
-		Object[] ret = new Object[3];
 		try
 		{
 			InetAddress ipAddr = InetAddress.getByName(ipAddress);
@@ -151,5 +149,4 @@ public class GeoLookUpBolt implements IRichBolt
 		}
 		return null;
 	}
-
 }

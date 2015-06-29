@@ -1,7 +1,7 @@
 package no.vimond.RealTimeArchitecture.Kafka;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import kafka.serializer.Decoder;
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
@@ -24,7 +24,7 @@ public class StormEventProcessor implements MessageProcessor<StormEvent>
 	public StormEventProcessor()
 	{
 		this.jsonDecoder = new JsonDecoder<StormEvent>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
-		this.queue = new LinkedBlockingDeque<StormEvent>();
+		this.queue = new ArrayBlockingQueue<StormEvent>(1000);
 	}
 
 	public Decoder<StormEvent> getDecoderSingleton()

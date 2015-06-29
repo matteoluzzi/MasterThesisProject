@@ -1,7 +1,12 @@
 package no.vimond.RealTimeArchitecture.Kafka;
 
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
+import org.elasticsearch.common.recycler.Recycler.V;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +23,10 @@ public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements K
 	private static Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
 	
 	private StormEventProcessor eventProcessor;
-
+	private Map<UUID, StormEvent> inProcessEvents;
+	
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public KafkaConsumer(MetricRegistry metricRegistry,
 			HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig,
 			KafkaConsumerConfig consumerConfig,
@@ -28,6 +36,7 @@ public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements K
 		super(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig,
 				messageProcessor);
 		this.eventProcessor = (StormEventProcessor) messageProcessor;
+		this.inProcessEvents = new TreeMap<UUID, StormEvent>();
 	}
 
 
@@ -57,6 +66,11 @@ public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements K
 		}
 		return null;
 	}
+	
+	public StormEvent takeNoBlock()
+	{
+			return eventProcessor.getQueue().poll();
+	}
 
 	public void startConsuming()
 	{
@@ -71,6 +85,29 @@ public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements K
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public void handleFailedEvents(UUID id)
+	{
+		StormEvent event = this.inProcessEvents.remove(id);
+		if(event != null)
+		{
+			this.eventProcessor.getQueue().add(event);
+			LOG.debug("Event " + id + " successfully recovered");
+		}
+		else
+			LOG.warn("Error while recovering an event");
+	}
+	
+	public void handleAckedEvents(UUID id)
+	{
+		this.inProcessEvents.remove(id);
+		LOG.debug("Event " + id + " successfully processed");
+	}
+	
+	public void addInProcessMessage(UUID id, StormEvent event)
+	{
+		this.inProcessEvents.put(id, event);
 	}
 
 }

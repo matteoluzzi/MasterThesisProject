@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 
@@ -25,27 +25,30 @@ import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 
 /**
- * Source spout for storm topology. It contains a <b>KafkaConsumer</b> which is listening on the specified kafka topic<br>
- * The communication between <b>KafkaConsumer</b> and <b>KafkaSpout07</b> is realized by a <code>BlockingQueue</code>
+ * Source spout for storm topology. It contains a <b>KafkaConsumer</b> which is
+ * listening on the specified kafka topic<br>
+ * The communication between <b>KafkaConsumer</b> and <b>KafkaSpout07</b> is
+ * realized by a <code>BlockingQueue</code>
+ * 
  * @author matteoremoluzzi
  *
  */
-public class KafkaSpout07 extends BaseRichSpout
+public class KafkaSpout07 implements IRichSpout
 {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = LoggerFactory.getLogger(KafkaSpout07.class);
 
 	private SpoutOutputCollector collector;
-	
+
 	private KafkaConsumer consumer;
 	private AtomicInteger count;
 	private MetricRegistry metricRegistry;
 	private HealthCheckRegistry healthCheckRegistry;
-	private StormEventProcessor messageProcessor;
 	private KafkaConfig kafkaConfig;
 	private KafkaConsumerConfig consumerConfig;
+	private AtomicInteger acked;
+	private AtomicInteger failed;
 
-	
 	@SuppressWarnings("rawtypes")
 	public void open(Map conf, TopologyContext context,
 			SpoutOutputCollector collector)
@@ -53,22 +56,25 @@ public class KafkaSpout07 extends BaseRichSpout
 		String zk_location = (String) conf.get("zk");
 		String topic = (String) conf.get("topic");
 		String consumer_group = (String) conf.get("consumer_group");
-		
+
 		this.collector = collector;
 		this.count = new AtomicInteger(0);
-		
+		this.acked = new AtomicInteger(0);
+		this.failed = new AtomicInteger(0);
+
 		this.metricRegistry = new MetricRegistry();
 		this.healthCheckRegistry = new HealthCheckRegistry();
-		this.messageProcessor = new StormEventProcessor();
-		this.kafkaConfig = (zk_location != null) ? new KafkaConfig(zk_location) : new KafkaConfig(Constants.DEFAULT_ZK_LOCATION);
+		this.kafkaConfig = (zk_location != null) ? new KafkaConfig(zk_location)
+				: new KafkaConfig(Constants.DEFAULT_ZK_LOCATION);
 		this.consumerConfig = new KafkaConsumerConfig();
-		this.consumerConfig.groupid = (consumer_group != null) ? consumer_group : Constants.DEFAULT_CONSUMER_GROUP;
-		this.consumerConfig.topic = (topic != null) ? topic : Constants.DEFAULT_TOPIC;
+		this.consumerConfig.groupid = (consumer_group != null) ? consumer_group
+				: Constants.DEFAULT_CONSUMER_GROUP;
+		this.consumerConfig.topic = (topic != null) ? topic
+				: Constants.DEFAULT_TOPIC;
 		this.consumerConfig.consumerThreads = 2;
-		
-		
+
 		consumer = new KafkaConsumer(metricRegistry, healthCheckRegistry,
-				kafkaConfig, consumerConfig, messageProcessor);
+				kafkaConfig, consumerConfig, new StormEventProcessor());
 		consumer.startConsuming();
 	}
 
@@ -79,18 +85,72 @@ public class KafkaSpout07 extends BaseRichSpout
 
 	public void nextTuple()
 	{
-		StormEvent message = this.consumer.take();
-		Values output = new Values(message);
-		this.collector.emit(output, UUID.randomUUID());
-		LOG.info("Received message " + this.count.getAndIncrement() + " "
-				+ message);
+		StormEvent message = this.consumer.takeNoBlock();
+		if(message != null)
+		{
+			Values output = new Values(message);
+			UUID id = UUID.randomUUID();
+			this.collector.emit(output, id);
+			LOG.info("Received message: id = " + id + ", message = " + this.count.incrementAndGet() + " "
+					+ message);
+			this.consumer.addInProcessMessage(id, message);
+		}
+		else
+		{
+			try
+			{
+				Thread.sleep(100);
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 
-	@Override
+	public void ack(Object msgId)
+	{
+		if(msgId instanceof UUID)
+		{
+			UUID id = (UUID) msgId;
+			LOG.info(msgId + " acked");
+			this.acked.incrementAndGet();
+			this.consumer.handleAckedEvents(id);
+		}		
+	}
+
+	public void fail(Object msgId)
+	{
+		if(msgId instanceof UUID)
+		{
+			UUID id = (UUID) msgId;
+			this.failed.incrementAndGet();
+			LOG.info(msgId + " failed, trying to recover it");
+			this.consumer.handleFailedEvents(id);
+		}		
+	}
+	
 	public void close()
 	{
-		if (consumer != null)
-			consumer.shutdown();
+		this.consumer.shutdown();
+		LOG.info("Shutting down....\nProcessed messages = " + this.count + "\nAcked messages = " + this.acked + "\nFailed messages = " + this.failed);
+	}
+
+	public void activate()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void deactivate()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Map<String, Object> getComponentConfiguration()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

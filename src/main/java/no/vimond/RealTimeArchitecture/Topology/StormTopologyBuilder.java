@@ -35,21 +35,42 @@ public class StormTopologyBuilder
 	{
 		TopologyBuilder builder = new TopologyBuilder();
 
+		LOG.info("Creating topology components.....");
+		
 		builder.setSpout("kafka-spout", SpoutCreator.create(args), 1);
+		
+//		builder.setBolt("test-bolt", new TestBolt(), 1).shuffleGrouping("kafka-spout");
 
-		builder.setBolt("simple-bolt", new SimpleBolt(), 3).shuffleGrouping(
+		builder.setBolt("simple-bolt", new SimpleBolt(), 1).shuffleGrouping(
 				"kafka-spout");
 		builder.setBolt("geo-bolt", new GeoLookUpBolt(), 2).shuffleGrouping("simple-bolt", Constants.IP_STREAM);
 		
-		builder.setBolt("el-bolt", new ElasticSearchBolt("storm/player-events"), 3)
+		builder.setBolt("el-bolt", new ElasticSearchBolt("storm/player-events"), 2)
 		.shuffleGrouping("simple-bolt")
 		.shuffleGrouping("geo-bolt", Constants.IP_STREAM)
 		.addConfiguration("es.storm.bolt.write.ack", true);
+		
+		LOG.info("Creating topology components DONE");
 
 		Config topConfig = getTopologyConfiguration();
 		
 		topConfig.putAll(args);
 
+		LOG.info("Launching topology");
+		/*			
+		try
+		{
+			StormSubmitter.submitTopology("RealTimeTopology", topConfig, builder.createTopology());
+		} catch (AlreadyAliveException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidTopologyException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 		LocalCluster cluster = new LocalCluster("localhost", new Long(2181));
 		cluster.submitTopology("RealTimeTopology", topConfig,
 				builder.createTopology());
@@ -67,7 +88,6 @@ public class StormTopologyBuilder
 		{
 			cluster.shutdown();
 		}
-
 	}
 	
 	public static Config getTopologyConfiguration()
@@ -75,11 +95,12 @@ public class StormTopologyBuilder
 		Config conf = new Config();
 		
 		conf.setDebug(true);
-		conf.setNumWorkers(2);
+		conf.setNumWorkers(1);
+		conf.setNumAckers(1);
 		conf.setMessageTimeoutSecs(10);
 		
 		//ElasticSearch bolt configuration
-		conf.put("s.storm.spout.reliable.queue.size", 100);
+		conf.put("es.storm.spout.reliable.queue.size", 100);
 		conf.put("es.storm.spout.reliable", true);
 		conf.put("es.storm.spout.reliable.handle.tuple.failure", "strict");
 		conf.put("es.index.auto.create", "true");

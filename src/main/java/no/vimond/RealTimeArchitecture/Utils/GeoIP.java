@@ -2,6 +2,7 @@ package no.vimond.RealTimeArchitecture.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +16,12 @@ public class GeoIP
 	private static final String DB_PATH = "src/main/resources/GeoLite2-Country.mmdb";
 	private static GeoIP instance = new GeoIP(DB_PATH);
 	private DatabaseReader dbReader;
-	private File dbFile;
+	private InputStream dbFile;
 
 	private GeoIP(String dbPath)
 	{
-		dbFile = new File(dbPath);
-		if (dbFile.exists())
+		dbFile = Utility.loadPropertiesFileFromClassPath("GeoLite2-Country.mmdb");
+		if (dbFile != null)
 		{
 			try
 			{

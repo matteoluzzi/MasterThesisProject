@@ -9,56 +9,37 @@ import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vimond.common.shared.ObjectMapperConfiguration;
-
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.IRichBolt;
+import backtype.storm.topology.BasicOutputCollector;
+import backtype.storm.topology.FailedException;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public class SimpleBolt implements IRichBolt
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vimond.common.shared.ObjectMapperConfiguration;
+
+public class SimpleBolt extends BaseBasicBolt
 {
 	private static final long serialVersionUID = 1L;
 	private static Logger LOG = LoggerFactory.getLogger(SimpleBolt.class);
 
 	private AtomicInteger count;
-	private OutputCollector collector;
 	private ObjectMapper mapper;
 
-	public void prepare(Map stormConf, TopologyContext context,
-			OutputCollector collector)
+	@SuppressWarnings("rawtypes")
+	public void prepare(Map stormConf, TopologyContext context)
 	{
 		this.count = new AtomicInteger(0);
-		this.collector = collector;
 		this.mapper = ObjectMapperConfiguration.configure();
 	}
 
 	public Map<String, Object> getComponentConfiguration()
 	{
 		return null;
-	}
-
-	public void execute(Tuple input)
-	{
-		StormEvent message = (StormEvent) input.getValue(0);
-		LOG.info("Received message " + this.count.getAndIncrement() + " "
-				+ message);
-		
-		String ipAddress = message.getIpAddress();
-		
-		if(ipAddress == null) //emit on default stream
-		{
-			emitOnDefaultStream(message, input);
-		}
-		else //emit to ip_stream for geolocation analysis
-		{
-			emitOnIpStream(message, ipAddress);
-		}
 	}
 
 	public void cleanup()
@@ -72,12 +53,30 @@ public class SimpleBolt implements IRichBolt
 		declarer.declareStream(Constants.IP_STREAM, new Fields(Constants.EVENT_MESSAGE, Constants.IP_MESSAGE));
 	}
 	
-	private void emitOnIpStream(StormEvent message, String ipAddress)
+	public void execute(Tuple input, BasicOutputCollector collector)
 	{
-		this.collector.emit(Constants.IP_STREAM, new Values(message, ipAddress));
+		StormEvent message = (StormEvent) input.getValue(0);
+		LOG.info("Received message " + this.count.getAndIncrement() + " "
+				+ message);
+		
+		String ipAddress = message.getIpAddress();
+		
+		if(ipAddress == null) //emit on default stream
+		{
+			emitOnDefaultStream(message, collector);
+		}
+		else //emit to ip_stream for geolocation analysis
+		{
+			emitOnIpStream(message, ipAddress, collector);
+		}
 	}
 	
-	private void emitOnDefaultStream(StormEvent message, Tuple input)
+	private void emitOnIpStream(StormEvent message, String ipAddress, BasicOutputCollector collector)
+	{
+		collector.emit(Constants.IP_STREAM, new Values(message, ipAddress));
+	}
+	
+	private void emitOnDefaultStream(StormEvent message, BasicOutputCollector collector)
 	{
 		String value = null;
 		try
@@ -85,13 +84,11 @@ public class SimpleBolt implements IRichBolt
 			 value = mapper.writeValueAsString(message);
 		} catch (JsonProcessingException e)
 		{
-			e.printStackTrace();
+			LOG.warn("Error while converting StormEvent into a JSON string");
 		}
 		if(value != null)
 			collector.emit(new Values(value));
 		else
-			collector.fail(input);
+			throw new FailedException(); //i.e. fail on processing tuple
 	}
-
-
 }
