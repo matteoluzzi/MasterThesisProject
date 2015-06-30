@@ -71,7 +71,7 @@ public class KafkaSpout07 implements IRichSpout
 				: Constants.DEFAULT_CONSUMER_GROUP;
 		this.consumerConfig.topic = (topic != null) ? topic
 				: Constants.DEFAULT_TOPIC;
-		this.consumerConfig.consumerThreads = 2;
+		this.consumerConfig.consumerThreads = 1;
 
 		consumer = new KafkaConsumer(metricRegistry, healthCheckRegistry,
 				kafkaConfig, consumerConfig, new StormEventProcessor());
@@ -91,8 +91,8 @@ public class KafkaSpout07 implements IRichSpout
 			Values output = new Values(message);
 			UUID id = UUID.randomUUID();
 			this.collector.emit(output, id);
-			LOG.info("Received message: id = " + id + ", message = " + this.count.incrementAndGet() + " "
-					+ message);
+	//		LOG.info("Received message: id = " + id + ", message = " + this.count.incrementAndGet() + " "
+	//				+ message);
 			this.consumer.addInProcessMessage(id, message);
 		}
 		else

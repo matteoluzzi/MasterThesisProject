@@ -24,7 +24,7 @@ public class StormEventProcessor implements MessageProcessor<StormEvent>
 	public StormEventProcessor()
 	{
 		this.jsonDecoder = new JsonDecoder<StormEvent>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
-		this.queue = new ArrayBlockingQueue<StormEvent>(1000);
+		this.queue = new ArrayBlockingQueue<StormEvent>(2000);
 	}
 
 	public Decoder<StormEvent> getDecoderSingleton()

@@ -18,7 +18,7 @@ public class App
 		parser.addArgument("-z", "--zookeeper").help("Zookeeper node address and port").type(String.class).required(false).dest("zookeeper");
 		parser.addArgument("-t", "--topic").help("Topic where to write the message").type(String.class).required(false).dest("topic");
 		parser.addArgument("-a", "--kafkaAPI").help("Version of Kafka API").type(String.class).required(false).dest("api");
-		parser.addArgument("-ms", "--milliseconds").help("Running time of cluster").type(String.class).required(false).dest("time");
+		parser.addArgument("-m", "--minutes").help("Running time of cluster").type(String.class).required(false).dest("time");
 		
 		try
 		{

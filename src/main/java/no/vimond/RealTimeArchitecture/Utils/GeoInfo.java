@@ -1,9 +1,5 @@
 package no.vimond.RealTimeArchitecture.Utils;
 
-import java.util.Optional;
-
-import com.maxmind.geoip2.record.City;
-
 public class GeoInfo
 {
 	private String country;
@@ -23,9 +19,9 @@ public class GeoInfo
 	public GeoInfo(String isoCode)
 	{
 		this.country = isoCode;
-		this.city = null;
-		this.latitute = null;
-		this.longitude = null;
+		this.city = "none";
+		this.latitute = Double.NaN;
+		this.longitude = Double.NaN;
 	}
 
 	public String getCountry()

@@ -26,7 +26,7 @@ public class TestBolt implements IRichBolt
 
 	public void execute(Tuple input)
 	{
-		LOG.info("Just failing every received message");
+		LOG.info("Just ignoring every received message");
 		//collector.fail(input);
 		
 	}

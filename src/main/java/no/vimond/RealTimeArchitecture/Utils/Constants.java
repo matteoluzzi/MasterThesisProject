@@ -10,7 +10,7 @@ public class Constants
 	public static final String EVENT_MESSAGE = "event";
 	public static final String IP_MESSAGE = "ip";
 	
-	public static final String COUNTRY_NAME = "countryName";
-	public static final String LATITUDE = "latitude";
-	public static final String LONGITUDE = "longitude";
+	public static final String COUNTRY_NAME = "geo.country";
+	public static final String LATITUDE = "geo.lat";
+	public static final String LONGITUDE = "geo.lon";
 }

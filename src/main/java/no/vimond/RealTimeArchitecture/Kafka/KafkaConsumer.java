@@ -1,12 +1,11 @@
 package no.vimond.RealTimeArchitecture.Kafka;
 
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
-import org.elasticsearch.common.recycler.Recycler.V;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class KafkaConsumer extends KafkaConsumerService<StormEvent> implements K
 		super(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig,
 				messageProcessor);
 		this.eventProcessor = (StormEventProcessor) messageProcessor;
-		this.inProcessEvents = new TreeMap<UUID, StormEvent>();
+		this.inProcessEvents = new ConcurrentHashMap<UUID, StormEvent>();
 	}
 
 

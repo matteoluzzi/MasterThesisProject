@@ -29,8 +29,11 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.record.Country;
 import com.vimond.common.shared.ObjectMapperConfiguration;
+
 /**
- * Storm bolt which adds is responsible to inject a country name fields, if found, according to the ip address
+ * Storm bolt which adds is responsible to inject a country name fields, if
+ * found, according to the ip address
+ * 
  * @author matteoremoluzzi
  *
  */
@@ -48,33 +51,33 @@ public class GeoLookUpBolt extends BaseBasicBolt
 		this.dbReader = GeoIP.getDbReader();
 		this.mapper = ObjectMapperConfiguration.configure();
 	}
-	
+
 	/**
 	 * Structure of the input tuple:
 	 * <ul>
-	 * 	<li>pos 0 = StormEvent
-	 * 	<li>pos 1 = Ip address
+	 * <li>pos 0 = StormEvent
+	 * <li>pos 1 = Ip address
 	 * </ul>
 	 */
 	public void execute(Tuple input, BasicOutputCollector collector)
 	{
 		StormEvent message = (StormEvent) input.getValue(0);
 		String ipAddress = (String) input.getValue(1);
-		
+
 		GeoInfo geoInfo = this.getCountryAndCoordinatesFromIp(ipAddress);
-		
-		if(geoInfo != null)
+
+		if (geoInfo != null)
 		{
-			if(geoInfo.getCountry() != null)
-				message.setCountryName(geoInfo.getCountry());
-			if(geoInfo.getCity() != null)
-				message.setCity(geoInfo.getCity());
-			if(geoInfo.getLatitute() != null)
-				message.setLatitude(geoInfo.getLatitute());
-			if(geoInfo.getLongitude() != null)
-				message.setLongitude(geoInfo.getLongitude());
+			// if(geoInfo.getCountry() != null)
+			message.setCountryName(geoInfo.getCountry());
+			// if(geoInfo.getCity() != null)
+			message.setCity(geoInfo.getCity());
+			// if(geoInfo.getLatitute() != null)
+			message.setLatitude(geoInfo.getLatitute());
+			// if(geoInfo.getLongitude() != null)
+			message.setLongitude(geoInfo.getLongitude());
 		}
-						
+
 		emit(message, collector);
 	}
 
@@ -93,37 +96,39 @@ public class GeoLookUpBolt extends BaseBasicBolt
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer)
 	{
-		declarer.declareStream(Constants.IP_STREAM, new Fields(Constants.EVENT_MESSAGE));
+		declarer.declareStream(Constants.IP_STREAM, new Fields(
+				Constants.EVENT_MESSAGE));
 	}
 
 	public Map<String, Object> getComponentConfiguration()
 	{
 		return null;
 	}
-	
+
 	private void emit(StormEvent message, BasicOutputCollector collector)
 	{
 		String value = null;
 		try
 		{
-			 value = this.mapper.writeValueAsString(message);
+			value = this.mapper.writeValueAsString(message);
 		} catch (JsonProcessingException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(value != null)
+		if (value != null)
 		{
 			collector.emit(Constants.IP_STREAM, new Values(value));
-		}
-		else
-			throw new FailedException(); //i.e. fail on processing tuple
+		} else
+			throw new FailedException(); // i.e. fail on processing tuple
 	}
 
 	/**
 	 * Ip address - geoInfo conversion made by MaxMind database
+	 * 
 	 * @param ipAddress
-	 * @return returns the name of the country the <b>ipAddress</b> belongs to, <b>null</b> otherwise
+	 * @return returns the name of the country the <b>ipAddress</b> belongs to,
+	 *         <b>null</b> otherwise
 	 */
 	public GeoInfo getCountryAndCoordinatesFromIp(String ipAddress)
 	{
@@ -133,9 +138,9 @@ public class GeoLookUpBolt extends BaseBasicBolt
 
 			CountryResponse response = this.dbReader.country(ipAddr);
 			Country country = response.getCountry();
-			//Location location = response.getLocation();
-			
-			return new GeoInfo(country.getIsoCode());
+			// Location location = response.getLocation();
+
+			return new GeoInfo(country.getName());
 
 		} catch (UnknownHostException e)
 		{
