@@ -2,5 +2,5 @@ package no.vimond.StorageArchitecture.Jobs;
 
 public enum JobName
 {
-	SIMPLE
+	SIMPLE_TOP_COUNTRIES, SIMPLE_TOP_ASSETS
 }
