@@ -5,6 +5,9 @@ target/
 .classpath
 .DS_Store
 
+messages/
+simple_job/
+
 *.class
 
 *.log
