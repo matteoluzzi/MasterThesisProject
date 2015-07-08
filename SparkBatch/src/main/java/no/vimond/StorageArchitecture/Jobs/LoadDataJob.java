@@ -27,17 +27,17 @@ import com.vimond.common.shared.ObjectMapperConfiguration;
  *
  * @param <T> subclass of <code>VimondEventAny</class>
  */
-public final class LoadDataJob<T extends VimondEventAny> implements Job
+public class LoadDataJob<T extends VimondEventAny> implements Job
 {
 	private static final long serialVersionUID = 4238953880867095830L;
 	
-	private Date minDate;
-	private Date maxDate;
-	private JavaRDD<T> inputDataset;
-	private Properties props;
-	private final Class<T> clazz;
+	protected Date minDate;
+	protected Date maxDate;
+	protected JavaRDD<T> inputDataset;
+	protected Properties props;
+	protected final Class<T> clazz;
 	
-	public LoadDataJob(JavaSparkContext ctx, Properties props, Class<T> clazz)
+	public LoadDataJob(Properties props, Class<T> clazz)
 	{
 		this.props = props;
 		this.clazz = clazz;
@@ -82,7 +82,11 @@ public final class LoadDataJob<T extends VimondEventAny> implements Job
 		this.minDate = minDate.value();
 		this.maxDate = maxDate.value();
 		
-		this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
+		inputDataset.collect();
+		
+		System.out.println(minDate.value());
+		
+	//	this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
 	}
 	
 	public JavaRDD<? extends VimondEventAny> getLoadedRDD()

@@ -5,8 +5,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import no.vimond.StorageArchitecture.Model.TestModel;
-import no.vimond.StorageArchitecture.Utils.StormEvent;
+import no.vimond.StorageArchitecture.Model.SimpleModel;
+import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -25,7 +25,7 @@ public class SimpleTopCountriesJob extends WorkingJob
 
 	private static final long serialVersionUID = -4447507237939137336L;
 	
-	public SimpleTopCountriesJob(JavaRDD<StormEvent> rdd, Date minDate, Date maxDate)
+	public SimpleTopCountriesJob(JavaRDD<Event> rdd, Date minDate, Date maxDate)
 	{
 		super(rdd, minDate, maxDate);
 	}
@@ -55,7 +55,7 @@ public class SimpleTopCountriesJob extends WorkingJob
 				while (tuples.hasNext())
 				{
 					Tuple2<String, Integer> t = tuples.next();
-					TestModel tm = new TestModel();
+					SimpleModel tm = new SimpleModel();
 					tm.eventName = "TopRanking";
 					tm.genericValues.put("data.country", t._1());
 					tm.genericValues.put("data.counter", t._2());

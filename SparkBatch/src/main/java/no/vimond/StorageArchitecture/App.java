@@ -12,10 +12,10 @@ import no.vimond.StorageArchitecture.Jobs.Job;
 import no.vimond.StorageArchitecture.Jobs.JobName;
 import no.vimond.StorageArchitecture.Jobs.JobsFactory;
 import no.vimond.StorageArchitecture.Jobs.LoadDataJob;
-import no.vimond.StorageArchitecture.Model.TestModel;
+import no.vimond.StorageArchitecture.Model.SimpleModel;
 import no.vimond.StorageArchitecture.Utils.AppProperties;
 import no.vimond.StorageArchitecture.Utils.Constants;
-import no.vimond.StorageArchitecture.Utils.StormEvent;
+import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -44,24 +44,27 @@ public class App
 
 		// Complex classes must be (de)serialized with Kyro otherwise it won't
 		// work
-		Class[] serClasses = { StormEvent.class, TestModel.class };
+		Class[] serClasses = { Event.class, SimpleModel.class };
 		cfg.registerKryoClasses(serClasses);
 
 		List<Future> jobs = new ArrayList<Future>();
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 		
-		LoadDataJob<StormEvent> loadDataJob = new LoadDataJob<StormEvent>(ctx, props, StormEvent.class);
+		LoadDataJob<Event> loadDataJob = new LoadDataJob<Event>(props, Event.class);
 		
 		loadDataJob.run(ctx);
 		
-		JavaRDD<StormEvent> inputDataset = (JavaRDD<StormEvent>) loadDataJob.getLoadedRDD();
+		JavaRDD<Event> inputDataset = (JavaRDD<Event>) loadDataJob.getLoadedRDD();
 		
 		//cache rdd!
 		inputDataset.cache();
 		
 		Date minDate = loadDataJob.getBeginDate();
 		Date maxDate = loadDataJob.getEndingDate();
+		
+		inputDataset.collect();
+		System.out.println(minDate);
 		
 		ExecutorService executorPool = Executors.newFixedThreadPool(poolSize);
 		
@@ -74,19 +77,9 @@ public class App
 				job_one.run(ctx);
 			}
 		});
+
 		
-		Future job_two = executorPool.submit(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				Job job_two = JobsFactory.getFactory().createJob(JobName.SIMPLE_TOP_ASSETS, ctx, props, inputDataset, minDate, maxDate);
-				job_two.run(ctx);
-			}
-		});
-		
-		jobs.add(job_one);
-		jobs.add(job_two);
+	//jobs.add(job_one);
 
 		try
 		{

@@ -2,7 +2,7 @@ package no.vimond.StorageArchitecture.Processing;
 
 import no.vimond.StorageArchitecture.Utils.GeoIP;
 import no.vimond.StorageArchitecture.Utils.GeoInfo;
-import no.vimond.StorageArchitecture.Utils.StormEvent;
+import no.vimond.StorageArchitecture.Utils.Event;
 import no.vimond.StorageArchitecture.Utils.Utility;
 
 import org.apache.spark.api.java.function.Function;
@@ -11,7 +11,7 @@ import org.apache.spark.broadcast.Broadcast;
 import com.maxmind.geoip2.DatabaseReader;
 
 
-public class ExtractGeoIPInfo implements Function<StormEvent, StormEvent>
+public class ExtractGeoIPInfo implements Function<Event, Event>
 {
 
 	private static final long serialVersionUID = 5768355406775319971L;
@@ -24,7 +24,7 @@ public class ExtractGeoIPInfo implements Function<StormEvent, StormEvent>
 	
 
 	@Override
-	public StormEvent call(StormEvent event) throws Exception
+	public Event call(Event event) throws Exception
 	{
 		DatabaseReader dbReader = GeoIP.getDbReader();
 

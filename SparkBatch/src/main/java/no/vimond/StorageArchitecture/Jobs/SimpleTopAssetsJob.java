@@ -5,6 +5,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import no.vimond.StorageArchitecture.Model.SimpleModel;
+import no.vimond.StorageArchitecture.Utils.Event;
+
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -12,18 +15,16 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
 
+import scala.Tuple2;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vimond.common.shared.ObjectMapperConfiguration;
-
-import scala.Tuple2;
-import no.vimond.StorageArchitecture.Model.TestModel;
-import no.vimond.StorageArchitecture.Utils.StormEvent;
 
 public class SimpleTopAssetsJob extends WorkingJob
 {
 	private static final long serialVersionUID = -8137849520886654258L;
 	
-	public SimpleTopAssetsJob(JavaRDD<StormEvent> rdd, Date minDate, Date maxDate)
+	public SimpleTopAssetsJob(JavaRDD<Event> rdd, Date minDate, Date maxDate)
 	{
 		super(rdd, minDate, maxDate);
 	}
@@ -40,6 +41,7 @@ public class SimpleTopAssetsJob extends WorkingJob
 		Broadcast<Date> maxDateBroad = ctx.broadcast(this.maxDate);
 		Broadcast<Date> minDateBroad = ctx.broadcast(this.minDate);
 		
+		
 		JavaRDD<String> models_aid = mapped_rdd_aid.mapPartitions(new FlatMapFunction<Iterator<Tuple2<Integer, Integer>>, String>()
 				{
 					private static final long serialVersionUID = 716052106872985771L;
@@ -51,7 +53,7 @@ public class SimpleTopAssetsJob extends WorkingJob
 						while (tuples.hasNext())
 						{
 							Tuple2<Integer, Integer> t = tuples.next();
-							TestModel tm = new TestModel();
+							SimpleModel tm = new SimpleModel();
 							tm.eventName = "TopAsset";
 							tm.genericValues.put("data.assetId", t._1());
 							tm.genericValues.put("data.counter", t._2());
