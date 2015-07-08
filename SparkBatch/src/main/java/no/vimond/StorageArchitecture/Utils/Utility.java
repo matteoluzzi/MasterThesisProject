@@ -69,13 +69,13 @@ public class Utility
 			}
 		} catch (UnknownHostException e)
 		{
-			LOG.error("UnknownHostException while looking up the ip address");
+	//		LOG.error("UnknownHostException while looking up the ip address");
 		} catch (IOException e)
 		{
-			LOG.error("IOException while looking up the ip address");
+	//		LOG.error("IOException while looking up the ip address");
 		} catch (GeoIp2Exception e)
 		{
-			LOG.error("GeoIp2Exception while looking up the ip address");
+	//		LOG.error("GeoIp2Exception while looking up the ip address");
 		}
 		return null;
 	}

@@ -19,38 +19,42 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
-public class SimpleTopAssetsJob extends WorkingJob
+public class SimpleTopAppJob extends WorkingJob
 {
-	private static final long serialVersionUID = -8137849520886654258L;
-	
-	public SimpleTopAssetsJob(JavaRDD<Event> rdd)
+
+	private static final long serialVersionUID = -2175194420496804736L;
+
+	public SimpleTopAppJob(JavaRDD<Event> inputDataset)
 	{
-		super(rdd);
+		super(inputDataset);
 	}
 
 	@Override
 	public void run(JavaSparkContext ctx)
 	{
-		JavaPairRDD<Integer, String> pair_rdd_aid_ip = this.inputDataset.mapToPair(e -> new Tuple2<Integer, String>(e.getAssetId(), e.getIpAddress()));
+		JavaPairRDD<String, String> pair_rdd = this.inputDataset.mapToPair(e -> new Tuple2<String, String>(e.getAppName(), e.getIpAddress()));
 		
-		pair_rdd_aid_ip = pair_rdd_aid_ip.distinct();
-		JavaPairRDD<Integer, Integer> mapped_rdd_aid = pair_rdd_aid_ip.mapToPair(t -> new Tuple2<Integer, Integer>(t._1(), 1));
-		mapped_rdd_aid = mapped_rdd_aid.reduceByKey((x, y) -> x + y);
+		pair_rdd = pair_rdd.distinct();
 		
-		JavaRDD<String> models_aid = mapped_rdd_aid.mapPartitions(new FlatMapFunction<Iterator<Tuple2<Integer, Integer>>, String>()
+		JavaPairRDD<String, Integer> mapped_rdd = pair_rdd.mapToPair(t -> new Tuple2<String, Integer>(t._1(), 1));
+		
+		mapped_rdd = mapped_rdd.reduceByKey((x, y) -> x +y);
+		
+		
+		JavaRDD<String> models = mapped_rdd.mapPartitions(new FlatMapFunction<Iterator<Tuple2<String, Integer>>, String>()
 				{
 					private static final long serialVersionUID = 716052106872985771L;
 
-					public Iterable<String> call(Iterator<Tuple2<Integer, Integer>> tuples) throws Exception
+					public Iterable<String> call(Iterator<Tuple2<String, Integer>> tuples) throws Exception
 					{
 						ObjectMapper mapper = ObjectMapperConfiguration.configure();
 						List<String> ranking = new ArrayList<String>();
 						while (tuples.hasNext())
 						{
-							Tuple2<Integer, Integer> t = tuples.next();
+							Tuple2<String, Integer> t = tuples.next();
 							SimpleModel tm = new SimpleModel();
-							tm.eventName = "TopAsset";
-							tm.genericValues.put("data.assetId", t._1());
+							tm.eventName = "TopApp";
+							tm.genericValues.put("data.appName", t._1());
 							tm.genericValues.put("data.counter", t._2());
 							tm.setRandomGuid();
 							tm.genericValues.put("timestamp", new Date());
@@ -60,7 +64,7 @@ public class SimpleTopAssetsJob extends WorkingJob
 					}
 				});
 		
-		JavaEsSpark.saveJsonToEs(models_aid, "spark/TopAssetId");
 		
+		JavaEsSpark.saveJsonToEs(models, "spark/TopAppName");
 	}
 }

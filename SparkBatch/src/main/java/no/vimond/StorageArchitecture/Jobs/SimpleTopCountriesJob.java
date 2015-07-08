@@ -12,7 +12,6 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.broadcast.Broadcast;
 import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
 
 import scala.Tuple2;
@@ -25,9 +24,9 @@ public class SimpleTopCountriesJob extends WorkingJob
 
 	private static final long serialVersionUID = -4447507237939137336L;
 	
-	public SimpleTopCountriesJob(JavaRDD<Event> rdd, Date minDate, Date maxDate)
+	public SimpleTopCountriesJob(JavaRDD<Event> rdd)
 	{
-		super(rdd, minDate, maxDate);
+		super(rdd);
 	}
 
 	@Override
@@ -40,9 +39,6 @@ public class SimpleTopCountriesJob extends WorkingJob
 		JavaPairRDD<String, Integer> mapped_rdd_cn = pair_rdd_cn_ip.mapToPair(t -> new Tuple2<String, Integer>(t._1(), 1));
 
 		mapped_rdd_cn = mapped_rdd_cn.reduceByKey((x, y) -> x + y);
-
-		Broadcast<Date> maxDateBroad = ctx.broadcast(this.maxDate);
-		Broadcast<Date> minDateBroad = ctx.broadcast(this.minDate);
 
 		JavaRDD<String> models_cn = mapped_rdd_cn.mapPartitions(new FlatMapFunction<Iterator<Tuple2<String, Integer>>, String>()
 		{
@@ -61,8 +57,6 @@ public class SimpleTopCountriesJob extends WorkingJob
 					tm.genericValues.put("data.counter", t._2());
 					tm.setRandomGuid();
 					tm.genericValues.put("timestamp", new Date());
-					tm.genericValues.put("maxDate", maxDateBroad.getValue());
-					tm.genericValues.put("minDate", minDateBroad.getValue());
 					ranking.add(mapper.writeValueAsString(tm));
 				}
 				return ranking;

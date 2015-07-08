@@ -52,11 +52,7 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 		// broadcast dblite value so it can be used by every executor
 		Broadcast<Boolean> dbLite = ctx.broadcast(dbLiteVersion);
 		
-		
 		JavaRDD<String> string_data = ctx.textFile(props.getProperty(Constants.INPUT_PATH_KEY));
-		
-		Accumulator<Date> maxDate = ctx.accumulator(new Date(0), new MaxDateAccumulatorParam()); 
-		Accumulator<Date> minDate = ctx.accumulator(new Date(0), new MinDateAccumulatorParam()); 
 		
 		this.inputDataset = string_data.mapPartitions(new FlatMapFunction<Iterator<String>, T>()
 		{
@@ -71,22 +67,13 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 				{
 					String next = str_events.next();
 					T event = mapper.readValue(next, clazz);
-					maxDate.add(event.getTimestamp().toDate());
-					minDate.add(event.getTimestamp().toDate());
 					events.add(event);
 				}
 				return events;
 			}
 		});
 		
-		this.minDate = minDate.value();
-		this.maxDate = maxDate.value();
-		
-		inputDataset.collect();
-		
-		System.out.println(minDate.value());
-		
-	//	this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
+		this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
 	}
 	
 	public JavaRDD<? extends VimondEventAny> getLoadedRDD()

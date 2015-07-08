@@ -15,15 +15,11 @@ public abstract class WorkingJob implements Job
 {
 	
 	protected JavaRDD<Event> inputDataset;
-	protected Date minDate;
-	protected Date maxDate;
 	
 	private static final long serialVersionUID = -1966157014649117505L;
 	
-	public WorkingJob(JavaRDD<Event> inputDataset, Date minDate, Date maxDate)
+	public WorkingJob(JavaRDD<Event> inputDataset)
 	{
-		this.minDate = minDate;
-		this.maxDate = maxDate;
 		this.inputDataset = inputDataset;
 	}
 }

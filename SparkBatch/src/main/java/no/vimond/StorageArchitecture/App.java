@@ -60,12 +60,6 @@ public class App
 		//cache rdd!
 		inputDataset.cache();
 		
-		Date minDate = loadDataJob.getBeginDate();
-		Date maxDate = loadDataJob.getEndingDate();
-		
-		inputDataset.collect();
-		System.out.println(minDate);
-		
 		ExecutorService executorPool = Executors.newFixedThreadPool(poolSize);
 		
 		Future job_one = executorPool.submit(new Runnable()
@@ -73,13 +67,46 @@ public class App
 			@Override
 			public void run()
 			{
-				Job job_one = JobsFactory.getFactory().createJob(JobName.SIMPLE_TOP_COUNTRIES, ctx, props, inputDataset, minDate, maxDate);
+				Job job_one = JobsFactory.getFactory().createJob(JobName.SIMPLE_TOP_COUNTRIES, ctx, props, inputDataset);
 				job_one.run(ctx);
 			}
 		});
-
 		
-	//jobs.add(job_one);
+		Future job_two = executorPool.submit(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Job job_one = JobsFactory.getFactory().createJob(JobName.SIMPLE_CONTENT_LOCATION, ctx, props, inputDataset);
+				job_one.run(ctx);
+			}
+		});
+/*		
+		Future job_three = executorPool.submit(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Job job_one = JobsFactory.getFactory().createJob(JobName.SIMPLE_TOP_ASSETS, ctx, props, inputDataset);
+				job_one.run(ctx);
+			}
+		});
+		
+		Future job_four = executorPool.submit(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Job job_one = JobsFactory.getFactory().createJob(JobName.SIMPLE_TOP_APP, ctx, props, inputDataset);
+				job_one.run(ctx);
+			}
+		});
+*/
+		
+	    jobs.add(job_one);
+	    jobs.add(job_two);
+//	    jobs.add(job_three);
+//	    jobs.add(job_four);
 
 		try
 		{

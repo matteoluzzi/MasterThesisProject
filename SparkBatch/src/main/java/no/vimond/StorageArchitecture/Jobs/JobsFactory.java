@@ -21,16 +21,18 @@ public class JobsFactory
 		return instance;
 	}
 
-	public Job createJob(JobName job_name, JavaSparkContext ctx, Properties props, JavaRDD<Event> rdd, Date minDate, Date maxDate)
+	public Job createJob(JobName job_name, JavaSparkContext ctx, Properties props, JavaRDD<Event> rdd)
 	{
 		switch (job_name)
 		{
 		case SIMPLE_TOP_COUNTRIES:
-			return new SimpleTopCountriesJob(rdd, minDate, maxDate);
+			return new SimpleTopCountriesJob(rdd);
 		case SIMPLE_TOP_ASSETS:
-			return new SimpleTopAssetsJob(rdd, minDate, maxDate);
+			return new SimpleTopAssetsJob(rdd);
 		case SIMPLE_CONTENT_LOCATION:
-			return new ContentLocalizationJob(rdd, minDate, maxDate);
+			return new ContentLocalizationJob(rdd);
+		case SIMPLE_TOP_APP:
+			return new SimpleTopAppJob(rdd);
 		default:
 			return new LoadDataJob<Event>(props, Event.class);
 		}
