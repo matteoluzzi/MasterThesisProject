@@ -1,7 +1,6 @@
 package no.vimond.StorageArchitecture;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +32,8 @@ public class App
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 		final int poolSize = Integer.parseInt(props.getProperty(Constants.POOL_SIZE_KEY));
 
-		final String master = "local";
+		final String master = "spark://Matteos-MBP.vimond.local:7077";
+		
 
 		// Spark settings
 
@@ -41,6 +41,11 @@ public class App
 		cfg.setAppName(appName);
 		cfg.setMaster(master);
 		cfg.set(Constants.ES_INDEX_AUTO_CREATE_KEY, "true");
+		cfg.set("es.nodes","localhost");
+		cfg.set("es.port", "9200");
+		cfg.set("es.input.json", "true");
+		cfg.set("spark.executor.memory", "2g");
+		
 
 		// Complex classes must be (de)serialized with Kyro otherwise it won't
 		// work
@@ -50,18 +55,20 @@ public class App
 		List<Future> jobs = new ArrayList<Future>();
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
-		
+
 		LoadDataJob<Event> loadDataJob = new LoadDataJob<Event>(props, Event.class);
-		
+
 		loadDataJob.run(ctx);
-		
+
 		JavaRDD<Event> inputDataset = (JavaRDD<Event>) loadDataJob.getLoadedRDD();
-		
-		//cache rdd!
+
+		// cache rdd!
 		inputDataset.cache();
 		
+		inputDataset.collect();
+
 		ExecutorService executorPool = Executors.newFixedThreadPool(poolSize);
-		
+
 		Future job_one = executorPool.submit(new Runnable()
 		{
 			@Override
@@ -71,7 +78,7 @@ public class App
 				job_one.run(ctx);
 			}
 		});
-		
+
 		Future job_two = executorPool.submit(new Runnable()
 		{
 			@Override
@@ -81,7 +88,7 @@ public class App
 				job_one.run(ctx);
 			}
 		});
-/*		
+
 		Future job_three = executorPool.submit(new Runnable()
 		{
 			@Override
@@ -91,7 +98,7 @@ public class App
 				job_one.run(ctx);
 			}
 		});
-		
+
 		Future job_four = executorPool.submit(new Runnable()
 		{
 			@Override
@@ -101,24 +108,28 @@ public class App
 				job_one.run(ctx);
 			}
 		});
-*/
-		
-	    jobs.add(job_one);
-	    jobs.add(job_two);
-//	    jobs.add(job_three);
-//	    jobs.add(job_four);
 
-		try
-		{
-			for (Future f : jobs)
+		jobs.add(job_one);
+		jobs.add(job_two);
+		jobs.add(job_three);
+		jobs.add(job_four);
+		
+		
+		for(Future f : jobs)
+			try
+			{
 				f.get();
-		} catch (InterruptedException | ExecutionException e)
-		{
-			e.printStackTrace();
-		} finally
-		{
-			executorPool.shutdown();
-			ctx.stop();
-		}
+			} catch (InterruptedException | ExecutionException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally
+			{
+				executorPool.shutdown();
+				ctx.close();
+			}
+
 	}
+	
 }

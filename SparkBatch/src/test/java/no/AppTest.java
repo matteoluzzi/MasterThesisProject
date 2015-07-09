@@ -59,18 +59,4 @@ public class AppTest
     	Event event = mapper.readValue(message, Event.class);
     	assertNotNull(event);
     }
-    
-    public void testGeoIP()
-    {
-    	DatabaseReader dbReader = GeoIP.getDbReader();
-    	try
-		{
-			CityResponse response = dbReader.city(InetAddress.getByName("80.212.25.5"));
-			response.getCity().getName();
-		} catch (IOException | GeoIp2Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
 }

@@ -8,6 +8,7 @@ target/
 messages/
 simple_job/
 
+.gitkeep
 *.class
 
 *.log

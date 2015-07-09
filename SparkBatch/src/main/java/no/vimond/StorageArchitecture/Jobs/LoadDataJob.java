@@ -52,7 +52,7 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 		// broadcast dblite value so it can be used by every executor
 		Broadcast<Boolean> dbLite = ctx.broadcast(dbLiteVersion);
 		
-		JavaRDD<String> string_data = ctx.textFile(props.getProperty(Constants.INPUT_PATH_KEY));
+		JavaRDD<String> string_data = ctx.textFile(props.getProperty(Constants.INPUT_PATH_KEY), 10);
 		
 		this.inputDataset = string_data.mapPartitions(new FlatMapFunction<Iterator<String>, T>()
 		{
