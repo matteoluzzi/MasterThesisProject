@@ -50,7 +50,6 @@ public class FileSystemMessageProcessor implements MessageProcessor<VimondEventA
 			e.printStackTrace();
 			return false;
 		}
-		
 	}
 	
 	public String toString()

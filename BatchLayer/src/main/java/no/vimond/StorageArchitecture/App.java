@@ -11,6 +11,7 @@ public class App
 	{
 		KafkaConsumerHandler handler = new KafkaConsumerHandler();
 		
+		
 		handler.registerConsumerGroup();
 		handler.startListening();
 	

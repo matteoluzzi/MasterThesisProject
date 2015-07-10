@@ -6,11 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
-import no.vimond.StorageArchitecture.Processor.FileSystemMessageProcessor;
 import no.vimond.StorageArchitecture.Utils.Constants;
 
 import org.slf4j.Logger;
@@ -26,10 +25,10 @@ public class FileSystemWriter extends TimerTask
 
 	private static final Logger LOG = LoggerFactory.getLogger(FileSystemWriter.class);
 
-	EventsKafkaConsumer consumer;
-	long currentTime;
-	ObjectMapper mapper;
-	StringBuffer stringBuffer;
+	private EventsKafkaConsumer consumer;
+	private long currentTime;
+	private ObjectMapper mapper;
+	private StringBuffer stringBuffer;
 
 	public FileSystemWriter(EventsKafkaConsumer consumer)
 	{
@@ -41,12 +40,11 @@ public class FileSystemWriter extends TimerTask
 	@Override
 	public void run()
 	{
-		Queue<VimondEventAny> messages = new ConcurrentLinkedQueue<VimondEventAny>(consumer.getMessages());
-		consumer.getMessages().clear();
 		try
 		{
 			LOG.info("Going to flush the buffer into file now!");
-
+			this.consumer.copyMessagesOnFlushArray();
+			List<VimondEventAny> messages = this.consumer.getMessages();
 			this.currentTime = System.currentTimeMillis();
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Constants.MESSAGE_PATH + Constants.MESSAGE_FILE_NAME + currentTime + ".txt"), "UTF-8"));
 
@@ -74,9 +72,8 @@ public class FileSystemWriter extends TimerTask
 				bw.flush();
 				bw.close();
 			}
+			this.consumer.getMessages().clear();
 			
-			consumer.setTaskStatus(false);
-
 		} catch (UnsupportedEncodingException e1)
 		{
 			e1.printStackTrace();

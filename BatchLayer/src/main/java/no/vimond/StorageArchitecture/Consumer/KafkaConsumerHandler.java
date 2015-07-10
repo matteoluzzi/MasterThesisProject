@@ -56,7 +56,7 @@ public class KafkaConsumerHandler {
 	private KafkaConsumerConfig initializeKafkaConsumerConfig()
 	{
 		KafkaConsumerConfig kafkaConsumerConfig = new KafkaConsumerConfig();
-		kafkaConsumerConfig.consumerThreads = 10;
+		kafkaConsumerConfig.consumerThreads = 20;
 		kafkaConsumerConfig.groupid = Constants.DEFAULT_CONSUMER_GROUP_B;
 		kafkaConsumerConfig.topic = Constants.DEFAULT_TOPIC;
 		
@@ -67,6 +67,6 @@ public class KafkaConsumerHandler {
 	{
 		this.kafkaConfig = new KafkaConfig();
 		this.kafkaConfig.hosts = (String) this.properties.getOrDefault("zookeeper.connect", Constants.DEFAULT_ZK_LOCATION);
-		this.kafkaConfig.properties.put("autocommit.enable", "true");
+		this.kafkaConfig.properties.put("autocommit.enable", "false");
 	}
 }
