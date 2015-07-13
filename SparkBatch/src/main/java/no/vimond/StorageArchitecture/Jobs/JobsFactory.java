@@ -1,12 +1,10 @@
 package no.vimond.StorageArchitecture.Jobs;
 
-import java.util.Date;
 import java.util.Properties;
 
 import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 
 public class JobsFactory
 {
@@ -21,7 +19,7 @@ public class JobsFactory
 		return instance;
 	}
 
-	public Job createJob(JobName job_name, JavaSparkContext ctx, Properties props, JavaRDD<Event> rdd)
+	public Job createJob(JobName job_name, Properties props, JavaRDD<Event> rdd)
 	{
 		switch (job_name)
 		{
@@ -33,9 +31,10 @@ public class JobsFactory
 			return new ContentLocalizationJob(rdd);
 		case SIMPLE_TOP_APP:
 			return new SimpleTopAppJob(rdd);
-		default:
+		case SIMPLE_DATA_LOADER:
 			return new LoadDataJob<Event>(props, Event.class);
 		}
+		return null;
 	}
 
 }

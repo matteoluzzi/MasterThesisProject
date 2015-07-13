@@ -22,8 +22,8 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerService;
  */
 public class EventsKafkaConsumer extends KafkaConsumerService<VimondEventAny>
 {
-	private LinkedBlockingQueue<VimondEventAny> buffer;
-	private List<VimondEventAny> flush_buffer;
+	private LinkedBlockingQueue<Object> buffer;
+	private List<Object> flush_buffer;
 	private Timer flushTimer;
 	
 	public EventsKafkaConsumer(MetricRegistry metricRegistry,
@@ -33,12 +33,12 @@ public class EventsKafkaConsumer extends KafkaConsumerService<VimondEventAny>
 		super(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor);
 		//bind message processor to this
 		fsProcessor.setEventsKafkaConsumer(this);
-		this.buffer = new LinkedBlockingQueue<VimondEventAny>();
-		this.flush_buffer = new ArrayList<VimondEventAny>();
+		this.buffer = new LinkedBlockingQueue<Object>();
+		this.flush_buffer = new ArrayList<Object>();
 		this.setUpTimerTask(Constants.DEFAULT_FLUSH_TIME);
 	}
 
-	public void putMessageIntoBuffer(VimondEventAny message) throws InterruptedException
+	public void putMessageIntoBuffer(Object message) throws InterruptedException
 	{
 		this.buffer.put(message);
 		if(this.buffer.size() >= Constants.MAX_MESSAGES_INTO_FILE)
@@ -68,7 +68,7 @@ public class EventsKafkaConsumer extends KafkaConsumerService<VimondEventAny>
 		this.flushTimer.cancel();
 	}
 	
-	public List<VimondEventAny> getMessages()
+	public List<Object> getMessages()
 	{
 		return flush_buffer;
 	}

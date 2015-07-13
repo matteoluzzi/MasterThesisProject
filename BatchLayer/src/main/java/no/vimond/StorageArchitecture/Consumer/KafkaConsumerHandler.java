@@ -3,6 +3,7 @@ package no.vimond.StorageArchitecture.Consumer;
 import java.util.HashSet;
 import java.util.Set;
 
+import no.vimond.StorageArchitecture.App;
 import no.vimond.StorageArchitecture.Processor.FileSystemMessageProcessor;
 import no.vimond.StorageArchitecture.Utils.Constants;
 import no.vimond.StorageArchitecture.Utils.KafkaProperties;
@@ -10,11 +11,11 @@ import no.vimond.StorageArchitecture.Utils.KafkaProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.backtype.hadoop.pail.Pail;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
-
 
 public class KafkaConsumerHandler {
 	
@@ -43,6 +44,7 @@ public class KafkaConsumerHandler {
 	
 	public void startListening()
 	{
+		
 		for(EventsKafkaConsumer group : this.consumerGroups)
 			try
 			{

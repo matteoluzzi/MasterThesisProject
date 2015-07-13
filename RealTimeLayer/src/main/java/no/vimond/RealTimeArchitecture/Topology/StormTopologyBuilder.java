@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import no.vimond.RealTimeArchitecture.Bolt.ElasticSearchBolt;
 import no.vimond.RealTimeArchitecture.Bolt.GeoLookUpBolt;
 import no.vimond.RealTimeArchitecture.Bolt.SimpleBolt;
 import no.vimond.RealTimeArchitecture.Spout.SpoutCreator;
@@ -45,7 +44,7 @@ public class StormTopologyBuilder
 				"kafka-spout");
 		
 		builder.setBolt("geo-bolt", new GeoLookUpBolt(), 2).shuffleGrouping("simple-bolt", Constants.IP_STREAM);
-		
+	/*	
 		builder.setBolt("el-bolt", new ElasticSearchBolt("storm/player-events"), 2)
 		.shuffleGrouping("simple-bolt")
 		.shuffleGrouping("geo-bolt", Constants.IP_STREAM)
@@ -56,7 +55,7 @@ public class StormTopologyBuilder
 		.shuffleGrouping("simple-bolt")
 		.addConfiguration("es.storm.bolt.write.ack", true)
 		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 2 minutes
-		
+		*/
 		LOG.info("Creating topology components DONE");
 
 		Config topConfig = getTopologyConfiguration();
@@ -64,7 +63,7 @@ public class StormTopologyBuilder
 		topConfig.putAll(args);
 
 		LOG.info("Launching topology");
-	/*		
+		/*	
 		try
 		{
 			StormSubmitter.submitTopology("RealTimeTopology", topConfig, builder.createTopology());
@@ -77,7 +76,7 @@ public class StormTopologyBuilder
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	*/
+*/
 		LocalCluster cluster = new LocalCluster("localhost", new Long(2181));
 		cluster.submitTopology("RealTimeTopology", topConfig,
 				builder.createTopology());
