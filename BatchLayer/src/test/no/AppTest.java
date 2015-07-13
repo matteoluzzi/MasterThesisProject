@@ -2,11 +2,14 @@ package no;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import no.vimond.StorageArchitecture.MyPailStructure;
+import no.vimond.StorageArchitecture.PailStructure.NewDataPailStructure;
 
 import org.joda.time.DateTime;
 
@@ -45,41 +48,17 @@ public class AppTest extends TestCase
 		assertTrue(true);
 	}
 
-	public void testDateFolder()
+
+
+	public void testDate()
 	{
-		DateTime date = new DateTime();
+		String timestamp = "2015-02-19T12:24:49.419Z";
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
-		String string_date = formatter.format(date.toDate());
-		assertEquals(string_date, "2015-07-12");
-	}
-
-	public void testPail() throws IOException
-	{
-		Pail<String> pail = Pail.create("/Users/matteoremoluzzi/testPailFolder", new MyPailStructure());
-		
-		
-
-		String records = "record1\nrecord2\nrecord3";
-
-		TypedRecordOutputStream os = pail.openWrite();
-
-		os.writeObject(records);
-		os.close();
-
-		Pail<String> newPail = new Pail<String>("/Users/matteoremoluzzi/testPailFolder");
-
-		newPail.consolidate();
-		
-		String records_ = "record1\nrecord2\nrecord3";
-
-		TypedRecordOutputStream os_ = pail.openWrite();
-
-		os_.writeObject(records_);
-		os_.close();
-		
-		
-
-	}
-
+			List<String> path = new ArrayList<String>();
+			DateTime date = new DateTime();
+			path.add(formatter.format(date.toDate()));
+			path.add(String.valueOf(date.getHourOfDay()));
+			path.add(String.valueOf(date.getMinuteOfHour() / 15));
+		}
 }

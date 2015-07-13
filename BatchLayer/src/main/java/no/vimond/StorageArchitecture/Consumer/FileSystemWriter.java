@@ -6,6 +6,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.TimerTask;
 
+import no.vimond.StorageArchitecture.Utils.Constants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,26 +41,23 @@ public class FileSystemWriter extends TimerTask
 			this.consumer.copyMessagesOnFlushArray();
 			List<Object> messages = this.consumer.getMessages();
 
-			Pail<String> pail = new Pail("/Users/matteoremoluzzi/myPailFolder");
+			Pail<String> pail = new Pail(Constants.NEW_DATA_PATH);
 
 		//	pail.consolidate();
 
 			// BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new
 			// FileOutputStream(Constants.MESSAGE_PATH +
 			// Constants.MESSAGE_FILE_NAME + currentTime + ".txt"), "UTF-8"));
-
-			for (Object message : messages)
-			{
-				this.stringBuffer.append(message + "\n");
-			}
-
+			TypedRecordOutputStream os = pail.openWrite();
+			
+			os.writeObjects(messages.toArray());
+		
+			os.close();
 			// Write only if there are messages
 			if (this.stringBuffer.length() > 0)
 			{
-				TypedRecordOutputStream os = pail.openWrite("test", false);
-				os.writeObjects(this.stringBuffer.toString());
-
-				os.close();
+				
+				
 			}
 			this.consumer.getMessages().clear();
 

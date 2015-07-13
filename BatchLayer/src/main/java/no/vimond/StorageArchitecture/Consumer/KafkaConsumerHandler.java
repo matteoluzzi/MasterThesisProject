@@ -5,9 +5,11 @@ import java.util.Set;
 
 import no.vimond.StorageArchitecture.App;
 import no.vimond.StorageArchitecture.Processor.FileSystemMessageProcessor;
+import no.vimond.StorageArchitecture.Processor.HDFSMessageProcessor;
 import no.vimond.StorageArchitecture.Utils.Constants;
 import no.vimond.StorageArchitecture.Utils.KafkaProperties;
 
+import org.apache.hadoop.hdfs.tools.HDFSConcat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,7 @@ public class KafkaConsumerHandler {
 	{
 		KafkaConsumerConfig kafkaConsumerConfig = this.initializeKafkaConsumerConfig();
 		
-		EventsKafkaConsumer group = new EventsKafkaConsumer(new MetricRegistry(), new HealthCheckRegistry(), this.kafkaConfig, kafkaConsumerConfig, new FileSystemMessageProcessor());
+		EventsKafkaConsumer group = new EventsKafkaConsumer(new MetricRegistry(), new HealthCheckRegistry(), this.kafkaConfig, kafkaConsumerConfig, new HDFSMessageProcessor());
 		this.consumerGroups.add(group);
 		LOG.info("KafkaConsumerHandler: added new group");	
 	}

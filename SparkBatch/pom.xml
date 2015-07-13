@@ -10,7 +10,6 @@
 	</parent>
 
 	<artifactId>SparkBatch</artifactId>
-
 	<name>SparkBatch</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
@@ -24,7 +23,7 @@
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-core_2.10</artifactId>
 			<version>1.4.0</version>
-			<scope>provided</scope>
+
 		</dependency>
 		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
@@ -90,6 +89,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
 	</dependencies>
 
 
@@ -117,6 +117,13 @@
 					</execution>
 				</executions>
 				<configuration>
+					<transformers>
+						<!-- add Main-Class to manifest file -->
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>no.vimond.StorageArchitecture.App</mainClass>
+						</transformer>
+					</transformers>
 					<filters>
 						<filter>
 							<artifact>*:*</artifact>

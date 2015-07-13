@@ -18,9 +18,11 @@ public class Constants
 	public static final String LATITUDE = "geo.lat";
 	public static final String LONGITUDE = "geo.lon";
 	
-	public static final long DEFAULT_FLUSH_TIME = 2;
+	public static final long DEFAULT_FLUSH_TIME = 1;
 	public static final long MAX_MESSAGES_INTO_FILE = 10000;
 	
 	public static final String MESSAGE_PATH = "messages/";
 	public static final String MESSAGE_FILE_NAME = "messages_";
+	
+	public static final String NEW_DATA_PATH = "/Users/matteoremoluzzi/dataset/newData";
 }

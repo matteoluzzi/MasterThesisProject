@@ -62,26 +62,6 @@ public class SimpleJobsStarter implements Serializable
 
 		boolean ready = false;
 
-		try
-		{
-			while (!ready)
-			{
-				Pail<String> pail = Pail.create(this.currentFolder, false);
-
-				if (pail.exists("SUCCESS"))
-				{
-					ready = true;
-				} else
-					Thread.sleep(30000);
-			}
-
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		}
 
 		// start loadData job before starting the other
 

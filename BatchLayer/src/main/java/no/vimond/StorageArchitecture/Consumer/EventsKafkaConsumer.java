@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import no.vimond.StorageArchitecture.Processor.FileSystemMessageProcessor;
+import no.vimond.StorageArchitecture.Processor.HDFSMessageProcessor;
 import no.vimond.StorageArchitecture.Utils.Constants;
 
 import com.codahale.metrics.MetricRegistry;
@@ -14,13 +15,14 @@ import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerService;
+import com.vimond.common.kafka07.consumer.MessageProcessor;
 
 /**
  * put and drainTo methods are thread-safe. Using of internal locking mechanism
  * @author matteoremoluzzi
  *
  */
-public class EventsKafkaConsumer extends KafkaConsumerService<VimondEventAny>
+public class EventsKafkaConsumer extends KafkaConsumerService<String>
 {
 	private LinkedBlockingQueue<Object> buffer;
 	private List<Object> flush_buffer;
@@ -28,11 +30,11 @@ public class EventsKafkaConsumer extends KafkaConsumerService<VimondEventAny>
 	
 	public EventsKafkaConsumer(MetricRegistry metricRegistry,
 			HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig,
-			KafkaConsumerConfig consumerConfig, FileSystemMessageProcessor fsProcessor)
+			KafkaConsumerConfig consumerConfig, MessageProcessor fsProcessor)
 	{
 		super(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor);
 		//bind message processor to this
-		fsProcessor.setEventsKafkaConsumer(this);
+		((HDFSMessageProcessor) fsProcessor).setEventsKafkaConsumer(this);
 		this.buffer = new LinkedBlockingQueue<Object>();
 		this.flush_buffer = new ArrayList<Object>();
 		this.setUpTimerTask(Constants.DEFAULT_FLUSH_TIME);

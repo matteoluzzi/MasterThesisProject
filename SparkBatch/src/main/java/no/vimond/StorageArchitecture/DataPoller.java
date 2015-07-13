@@ -1,39 +1,59 @@
 package no.vimond.StorageArchitecture;
 
 import java.io.IOException;
-import java.util.TimerTask;
+
+import no.vimond.StorageArchitecture.PailStructure.NewDataPailStructure;
+import no.vimond.StorageArchitecture.PailStructure.TimeFramePailStructure;
+import no.vimond.StorageArchitecture.Utils.Constants;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import com.backtype.hadoop.pail.Pail;
+import com.backtype.hadoop.pail.PailSpec;
+import com.backtype.hadoop.pail.PailStructure;
 
-public class DataPoller extends TimerTask
+public class DataPoller
 {
-	//the folder where it should read data, if available
-	private String folderPath;
-	
-	public DataPoller(String ...path )
-	{
-		this.folderPath = String.join("/", path);
-	}
 
-	@Override
-	public void run()
+	private Pail<String> masterDataPail;
+	private FileSystem fs;
+
+	public DataPoller(String path)
 	{
 		try
 		{
-			Pail<String> pail = Pail.create(this.folderPath, false);
-			if(pail.exists("SUCCESS"))
+			fs = FileSystem.get(new Configuration());
+			masterDataPail = Pail.create(path, new TimeFramePailStructure());
+
+		} catch (IllegalArgumentException e)
+		{
+			try
 			{
-				
+				masterDataPail = new Pail(path);
+			} catch (IOException e1)
+			{
 			}
-			
-			
-			
 		} catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
 	}
 
+	public String ingestNewData()
+	{
+		// set up a temporary folder for moving the snapshot
+		Path tmpPath = new Path("/Users/matteoremoluzzi/dataset/tmp");
+		try
+		{
+			this.fs.delete(tmpPath, true);
+			this.fs.mkdirs(tmpPath);
+
+			masterDataPail.snapshot("/Users/matteoremoluzzi/dataset/tmp/snapshot");
+			return tmpPath.toString();
+		} catch (IOException e)
+		{
+			return null;
+		}
+	}
 }

@@ -18,4 +18,8 @@ public class Constants
 	public static final String ES_INDEX_AUTO_CREATE_KEY = "es.index.auto.create";
 	public static final String ES_INDEX_NAME_KEY = "es_index";
 	public static final String INPUT_PATH_KEY = "inputPath";
+
+	public static final String NEW_DATA_PATH = "/Users/matteoremoluzzi/dataset/newData";
+
+	public static final String MASTER_DATA_PATH = "/Users/matteoremoluzzi/dataset/masterData";
 }
