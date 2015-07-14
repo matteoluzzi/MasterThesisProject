@@ -19,10 +19,10 @@ public class Constants
 	public static final String LONGITUDE = "geo.lon";
 	
 	public static final long DEFAULT_FLUSH_TIME = 1;
-	public static final long MAX_MESSAGES_INTO_FILE = 10000;
+	public static final long MAX_MESSAGES_INTO_FILE = 50000;
 	
 	public static final String MESSAGE_PATH = "messages/";
 	public static final String MESSAGE_FILE_NAME = "messages_";
 	
-	public static final String NEW_DATA_PATH = "/Users/matteoremoluzzi/dataset/newData";
+	public static final String NEW_DATA_PATH = "hdfs://localhost:9000/dataset/master";
 }

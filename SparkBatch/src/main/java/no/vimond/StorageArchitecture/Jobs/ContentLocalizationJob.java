@@ -62,7 +62,7 @@ public class ContentLocalizationJob extends WorkingJob
 					
 					SimpleModel tm = new SimpleModel();
 					tm.eventName = "ContentLocation";
-					tm.genericValues.put("data.assetId", t._1());
+					tm.setGenericValue("data.assetId", t._1());
 					Iterable<Tuple2<String, Integer>> countriesList = t._2();
 					List<Map<String, Object>> ranking = new ArrayList<Map<String, Object>>();
 					
@@ -73,9 +73,9 @@ public class ContentLocalizationJob extends WorkingJob
 						element.put("count", country_tuple._2());
 						ranking.add(element);
 					}
-					tm.genericValues.put("data.ranking", ranking);
+					tm.setGenericValue("data.ranking", ranking);
 					tm.setRandomGuid();
-					tm.genericValues.put("timestamp", new Date());
+					tm.setGenericValue("timestamp", new Date());
 					
 					result.add(mapper.writeValueAsString(tm));
 				}

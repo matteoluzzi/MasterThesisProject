@@ -10,7 +10,9 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import no.vimond.StorageArchitecture.PailStructure.NewDataPailStructure;
+import no.vimond.StorageArchitecture.PailStructure.TimeFramePailStructure;
 
+import org.elasticsearch.search.query.TimeoutParseElement;
 import org.joda.time.DateTime;
 
 import com.backtype.hadoop.pail.Pail;
@@ -48,17 +50,28 @@ public class AppTest extends TestCase
 		assertTrue(true);
 	}
 
-
-
 	public void testDate()
 	{
 		String timestamp = "2015-02-19T12:24:49.419Z";
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
-			List<String> path = new ArrayList<String>();
-			DateTime date = new DateTime();
-			path.add(formatter.format(date.toDate()));
-			path.add(String.valueOf(date.getHourOfDay()));
-			path.add(String.valueOf(date.getMinuteOfHour() / 15));
-		}
+		List<String> path = new ArrayList<String>();
+		DateTime date = new DateTime();
+		path.add(formatter.format(date.toDate()));
+		path.add(String.valueOf(date.getHourOfDay()));
+		path.add(String.valueOf(date.getMinuteOfHour() / 15));
+	}
+
+	public void testHDFS() throws IOException
+	{
+		String path = "hdfs://localhost:9000/dataset";
+		
+		Pail pail = Pail.create(path);
+		TypedRecordOutputStream os = pail.openWrite();
+        os.writeObject(new byte[] {1, 2, 3});
+        os.writeObject(new byte[] {1, 2, 3, 4});
+        os.writeObject(new byte[] {1, 2, 3, 4, 5});
+        os.close();   
+		
+	}
 }
