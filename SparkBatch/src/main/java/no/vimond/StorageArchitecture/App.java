@@ -31,19 +31,15 @@ public class App
 
 		DateTime now = new DateTime();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-//
-//		path.add(formatter.format(now.toDate()));
-//		path.add(String.valueOf(now.getHourOfDay()));
-//		path.add(String.valueOf(15));
-
-		DataPoller dataInit = new DataPoller(String.join("/", path));
-
-		String dataPah = dataInit.ingestNewData();
+		//
+		path.add(formatter.format(now.toDate()));
+		path.add(String.valueOf(now.getHourOfDay() - 2));
+		path.add(String.valueOf(2));
 
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
-		// final String master = "spark://Matteos-MBP.vimond.local:7077";
-		final String master = "local";
+		//final String master = "spark://Matteos-MBP.vimond.local:7077";
+		 final String master = "local";
 
 		// Spark settings
 
@@ -68,11 +64,48 @@ public class App
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 
-		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
-		starter.startJobs();
+		while(true)
+		{
+			DataPoller dataInit = new DataPoller(String.join("/", path));
 
-		// updateFolderPath(path);
-		// Thread.sleep(5*60*1000);
+			String dataPath = dataInit.ingestNewData();
+			
+			props.addOrUpdateProperty("dataPath", dataPath);
+			
+			SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+			starter.startJobs();
 
+			path = updateFolderPath(path, minBatch);
+			Thread.sleep(minBatch * 60 * 1000);
+		}
+
+	}
+
+	public static List<String> updateFolderPath(List<String> path, int timeFrame)
+	{
+		if (path.size() != 6)
+			System.exit(0);
+
+		DateTime date = new DateTime(path.get(3));
+		int hourFrame = Integer.parseInt(path.get(4));
+		int minuteFrame = Integer.parseInt(path.get(5));
+		minuteFrame += 1;
+		// must switch the hour
+		if (minuteFrame % ((Integer) 60 / timeFrame) == 0)
+		{
+			minuteFrame = 0;
+			hourFrame += 1;
+			if (hourFrame % 24 == 0)// must switch the date
+			{
+				hourFrame = 0;
+				date.plusDays(1);
+			}
+		}
+
+		path.set(3, new SimpleDateFormat("yyyy-MM-dd").format(date.toDate()));
+		path.set(4, String.valueOf(hourFrame));
+		path.set(5, String.valueOf(minuteFrame));
+
+		return path;
 	}
 }

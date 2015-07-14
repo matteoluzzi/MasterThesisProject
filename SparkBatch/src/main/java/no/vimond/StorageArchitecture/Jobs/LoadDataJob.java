@@ -24,7 +24,7 @@ import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
 /**
- * Generic job for loading events from text files. It contains information about
+ * Generic job for loading events from an hdfs folder. It contains information about
  * the timeframe of the data
  * 
  * @author matteoremoluzzi
@@ -59,7 +59,7 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 		Broadcast<Boolean> dbLite = ctx.broadcast(dbLiteVersion);
 
 		
-		JavaPairRDD<BytesWritable,NullWritable> string_data = ctx.sequenceFile("hdfs://localhost:9000/dataset/tmp/snapshot/*.pailfile", BytesWritable.class, NullWritable.class, 3);
+		JavaPairRDD<BytesWritable,NullWritable> string_data = ctx.sequenceFile(this.props.getProperty("dataPath") + "/*.pailfile", BytesWritable.class, NullWritable.class, 3);
 		
 		this.inputDataset = string_data.mapPartitions(new FlatMapFunction<Iterator<Tuple2<BytesWritable,NullWritable>>, T>()
 		{
