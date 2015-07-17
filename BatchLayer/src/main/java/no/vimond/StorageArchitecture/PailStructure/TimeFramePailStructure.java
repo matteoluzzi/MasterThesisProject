@@ -1,6 +1,5 @@
 package no.vimond.StorageArchitecture.PailStructure;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,10 +8,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 
 import com.backtype.hadoop.pail.PailStructure;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
 public class TimeFramePailStructure implements PailStructure<String>
@@ -20,22 +16,30 @@ public class TimeFramePailStructure implements PailStructure<String>
 	private static final long serialVersionUID = 9195695651901130252L;
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 	private static ObjectMapper mapper = ObjectMapperConfiguration.configure();
-
-
+	private static int timeFrame;
+	
+	public TimeFramePailStructure()
+	{
+	}
+	
+	public TimeFramePailStructure(int timeFrame)
+	{
+		TimeFramePailStructure.timeFrame = timeFrame;
+	}
+	
 	public boolean isValidTarget(String... dirs)
 	{
-//		if(dirs.length != 4)
-//			return false;
-//		try
-//		{
-//			int hour = Integer.parseInt(dirs[1]);
-//			int quarter = Integer.parseInt(dirs[2]);
-//			return (formatter.parse(dirs[0]) != null && hour >= 0 && hour <= 24 && quarter >= 0 && quarter <= 4);
-//		} catch (ParseException e)
-//		{
-//			return false;
-//		}
-		return true;
+		if(dirs.length != 4)
+			return false;
+		try
+		{
+			int hour = Integer.parseInt(dirs[1]);
+			int quarter = Integer.parseInt(dirs[2]);
+			return (formatter.parse(dirs[0]) != null && hour >= 0 && hour <= 24 && quarter >= 0 && quarter <= (int) 60/ timeFrame);
+		} catch (ParseException e)
+		{
+			return false;
+		}
 	}
 
 	public String deserialize(byte[] serialized)
@@ -48,6 +52,9 @@ public class TimeFramePailStructure implements PailStructure<String>
 		return object.getBytes();
 	}
 
+	/**
+	 * TODO decomment the code later
+	 */
 	public List<String> getTarget(String object)
 	{
 	/*	VimondEventAny event;

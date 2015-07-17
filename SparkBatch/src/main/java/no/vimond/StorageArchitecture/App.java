@@ -38,8 +38,8 @@ public class App
 
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
-		//final String master = "spark://Matteos-MBP.vimond.local:7077";
-		 final String master = "local";
+		final String master = "spark://Matteos-MBP.vimond.local:7077";
+		//final String master = "local";
 
 		// Spark settings
 

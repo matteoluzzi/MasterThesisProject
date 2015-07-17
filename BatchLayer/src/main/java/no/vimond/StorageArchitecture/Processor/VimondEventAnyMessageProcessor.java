@@ -1,8 +1,6 @@
 package no.vimond.StorageArchitecture.Processor;
 
 import kafka.serializer.Decoder;
-import no.vimond.StorageArchitecture.Consumer.EventsKafkaConsumer;
-import no.vimond.StorageArchitecture.Utils.StormEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,23 +10,16 @@ import com.vimond.common.kafka07.consumer.JsonDecoder;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
-public class FileSystemMessageProcessor implements MessageProcessor<VimondEventAny>
+public class VimondEventAnyMessageProcessor extends BatchProcessor implements MessageProcessor<VimondEventAny>
 {
 	
-	private Logger LOG = LoggerFactory.getLogger(FileSystemMessageProcessor.class);
+	private Logger LOG = LoggerFactory.getLogger(VimondEventAnyMessageProcessor.class);
 
 	private JsonDecoder<VimondEventAny> jsonDecoder;
-	private EventsKafkaConsumer consumer;
 	
-	
-	public FileSystemMessageProcessor()
+	public VimondEventAnyMessageProcessor()
 	{
-		this.jsonDecoder = new JsonDecoder<VimondEventAny>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
-	}
-	
-	public void setEventsKafkaConsumer(EventsKafkaConsumer consumer)
-	{
-		this.consumer = consumer;
+		this.jsonDecoder = new JsonDecoder<VimondEventAny>(VimondEventAny.class, ObjectMapperConfiguration.configurePretty());
 	}
 	
 	public Decoder<VimondEventAny> getDecoderSingleton()

@@ -3,16 +3,12 @@ package no;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import no.vimond.StorageArchitecture.PailStructure.NewDataPailStructure;
-import no.vimond.StorageArchitecture.PailStructure.TimeFramePailStructure;
 
-import org.elasticsearch.search.query.TimeoutParseElement;
 import org.joda.time.DateTime;
 
 import com.backtype.hadoop.pail.Pail;
@@ -52,7 +48,6 @@ public class AppTest extends TestCase
 
 	public void testDate()
 	{
-		String timestamp = "2015-02-19T12:24:49.419Z";
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
 		List<String> path = new ArrayList<String>();
@@ -62,6 +57,7 @@ public class AppTest extends TestCase
 		path.add(String.valueOf(date.getMinuteOfHour() / 15));
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testHDFS() throws IOException
 	{
 		String path = "hdfs://localhost:9000/dataset";

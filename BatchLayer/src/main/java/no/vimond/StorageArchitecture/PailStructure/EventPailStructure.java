@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
 
 import com.backtype.hadoop.pail.PailStructure;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -18,8 +19,20 @@ import com.vimond.common.shared.ObjectMapperConfiguration;
 public class EventPailStructure implements PailStructure<VimondEventAny>
 {
 	private static final long serialVersionUID = 7869846567202993614L;
+	private static Logger LOG = org.slf4j.LoggerFactory.getLogger(EventPailStructure.class);
+	
 	private static ObjectMapper mapper = ObjectMapperConfiguration.configure();
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+	private int timeFrame;
+	
+	public EventPailStructure()
+	{
+	}
+	
+	public EventPailStructure(int timeFrame)
+	{
+		this.timeFrame = timeFrame;
+	}
 
 	public boolean isValidTarget(String... dirs)
 	{
@@ -34,16 +47,13 @@ public class EventPailStructure implements PailStructure<VimondEventAny>
 			return mapper.readValue(json, VimondEventAny.class);
 		} catch (JsonParseException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error while deserializing the event, going to skip it");
 		} catch (JsonMappingException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error while deserializing the event, going to skip it");
 		} catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error while deserializing the event, going to skip it");
 		}
 		return null;
 	}
@@ -55,28 +65,23 @@ public class EventPailStructure implements PailStructure<VimondEventAny>
 			return mapper.writeValueAsBytes(object);
 		} catch (JsonProcessingException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error while serializing the event, going to skip it");
 		}
 		return null;
 	}
 
 	public List<String> getTarget(VimondEventAny object)
 	{
-		// TODO Auto-generated method stub
 		DateTime date = new DateTime();
 		List<String> path = new ArrayList<String>();
 		path.add(formatter.format(date.toDate()));
 		path.add(String.valueOf(date.getHourOfDay()));
-		path.add(String.valueOf(date.getMinuteOfHour() / 5));
+		path.add(String.valueOf(date.getMinuteOfHour() / timeFrame));
 		return path;
 	}
 
-	public Class getType()
+	public Class<VimondEventAny> getType()
 	{
-		// TODO Auto-generated method stub
 		return VimondEventAny.class;
 	}
-	
-	
 }

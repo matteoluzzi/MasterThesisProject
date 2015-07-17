@@ -1,40 +1,71 @@
 package no.vimond.StorageArchitecture;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import no.vimond.StorageArchitecture.Consumer.KafkaConsumerHandler;
-import no.vimond.StorageArchitecture.PailStructure.EventPailStructure;
 import no.vimond.StorageArchitecture.PailStructure.TimeFramePailStructure;
+import no.vimond.StorageArchitecture.Utils.AppProperties;
 import no.vimond.StorageArchitecture.Utils.Constants;
 
 import com.backtype.hadoop.pail.Pail;
-import com.backtype.hadoop.pail.PailSpec;
-import com.backtype.hadoop.pail.SequenceFileFormat;
 
+/**
+ * Project resposible for ingesting the data lake located in
+ * hdfs://localhost:9000/dataset with events read from kafka WARNING! USE THE
+ * SAME CONFIGURATION FILE AS THE SPARK BATCH PROJECT : java -jar
+ * thisProject.jar -conf config.properties
+ * 
+ * @author matteoremoluzzi
+ *
+ */
 public class App
 {
 
 	public static void main(String[] args) throws IOException
 	{
 
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("BatchLayer");
+		parser.addArgument("-conf", "--configuration").help("Configuration time").type(String.class).required(true).dest("cfg");
+
+		AppProperties props = null;
+
 		try
 		{
-		/*	Map<String, Object> options = new HashMap<String, Object>();
-			options.put(SequenceFileFormat.CODEC_ARG, SequenceFileFormat.CODEC_ARG_GZIP);
-			options.put(SequenceFileFormat.TYPE_ARG, SequenceFileFormat.TYPE_ARG_BLOCK);
-			Pail.create(Constants.NEW_DATA_PATH, new PailSpec("SequenceFile", options, new TimeFramePailStructure()));
-			 */
-			Pail.create(Constants.NEW_DATA_PATH, new TimeFramePailStructure());
-		} catch (IllegalArgumentException e)
+
+			Namespace namespace = parser.parseArgs(args);
+			String cfg_file = namespace.getString("cfg");
+
+			props = new AppProperties(cfg_file);
+
+		} catch (ArgumentParserException e1)
 		{
+			parser.printHelp();
+		} catch (FileNotFoundException e)
+		{
+			System.err.println("Configuration file not found");
 		}
 
-		KafkaConsumerHandler handler = new KafkaConsumerHandler();
+		if (props != null)
+		{
+			int batchTimeFrame = (props.get(Constants.TIME_FRAME_KEY) != null) ? Integer.parseInt((String) props.get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;;
+			try
+			{
+				Pail.create(Constants.NEW_DATA_PATH, new TimeFramePailStructure(batchTimeFrame));
+			} catch (IllegalArgumentException e) // Exception is caught due to
+													// an existing pail in that
+													// location, just ignore it
+			{
+			}
 
-		handler.registerConsumerGroup();
-		handler.startListening();
+			KafkaConsumerHandler handler = new KafkaConsumerHandler(props);
 
+			handler.registerConsumerGroup();
+			handler.startListening();
+		}
 	}
 }
