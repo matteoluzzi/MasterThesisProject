@@ -1,0 +1,5 @@
+<datasets>
+	<dataset name="vimondEvents" frequency="${coord:minutes(5)}" initial-instance="2015-07-19T17:10Z" timezone="UTC">
+		<uri-template>hdfs://foo:8020/usr/matteoremoluzzi/dataset/${YEAR}-${MONTH}-${DAY}/${HOUR}/${timeframe}</uri-template>
+	</dataset>
+</datasets>
