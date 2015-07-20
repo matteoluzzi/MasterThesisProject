@@ -1,0 +1,55 @@
+<coordinator-app name="hello-coord" frequency="${coord:minutes(5)}" start="${startTime}" end="${endTime}" timezone="GMT+02:00"  
+  xmlns="uri:oozie:coordinator:0.3">
+  <controls>
+        <timeout>1</timeout>
+        <concurrency>1</concurrency>
+    </controls>
+	<datasets>
+  		<dataset name="vimondEvents" frequency="${coord:minutes(5)}" initial-instance="${startTime}" timezone="GMT+02:00">
+		<uri-template>${nameNode}/user/${coord:user()}/${datasetFolder}/master/${YEAR}-${MONTH}-${DAY}/${HOUR}/${MINUTE}</uri-template>
+		<done-flag></done-flag>
+		<!-- TODO: implement a done-flag mechanism -->
+	</dataset>
+  	</datasets>
+  	<input-events>
+  		<data-in name="input" dataset="vimondEvents">
+  			<instance>${coord:current(-1)}</instance>
+		</data-in>
+  	</input-events>
+  	<action>
+  		<workflow>
+	  		<app-path>${nameNode}/user/${coord:user()}/${batchAppFolder}</app-path>
+	  		<configuration>
+	  			<property>
+	  				<name>user.name</name>
+	        		<value>matteoremoluzzi</value>
+	        	</property>
+	        	<property>
+	                <name>jobTracker</name>
+	                <value>${jobTracker}</value>
+	            </property>
+	            <property>
+	                <name>nameNode</name>
+	                <value>${nameNode}</value>
+	            </property>
+	            <property>
+	                <name>queueName</name>
+	                <value>${queueName}</value>
+	            </property>
+	            <property>
+	                <name>inputDir</name>
+	                <value>${coord:dataIn("input")}</value>
+	            </property>
+	            <property>
+	                <name>jarName</name>
+	                <value>${jarName}</value>
+	            </property>
+	             <property>
+	                <name>batchAppFolder</name>
+	                <value>${batchAppFolder}</value>
+	            </property>
+	  		</configuration>
+  		</workflow>
+  	</action>
+
+</coordinator-app>

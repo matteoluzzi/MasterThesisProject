@@ -44,18 +44,16 @@ public class DataPoller
 	public String ingestNewData()
 	{
 		// set up a temporary folder for moving the snapshot
-		Path tmpPath = new Path("hdfs://localhost:9000/dataset/tmp");
+		Path tmpPath = new Path("hdfs://localhost:9000/user/matteoremoluzzi/dataset/tmp");
 		try
 		{
 			this.fs.delete(tmpPath, true);
 			this.fs.mkdirs(tmpPath);
 			//TODO generate a unique folder for the snapshot, in order to have more jobs running on different data
-			masterDataPail.snapshot("hdfs://localhost:9000/dataset/tmp/snapshot");
+			masterDataPail.snapshot("hdfs://localhost:9000/user/matteoremoluzzi/dataset/tmp/snapshot");
 			return tmpPath.toString() + "/snapshot";
 		} catch (IOException e)
 		{
-			//return null;
-			e.printStackTrace();
 			return null;
 		}
 	}

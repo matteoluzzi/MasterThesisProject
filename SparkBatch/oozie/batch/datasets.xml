@@ -1,0 +1,7 @@
+<datasets>
+	<dataset name="vimondEvents" frequency="${coord:minutes(5)}" initial-instance="2015-07-19T17:10Z" timezone="UTC">
+		<uri-template>${nameNode}/user/${coord:user()}/${datasetFolder}/${YEAR}-${MONTH}-${DAY}/${HOUR}/${MINUTE / 5}</uri-template>
+		<done-flag></done-flag>
+		<!-- TODO: implement a done-flag mechanism -->
+	</dataset>
+</datasets>

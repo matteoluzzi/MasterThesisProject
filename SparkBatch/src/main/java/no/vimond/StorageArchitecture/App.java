@@ -38,8 +38,9 @@ public class App
 
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
-		//final String master = "spark://Matteos-MBP.vimond.local:7077";
-		final String master = "local";
+		final String master = "spark://Matteos-MacBook-Pro.local:7077";
+		//String master = "local";
+		System.out.println(master);
 
 		// Spark settings
 
@@ -64,7 +65,7 @@ public class App
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 
-		DataPoller dataInit = new DataPoller("hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/2015-07-20/15/0");
+		DataPoller dataInit = new DataPoller("hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/2015-07-20/20/50");
 
 		String dataPath = dataInit.ingestNewData();
 
@@ -72,7 +73,7 @@ public class App
 
 		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
 		starter.startJobs();
-		Thread.sleep(200000);
+		// Thread.sleep(200000);
 
 	}
 
