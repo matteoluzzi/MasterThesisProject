@@ -38,8 +38,8 @@ public class App
 
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
-		final String master = "spark://Matteos-MBP.vimond.local:7077";
-		//final String master = "local";
+		//final String master = "spark://Matteos-MBP.vimond.local:7077";
+		final String master = "local";
 
 		// Spark settings
 
@@ -64,20 +64,15 @@ public class App
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 
-		while(true)
-		{
-			DataPoller dataInit = new DataPoller(String.join("/", path));
+		DataPoller dataInit = new DataPoller("hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/2015-07-20/15/0");
 
-			String dataPath = dataInit.ingestNewData();
-			
-			props.addOrUpdateProperty("dataPath", dataPath);
-			
-			SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
-			starter.startJobs();
+		String dataPath = dataInit.ingestNewData();
 
-			path = updateFolderPath(path, minBatch);
-			Thread.sleep(minBatch * 60 * 1000);
-		}
+		props.addOrUpdateProperty("dataPath", dataPath);
+
+		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+		starter.startJobs();
+		Thread.sleep(200000);
 
 	}
 

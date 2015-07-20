@@ -35,7 +35,7 @@ public class TimeFramePailStructure implements PailStructure<String>
 		{
 			int hour = Integer.parseInt(dirs[1]);
 			int quarter = Integer.parseInt(dirs[2]);
-			return (formatter.parse(dirs[0]) != null && hour >= 0 && hour <= 24 && quarter >= 0 && quarter <= (int) 60/ timeFrame);
+			return (formatter.parse(dirs[0]) != null && hour >= 0 && hour <= 24 && quarter >= 0 && quarter < 60);
 		} catch (ParseException e)
 		{
 			return false;
@@ -86,7 +86,7 @@ public class TimeFramePailStructure implements PailStructure<String>
 		List<String> path = new ArrayList<String>();
 		path.add(formatter.format(date.toDate()));
 		path.add(String.valueOf(date.getHourOfDay()));
-		path.add(String.valueOf(date.getMinuteOfHour() / 10));
+		path.add(String.valueOf(getCorrectFolder(date.getMinuteOfHour())));
 		return path;
 		
 	}
@@ -96,5 +96,11 @@ public class TimeFramePailStructure implements PailStructure<String>
 		return String.class;
 	}
 
+	
+	public int getCorrectFolder(int minutes)
+	{
+		int timeFrame = (int) minutes / 5;
+		return timeFrame * 5;
+	}
 
 }

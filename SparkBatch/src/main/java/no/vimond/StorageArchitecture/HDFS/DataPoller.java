@@ -54,6 +54,8 @@ public class DataPoller
 			return tmpPath.toString() + "/snapshot";
 		} catch (IOException e)
 		{
+			//return null;
+			e.printStackTrace();
 			return null;
 		}
 	}

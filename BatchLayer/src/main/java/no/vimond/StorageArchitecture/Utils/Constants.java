@@ -22,7 +22,7 @@ public class Constants
 	public static final String LATITUDE = "geo.lat";
 	public static final String LONGITUDE = "geo.lon";
 	
-	public static final String NEW_DATA_PATH = "hdfs://localhost:9000/dataset/master";
+	public static final String NEW_DATA_PATH = "hdfs://localhost:9000/user/matteoremoluzzi/dataset/master";
 	
 	public static final String ZK_KEY = "zkServer";
 	public static final String CONSUMER_THREAD_KEY = "consumerThread";
