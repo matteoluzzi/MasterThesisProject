@@ -24,33 +24,16 @@ public class App
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
 		AppProperties props = new AppProperties();
-		int minBatch = Integer.parseInt((String) props.get("minBatch"));
 
-		List<String> path = new ArrayList<String>();
-		path.add("hdfs://localhost:9000");
-		path.add("user");
-		path.add("matteoremoluzzi");
-		path.add("dataset");
-		path.add("master");
+		String path = (String) args[0];
 
-		DateTime now = new DateTime();
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		now = now.plusDays(-1);
-		path.add(formatter.format(now.toDate()));
-		path.add(String.valueOf(now.getHourOfDay()-3));
-	//	path.add(String.valueOf(((int) now.getMinuteOfHour() / minBatch) * minBatch));
-		path.add(String.valueOf(30));
-
-		System.out.println(path);
-		
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
 		// Spark settings
-
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-		//cfg.setMaster("local");
 
+		
 		// ES settings
 		cfg.set(Constants.ES_INDEX_AUTO_CREATE_KEY, "true");
 		cfg.set("es.nodes", "localhost");
@@ -64,62 +47,32 @@ public class App
 
 		// Complex classes must be (de)serialized with Kyro otherwise it won't
 		// work
-	//	Class[] serClasses = { Event.class, SimpleModel.class };
-	//	cfg.registerKryoClasses(serClasses);
+		// Class[] serClasses = { Event.class, SimpleModel.class };
+		// cfg.registerKryoClasses(serClasses);
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
+		
+//		props.addOrUpdateProperty("dataPath", path);
+//
+//		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+//		starter.startJobs();
 
-		while (true)
+		DataPoller dataInit = new DataPoller(path);
+
+		if (dataInit.getMasterPail() != null)
 		{
-			
-			DataPoller dataInit = new DataPoller(String.join("/", path));
+			String dataPath = dataInit.ingestNewData();
 
-			if(dataInit.getMasterPail() != null)
-			{
-				String dataPath = dataInit.ingestNewData();
-				
-				props.addOrUpdateProperty("dataPath", dataPath);
+			props.addOrUpdateProperty("dataPath", dataPath);
 
-				SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
-				starter.startJobs();
-
-				path = updateFolderPath(path, minBatch);
-				Thread.sleep(1 * 60 * 1000);
-			}
-			
-			else
-			{
-				Log.error("Data not aligned with batch program");
-				System.exit(0);
-			}
+			SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+			starter.startJobs();
 		}
-	}
 
-	public static List<String> updateFolderPath(List<String> path, int timeFrame)
-	{
-		if (path.size() != 8)
+		else
+		{
+			Log.error("Data not aligned with batch program");
 			System.exit(0);
-
-		DateTime date = new DateTime(path.get(5));
-		int hourFrame = Integer.parseInt(path.get(6));
-		int minuteFrame = Integer.parseInt(path.get(7));
-		minuteFrame += timeFrame;
-		// must switch the hour
-		if (minuteFrame % ((Integer)( 60 / timeFrame) * timeFrame) == 0)
-		{
-			minuteFrame = 0;
-			hourFrame += 1;
-			if (hourFrame % 24 == 0)// must switch the date
-			{
-				hourFrame = 0;
-				date.plusDays(1);
-			}
 		}
-
-		path.set(5, new SimpleDateFormat("yyyy-MM-dd").format(date.toDate()));
-		path.set(6, String.valueOf(hourFrame));
-		path.set(7, String.valueOf(minuteFrame));
-
-		return path;
 	}
 }

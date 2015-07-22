@@ -13,7 +13,7 @@
   	</datasets>
   	<input-events>
   		<data-in name="input" dataset="vimondEvents">
-  			<instance>${coord:current(-1)}</instance>
+  			<instance>${coord:current(0)}</instance>
 		</data-in>
   	</input-events>
   	<action>
