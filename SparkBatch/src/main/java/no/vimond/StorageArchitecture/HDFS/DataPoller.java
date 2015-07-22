@@ -26,16 +26,10 @@ public class DataPoller
 			Path sitecorexml = new Path(hadoop_home + "/etc/hadoop/core-site.xml");
 			cfg.addResource(sitecorexml);
 			fs = FileSystem.get(cfg);
-			masterDataPail = Pail.create(path, new TimeFramePailStructure());
+			masterDataPail = new Pail<String>(path);
 
 		} catch (IllegalArgumentException e)
 		{
-			try
-			{
-				masterDataPail = new Pail<String>(path);
-			} catch (IOException e1)
-			{
-			}
 		} catch (IOException e)
 		{
 		}
@@ -49,12 +43,18 @@ public class DataPoller
 		{
 			this.fs.delete(tmpPath, true);
 			this.fs.mkdirs(tmpPath);
-			//TODO generate a unique folder for the snapshot, in order to have more jobs running on different data
+			// TODO generate a unique folder for the snapshot, in order to have
+			// more jobs running on different data
 			masterDataPail.snapshot("hdfs://localhost:9000/user/matteoremoluzzi/dataset/tmp/snapshot");
 			return tmpPath.toString() + "/snapshot";
 		} catch (IOException e)
 		{
 			return null;
 		}
+	}
+
+	public Pail<String> getMasterPail()
+	{
+		return this.masterDataPail;
 	}
 }

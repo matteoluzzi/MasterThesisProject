@@ -95,6 +95,8 @@ public class SimpleJobsStarter implements Serializable
 			}
 		}
 
+		data_rdd.unpersist();
+		
 		return 0;
 	}
 

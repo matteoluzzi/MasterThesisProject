@@ -10,18 +10,16 @@ import java.util.Map;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
 import no.vimond.StorageArchitecture.Utils.Event;
 
-import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.broadcast.Broadcast;
 import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
 
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vimond.common.shared.ObjectMapperConfiguration;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class ContentLocalizationJob extends WorkingJob
 {
@@ -54,7 +52,8 @@ public class ContentLocalizationJob extends WorkingJob
 			@Override
 			public Iterable<String> call(Iterator<Tuple2<Integer, Iterable<Tuple2<String, Integer>>>> tuples) throws Exception
 			{
-				ObjectMapper mapper = ObjectMapperConfiguration.configure();
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.registerModule(new JodaModule());
 				List<String> result = new ArrayList<String>();
 				while(tuples.hasNext())
 				{

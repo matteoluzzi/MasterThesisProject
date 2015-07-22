@@ -8,13 +8,18 @@ import org.joda.time.DateTime;
 
 import com.backtype.hadoop.pail.PailStructure;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vimond.common.shared.ObjectMapperConfiguration;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class TimeFramePailStructure implements PailStructure<String>
 {
 	private static final long serialVersionUID = 9195695651901130252L;
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-	private static ObjectMapper mapper = ObjectMapperConfiguration.configure();
+	private static ObjectMapper mapper;
+	static{
+		mapper = new ObjectMapper();
+		mapper.registerModule(new JodaModule());
+	}
+	
 
 
 	public boolean isValidTarget(String... dirs)

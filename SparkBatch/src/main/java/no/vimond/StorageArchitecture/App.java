@@ -15,6 +15,8 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.joda.time.DateTime;
 
+import com.esotericsoftware.minlog.Log;
+
 public class App
 {
 
@@ -26,27 +28,28 @@ public class App
 
 		List<String> path = new ArrayList<String>();
 		path.add("hdfs://localhost:9000");
+		path.add("user");
+		path.add("matteoremoluzzi");
 		path.add("dataset");
 		path.add("master");
 
 		DateTime now = new DateTime();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		//
+		now = now.plusDays(-1);
 		path.add(formatter.format(now.toDate()));
-		path.add(String.valueOf(now.getHourOfDay() - 2));
-		path.add(String.valueOf(2));
+		path.add(String.valueOf(now.getHourOfDay()-3));
+	//	path.add(String.valueOf(((int) now.getMinuteOfHour() / minBatch) * minBatch));
+		path.add(String.valueOf(30));
 
+		System.out.println(path);
+		
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
-
-		final String master = "spark://Matteos-MacBook-Pro.local:7077";
-		//String master = "local";
-		System.out.println(master);
 
 		// Spark settings
 
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-		cfg.setMaster(master);
+		//cfg.setMaster("local");
 
 		// ES settings
 		cfg.set(Constants.ES_INDEX_AUTO_CREATE_KEY, "true");
@@ -55,39 +58,54 @@ public class App
 		cfg.set("es.input.json", "true");
 
 		// spark cluster settings
+
 		cfg.set("spark.executor.memory", "2g");
 		cfg.set("spark.scheduler.mode", "FAIR");
 
 		// Complex classes must be (de)serialized with Kyro otherwise it won't
 		// work
-		Class[] serClasses = { Event.class, SimpleModel.class };
-		cfg.registerKryoClasses(serClasses);
+	//	Class[] serClasses = { Event.class, SimpleModel.class };
+	//	cfg.registerKryoClasses(serClasses);
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 
-		DataPoller dataInit = new DataPoller("hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/2015-07-20/20/50");
+		while (true)
+		{
+			
+			DataPoller dataInit = new DataPoller(String.join("/", path));
 
-		String dataPath = dataInit.ingestNewData();
+			if(dataInit.getMasterPail() != null)
+			{
+				String dataPath = dataInit.ingestNewData();
+				
+				props.addOrUpdateProperty("dataPath", dataPath);
 
-		props.addOrUpdateProperty("dataPath", dataPath);
+				SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+				starter.startJobs();
 
-		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
-		starter.startJobs();
-		// Thread.sleep(200000);
-
+				path = updateFolderPath(path, minBatch);
+				Thread.sleep(1 * 60 * 1000);
+			}
+			
+			else
+			{
+				Log.error("Data not aligned with batch program");
+				System.exit(0);
+			}
+		}
 	}
 
 	public static List<String> updateFolderPath(List<String> path, int timeFrame)
 	{
-		if (path.size() != 6)
+		if (path.size() != 8)
 			System.exit(0);
 
-		DateTime date = new DateTime(path.get(3));
-		int hourFrame = Integer.parseInt(path.get(4));
-		int minuteFrame = Integer.parseInt(path.get(5));
-		minuteFrame += 1;
+		DateTime date = new DateTime(path.get(5));
+		int hourFrame = Integer.parseInt(path.get(6));
+		int minuteFrame = Integer.parseInt(path.get(7));
+		minuteFrame += timeFrame;
 		// must switch the hour
-		if (minuteFrame % ((Integer) 60 / timeFrame) == 0)
+		if (minuteFrame % ((Integer)( 60 / timeFrame) * timeFrame) == 0)
 		{
 			minuteFrame = 0;
 			hourFrame += 1;
@@ -98,9 +116,9 @@ public class App
 			}
 		}
 
-		path.set(3, new SimpleDateFormat("yyyy-MM-dd").format(date.toDate()));
-		path.set(4, String.valueOf(hourFrame));
-		path.set(5, String.valueOf(minuteFrame));
+		path.set(5, new SimpleDateFormat("yyyy-MM-dd").format(date.toDate()));
+		path.set(6, String.valueOf(hourFrame));
+		path.set(7, String.valueOf(minuteFrame));
 
 		return path;
 	}

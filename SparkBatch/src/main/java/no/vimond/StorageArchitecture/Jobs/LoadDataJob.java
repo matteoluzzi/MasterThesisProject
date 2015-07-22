@@ -20,6 +20,7 @@ import org.apache.spark.broadcast.Broadcast;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
@@ -69,7 +70,8 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 			@Override
 			public Iterable<T> call(Iterator<Tuple2<BytesWritable, NullWritable>> t) throws Exception
 			{
-				ObjectMapper mapper = ObjectMapperConfiguration.configure();
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.registerModule(new JodaModule());
 				ArrayList<T> events = new ArrayList<T>();
 				while(t.hasNext())
 				{

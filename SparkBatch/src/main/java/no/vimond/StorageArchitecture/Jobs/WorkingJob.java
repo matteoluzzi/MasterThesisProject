@@ -1,7 +1,5 @@
 package no.vimond.StorageArchitecture.Jobs;
 
-import java.util.Date;
-
 import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaRDD;

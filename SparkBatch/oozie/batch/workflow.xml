@@ -5,14 +5,11 @@
 		<spark xmlns="uri:oozie:spark-action:0.1">
 			<job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <master>local</master>
+            <master>${master}</master>
             <name>SparkBatch</name>
-          <!--  <class>no.vimond.StorageArchitecture.App</class> -->
-          <class>org.apache.oozie.example.SparkFileCopy</class>
+          <class>no.vimond.StorageArchitecture.App</class>
             <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${jarName}</jar>
-           <!-- <arg>${nameNode}/user/matteoremoluzzi/dataset/master/2015-07-20/13/5</arg> -->
-           <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input-data/text/data.txt</arg>
-            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/spark</arg>
+            <spark-opts>--num-executors 2 --driver-memory 2g --executor-memory 3g --executor-cores 2</spark-opts>
 		</spark>
 		<ok to="end"/>
         <error to="fail"/>

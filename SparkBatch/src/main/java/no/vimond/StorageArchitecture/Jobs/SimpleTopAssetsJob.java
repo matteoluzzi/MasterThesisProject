@@ -17,7 +17,7 @@ import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
 import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vimond.common.shared.ObjectMapperConfiguration;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class SimpleTopAssetsJob extends WorkingJob
 {
@@ -43,7 +43,8 @@ public class SimpleTopAssetsJob extends WorkingJob
 
 					public Iterable<String> call(Iterator<Tuple2<Integer, Integer>> tuples) throws Exception
 					{
-						ObjectMapper mapper = ObjectMapperConfiguration.configure();
+						ObjectMapper mapper = new ObjectMapper();
+						mapper.registerModule(new JodaModule());
 						List<String> ranking = new ArrayList<String>();
 						while (tuples.hasNext())
 						{
