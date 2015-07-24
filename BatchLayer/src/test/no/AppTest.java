@@ -1,6 +1,7 @@
 package no;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,4 +71,5 @@ public class AppTest extends TestCase
         os.close();   
 		
 	}
+	
 }

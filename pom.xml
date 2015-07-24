@@ -26,6 +26,7 @@
 		<module>BatchLayer</module>
 		<module>RealTimeLayerSpark</module>
 		<module>SparkBatch</module>
+		<module>UtilsFunctions</module>
 	</modules>
 	
 </project>

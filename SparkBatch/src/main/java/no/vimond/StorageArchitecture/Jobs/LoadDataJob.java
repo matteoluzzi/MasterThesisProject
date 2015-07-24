@@ -22,7 +22,6 @@ import scala.Tuple2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vimond.common.events.data.VimondEventAny;
-import com.vimond.common.shared.ObjectMapperConfiguration;
 
 /**
  * Generic job for loading events from an hdfs folder. It contains information about

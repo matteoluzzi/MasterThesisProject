@@ -97,10 +97,10 @@ public class TimeFramePailStructure implements PailStructure<String>
 	}
 
 	
-	public int getCorrectFolder(int minutes)
+	public String getCorrectFolder(int minutes)
 	{
 		int timeFrame = (int) minutes / 5;
-		return timeFrame * 5;
+		return String.format("%02d", timeFrame * 5);
 	}
 
 }

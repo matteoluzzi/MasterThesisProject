@@ -13,7 +13,7 @@
   	</datasets>
   	<input-events>
   		<data-in name="input" dataset="vimondEvents">
-  			<instance>${coord:current(0)}</instance>
+  			<instance>${coord:current(-1)}</instance>
 		</data-in>
   	</input-events>
   	<action>
@@ -47,6 +47,10 @@
 	             <property>
 	                <name>batchAppFolder</name>
 	                <value>${batchAppFolder}</value>
+	            </property>
+	            <property>
+	            	<name>frequency</name>
+	            	<value>${frequency}</value>
 	            </property>
 	  		</configuration>
   		</workflow>
