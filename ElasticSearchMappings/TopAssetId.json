@@ -1,0 +1,43 @@
+{
+    "mappings": {
+        "TopAssetId": {
+            "properties": {
+                "originator": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "eventName": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                 "timewindow": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "date",
+                    "format": "dateOptionalTime"
+                },
+                "version": {
+                    "type": "string",
+                    "index": "no"
+                },
+                "tenant": {
+                    "type": "string",
+                    "index": "no"
+                },
+                "guid": {
+                    "type": "string"
+                },
+                "_id": {
+                    "type": "long"
+                },
+                "data.assetId": {
+                	"type": "long"
+                },
+                 "data.counter": {
+                    "type": "long"
+                }
+            }
+        }
+    }
+}
