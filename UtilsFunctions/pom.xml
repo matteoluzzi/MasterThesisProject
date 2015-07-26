@@ -79,6 +79,7 @@
 							<mainClass>no.vimond.UtilsFunctions.UpdateRecords</mainClass>
 						</transformer>
 					</transformers>
+					<outputDirectory>../oozie/batch/lib</outputDirectory>
 					<filters>
 						<filter>
 							<artifact>*:*</artifact>

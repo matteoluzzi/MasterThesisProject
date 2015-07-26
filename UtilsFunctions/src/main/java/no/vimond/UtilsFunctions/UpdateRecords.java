@@ -2,6 +2,8 @@ package no.vimond.UtilsFunctions;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -23,6 +25,12 @@ import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Utility class for deleting records from elasticsearch belonging to an index within a timeframe.<br>
+ * Must be invoked by oozie coordinator when a batch process for the given timeframe has been correcty executed.
+ * @author matteoremoluzzi
+ *
+ */
 public class UpdateRecords
 {
 	private static final Logger LOG = LoggerFactory.getLogger(UpdateRecords.class);
@@ -41,22 +49,33 @@ public class UpdateRecords
 
 	public static void main(String[] args)
 	{
-		String path = args[0]; //something like YYYY-MM-DD/HH/mm
-		int batchTimeInMinutes = Integer.parseInt(args[1]);
-		
-		LOG.info("Parameters: folder {}, timeframe {}", path, batchTimeInMinutes);
-		
-
-		UpdateRecords ur = new UpdateRecords();
-
-		ur.deleteRecordsFromES(path, batchTimeInMinutes);
-
-		ur.shutDown();
+		if(args.length != 2)
+		{
+			LOG.error("Error with the paramenters: {}", (Object[]) args);
+		}
+		else
+		{
+			String path = args[0]; //something like hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/YYYY-MM-DD/HH/mm
+			int batchTimeInMinutes = Integer.parseInt(args[1]);
+			
+			path = extractDate(path); //something like YYYY-MM-DD/HH/mm
+			
+			if(path != null)
+			{
+				LOG.info("Parameters: folder {}, timeframe {}", path, batchTimeInMinutes);
+				
+				UpdateRecords ur = new UpdateRecords();
+				ur.deleteRecordsFromES(path, batchTimeInMinutes);
+				ur.shutDown();
+			}
+			else
+				LOG.error("Can't execute the action with this paramenters: folder {}, timeframe {}", path, batchTimeInMinutes);
+		}
 	}
 
 	public void deleteRecordsFromES(String path, int timeFrameInMinutes)
 	{
-		//Usage of Search API to identify the matching ids and then perform a bulk delete operations
+		//Usage of Search API to identify the matching ids and then perform bulk delete operations
 		
 		BulkProcessor bp = this.getBulkProcessor(this.esClient);
 		Map<String, Object> params = this.prepareQueryParameters(path, timeFrameInMinutes);
@@ -164,5 +183,15 @@ public class UpdateRecords
 	public void shutDown()
 	{
 		this.esClient.close();
+	}
+	
+	public static String extractDate(String input)
+	{
+		Pattern p = Pattern.compile("\\d{4}-\\d{2}-\\d{2}/\\d{2}/\\d{2}$");
+		Matcher m = p.matcher(input);
+		
+		if(m.find())
+			return m.group();
+		else return null;
 	}
 }
