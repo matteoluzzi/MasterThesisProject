@@ -2,8 +2,6 @@ package no.vimond.StorageArchitecture.HDFS;
 
 import java.io.IOException;
 
-import no.vimond.StorageArchitecture.PailStructure.TimeFramePailStructure;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,7 +14,6 @@ public class DataPoller
 	private Pail<String> masterDataPail;
 	private FileSystem fs;
 
-	@SuppressWarnings("unchecked")
 	public DataPoller(String path)
 	{
 		try

@@ -165,6 +165,7 @@
 							<mainClass>no.vimond.StorageArchitecture.App</mainClass>
 						</transformer>
 					</transformers>
+					<outputDirectory>../oozie/batch/lib</outputDirectory>
 					<filters>
 						<filter>
 							<artifact>*:*</artifact>

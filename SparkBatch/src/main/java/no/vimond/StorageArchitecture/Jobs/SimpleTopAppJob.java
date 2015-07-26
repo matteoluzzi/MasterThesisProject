@@ -1,18 +1,18 @@
 package no.vimond.StorageArchitecture.Jobs;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
-import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
+import org.joda.time.DateTime;
 
 import scala.Tuple2;
 
@@ -24,9 +24,9 @@ public class SimpleTopAppJob extends WorkingJob
 
 	private static final long serialVersionUID = -2175194420496804736L;
 
-	public SimpleTopAppJob(JavaRDD<Event> inputDataset)
+	public SimpleTopAppJob(JavaRDD<Event> inputDataset, DateTime timestamp, String timewindow)
 	{
-		super(inputDataset);
+		super(inputDataset, timestamp, timewindow);
 	}
 
 	@Override
@@ -58,7 +58,8 @@ public class SimpleTopAppJob extends WorkingJob
 							tm.genericValues.put("data.appName", t._1());
 							tm.genericValues.put("data.counter", t._2());
 							tm.setRandomGuid();
-							tm.genericValues.put("timestamp", new Date());
+							tm.setTimestamp(timestamp);
+							tm.setGenericValue("timewindow", timewindow);
 							ranking.add(mapper.writeValueAsString(tm));
 						}
 						return ranking;

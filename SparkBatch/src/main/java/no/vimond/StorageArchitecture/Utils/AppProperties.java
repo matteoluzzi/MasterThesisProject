@@ -24,8 +24,8 @@ public class AppProperties extends Properties
 		}
 	}
 
-	public void addOrUpdateProperty(String key, String value)
+	public void addOrUpdateProperty(String key, Object value)
 	{
-		this.setProperty(key, value);
+		this.put(key, value);
 	}
 }

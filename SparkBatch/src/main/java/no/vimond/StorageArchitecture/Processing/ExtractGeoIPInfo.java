@@ -1,8 +1,8 @@
 package no.vimond.StorageArchitecture.Processing;
 
+import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Utils.GeoIP;
 import no.vimond.StorageArchitecture.Utils.GeoInfo;
-import no.vimond.StorageArchitecture.Utils.Event;
 import no.vimond.StorageArchitecture.Utils.Utility;
 
 import org.apache.spark.api.java.function.Function;

@@ -1,7 +1,9 @@
-package no.vimond.StorageArchitecture.Utils;
+package no.vimond.StorageArchitecture.Model;
 
 import java.io.Serializable;
 import java.util.Map;
+
+import no.vimond.StorageArchitecture.Utils.Constants;
 
 import com.vimond.common.events.data.VimondEventAny;
 

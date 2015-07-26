@@ -2,9 +2,10 @@ package no.vimond.StorageArchitecture.Jobs;
 
 import java.util.Properties;
 
-import no.vimond.StorageArchitecture.Utils.Event;
+import no.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.joda.time.DateTime;
 
 public class JobsFactory
 {
@@ -21,16 +22,19 @@ public class JobsFactory
 
 	public Job createJob(JobName job_name, Properties props, JavaRDD<Event> rdd)
 	{
+		DateTime timestamp = (DateTime) props.get("timestamp");
+		String timewindow = props.getProperty("timewindow");
+		
 		switch (job_name)
 		{
 		case SIMPLE_TOP_COUNTRIES:
-			return new SimpleTopCountriesJob(rdd);
+			return new SimpleTopCountriesJob(rdd, timestamp, timewindow);
 		case SIMPLE_TOP_ASSETS:
-			return new SimpleTopAssetsJob(rdd);
+			return new SimpleTopAssetsJob(rdd, timestamp, timewindow);
 		case SIMPLE_CONTENT_LOCATION:
-			return new ContentLocalizationJob(rdd);
+			return new ContentLocalizationJob(rdd, timestamp, timewindow);
 		case SIMPLE_TOP_APP:
-			return new SimpleTopAppJob(rdd);
+			return new SimpleTopAppJob(rdd, timestamp, timewindow);
 		case SIMPLE_DATA_LOADER:
 			return new LoadDataJob<Event>(props, Event.class);
 		}

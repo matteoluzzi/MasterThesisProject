@@ -1,20 +1,20 @@
 package no.vimond.StorageArchitecture.Jobs;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
-import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.elasticsearch.spark.rdd.api.java.JavaEsSpark;
+import org.joda.time.DateTime;
 
 import scala.Tuple2;
 
@@ -25,9 +25,9 @@ public class ContentLocalizationJob extends WorkingJob
 {
 	private static final long serialVersionUID = -3085596859613929694L;
 
-	public ContentLocalizationJob(JavaRDD<Event> inputDataset)
+	public ContentLocalizationJob(JavaRDD<Event> inputDataset, DateTime timestamp, String timewindow)
 	{
-		super(inputDataset);
+		super(inputDataset, timestamp, timewindow);
 	}
 
 	@Override
@@ -73,16 +73,18 @@ public class ContentLocalizationJob extends WorkingJob
 						ranking.add(element);
 					}
 					tm.setGenericValue("data.ranking", ranking);
+					tm.setOriginator("VimondAnalytics");
 					tm.setRandomGuid();
-					tm.setGenericValue("timestamp", new Date());
+					tm.setTimestamp(timestamp);
+					tm.setGenericValue("timewindow", timewindow);
 					
 					result.add(mapper.writeValueAsString(tm));
 				}
 				return result;
 			}
 		});
-		
+		System.out.println(models.collect());
 		JavaEsSpark.saveJsonToEs(models, "spark/ContentLocation");
-
+		
 	}
 }

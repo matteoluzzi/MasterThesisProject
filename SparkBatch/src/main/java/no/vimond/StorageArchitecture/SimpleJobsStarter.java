@@ -1,6 +1,5 @@
 package no.vimond.StorageArchitecture;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,15 +13,13 @@ import no.vimond.StorageArchitecture.Jobs.Job;
 import no.vimond.StorageArchitecture.Jobs.JobName;
 import no.vimond.StorageArchitecture.Jobs.JobsFactory;
 import no.vimond.StorageArchitecture.Jobs.LoadDataJob;
+import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Utils.Constants;
-import no.vimond.StorageArchitecture.Utils.Event;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.backtype.hadoop.pail.Pail;
 
 /**
  * Class in charge to start at the same time some simple jobs working on the
@@ -38,8 +35,6 @@ public class SimpleJobsStarter implements Serializable
 	private static final long serialVersionUID = 1L;
 	private Logger LOG = LoggerFactory.getLogger(SimpleJobsStarter.class);
 
-	private String currentFolder;
-
 	private JavaSparkContext ctx;
 	private Properties prop;
 	private ExecutorService pool;
@@ -53,15 +48,13 @@ public class SimpleJobsStarter implements Serializable
 
 		final int poolSize = Integer.parseInt(this.prop.getProperty(Constants.POOL_SIZE_KEY));
 		this.pool = Executors.newFixedThreadPool(poolSize);
-		this.currentFolder = prop.getProperty("startingFolder");
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public int startJobs()
 	{
-
+		
 		boolean ready = false;
-
 
 		// start loadData job before starting the other
 

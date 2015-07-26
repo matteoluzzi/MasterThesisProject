@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.vimond.StorageArchitecture.HDFS.DataPoller;
+import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
 import no.vimond.StorageArchitecture.Utils.AppProperties;
 import no.vimond.StorageArchitecture.Utils.Constants;
-import no.vimond.StorageArchitecture.Utils.Event;
+import no.vimond.StorageArchitecture.Utils.Utility;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.esotericsoftware.minlog.Log;
 
@@ -26,13 +29,14 @@ public class App
 		AppProperties props = new AppProperties();
 
 		String path = (String) args[0];
+		String freq = args[1];
 
 		final String appName = (String) props.get(Constants.APP_NAME_KEY);
 
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-
+		cfg.setMaster("local");
 		
 		// ES settings
 		cfg.set(Constants.ES_INDEX_AUTO_CREATE_KEY, "true");
@@ -52,15 +56,17 @@ public class App
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 		
-//		props.addOrUpdateProperty("dataPath", path);
-//
-//		SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
-//		starter.startJobs();
 
 		DataPoller dataInit = new DataPoller(path);
 
 		if (dataInit.getMasterPail() != null)
 		{
+			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm");
+			
+			String folder_path = Utility.extractDate(path);
+			props.addOrUpdateProperty("timestamp", formatter.parseDateTime(folder_path));
+			props.addOrUpdateProperty("timewindow", freq);
+			
 			String dataPath = dataInit.ingestNewData();
 
 			props.addOrUpdateProperty("dataPath", dataPath);

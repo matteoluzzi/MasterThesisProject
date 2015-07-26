@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,5 +81,15 @@ public class Utility
 		}
 		
 		return null;
+	}
+	
+	public static String extractDate(String input)
+	{
+		Pattern p = Pattern.compile("\\d{4}-\\d{2}-\\d{2}/\\d{2}/\\d{2}$");
+		Matcher m = p.matcher(input);
+		
+		if(m.find())
+			return m.group();
+		else return null;
 	}
 }
