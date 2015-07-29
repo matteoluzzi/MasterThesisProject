@@ -1,6 +1,6 @@
 {
     "mappings": {
-        "player-events": {
+        "realtime-player-events": {
             "properties": {
                 "asset_playback.geo.country": {
                     "type": "string",
@@ -67,15 +67,20 @@
                     "type": "integer"
                 },
                 "asset_playback.appName": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 },
                 "asset_playback.geo.coordinates": {
                     "type": "geo_point",
                     "doc_value": "true"
+                },
+                "counter": {
+                    "type": "integer",
+                    "null_value": 1
                 }
             }
         },
-        "player-log-events": {
+        "realtime-player-log-events": {
             "properties": {
                 "eventName": {
                     "type": "string",
@@ -149,6 +154,10 @@
                 "progress.enc.pos": {
                     "type": "date",
                     "format": "dateOptionalTime"
+                },
+                "counter": {
+                    "type": "integer",
+                    "null_value": 1
                 }
             }
         }
