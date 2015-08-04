@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
+import no.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -33,7 +33,7 @@ public class SimpleTopAssetsJob extends WorkingJob
 	{
 		JavaPairRDD<Integer, String> pair_rdd_aid_ip = this.inputDataset.mapToPair(e -> new Tuple2<Integer, String>(e.getAssetId(), e.getIpAddress()));
 		
-		pair_rdd_aid_ip = pair_rdd_aid_ip.distinct();
+	//	pair_rdd_aid_ip = pair_rdd_aid_ip.distinct();
 		JavaPairRDD<Integer, Integer> mapped_rdd_aid = pair_rdd_aid_ip.mapToPair(t -> new Tuple2<Integer, Integer>(t._1(), 1));
 		mapped_rdd_aid = mapped_rdd_aid.reduceByKey((x, y) -> x + y);
 		
@@ -52,7 +52,8 @@ public class SimpleTopAssetsJob extends WorkingJob
 							SimpleModel tm = new SimpleModel();
 							tm.eventName = "TopAsset";
 							tm.genericValues.put("data.assetId", t._1());
-							tm.genericValues.put("data.counter", t._2());
+							tm.genericValues.put("counter", t._2());
+							tm.setOriginator("VimondAnalytics");
 							tm.setRandomGuid();
 							tm.setTimestamp(timestamp);
 							tm.setGenericValue("timewindow", timewindow);
@@ -62,7 +63,7 @@ public class SimpleTopAssetsJob extends WorkingJob
 					}
 				});
 		
-		JavaEsSpark.saveJsonToEs(models_aid, "spark/TopAssetId");
+		JavaEsSpark.saveJsonToEs(models_aid, "vimond-batch/batch-topAssetId");
 		
 	}
 }

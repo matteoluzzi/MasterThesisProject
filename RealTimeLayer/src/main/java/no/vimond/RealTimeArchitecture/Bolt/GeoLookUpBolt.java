@@ -10,8 +10,8 @@ import no.vimond.RealTimeArchitecture.Utils.GeoIP;
 import no.vimond.RealTimeArchitecture.Utils.GeoInfo;
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
@@ -40,8 +40,8 @@ import com.vimond.common.shared.ObjectMapperConfiguration;
 public class GeoLookUpBolt extends BaseBasicBolt
 {
 	private static final long serialVersionUID = 1L;
-	private static Logger LOG = LoggerFactory.getLogger(GeoLookUpBolt.class);
-
+	private static final Logger LOG = LogManager.getLogger(GeoLookUpBolt.class);
+	
 	private DatabaseReader dbReader;
 	private ObjectMapper mapper;
 
@@ -85,7 +85,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 	{
 		try
 		{
-			LOG.info("Going to sleep now, closing connection with database");
+			LOG.warn("Going to sleep now, closing connection with database");
 			dbReader.close();
 		} catch (IOException e)
 		{
@@ -97,7 +97,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 	public void declareOutputFields(OutputFieldsDeclarer declarer)
 	{
 		declarer.declareStream(Constants.IP_STREAM, new Fields(
-				Constants.EVENT_MESSAGE));
+				Constants.EVENT_MESSAGE, "initTime"));
 	}
 
 	public Map<String, Object> getComponentConfiguration()
@@ -108,6 +108,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 	private void emit(StormEvent message, BasicOutputCollector collector)
 	{
 		String value = null;
+		long initTime = message.getInitTime();
 		try
 		{
 			value = this.mapper.writeValueAsString(message);
@@ -118,9 +119,10 @@ public class GeoLookUpBolt extends BaseBasicBolt
 		}
 		if (value != null)
 		{
-			collector.emit(Constants.IP_STREAM, new Values(value));
+			collector.emit(Constants.IP_STREAM, new Values(value, initTime));
 		} else
 			throw new FailedException(); // i.e. fail on processing tuple
+		LOG.info("Processed message");
 	}
 
 	/**
@@ -144,13 +146,13 @@ public class GeoLookUpBolt extends BaseBasicBolt
 
 		} catch (UnknownHostException e)
 		{
-			LOG.error("UnknownHostException while looking up the ip address");
+	//		LOG.error("UnknownHostException while looking up the ip address");
 		} catch (IOException e)
 		{
-			LOG.error("IOException while looking up the ip address");
+	//		LOG.error("IOException while looking up the ip address");
 		} catch (GeoIp2Exception e)
 		{
-			LOG.error("GeoIp2Exception while looking up the ip address");
+	//		LOG.error("GeoIp2Exception while looking up the ip address");
 		}
 		return null;
 	}

@@ -40,6 +40,7 @@ public class UpdateRecords
 
 	public UpdateRecords()
 	{
+		LOG.debug("here");
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
 		
@@ -88,7 +89,7 @@ public class UpdateRecords
 				.from(params.get("start_date"))
 				.to(params.get("end_date"))
 				.includeLower(false)
-				.includeUpper(true), "storm").noMatchFilter("none");	
+				.includeUpper(true), "vimond-realtime").noMatchFilter("none");	
 			
 				
 						/*		FilterBuilder fb = new AndFilterBuilder(new TypeFilterBuilder("player-events"), 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" name="MyApp" packages="">
+  <Appenders>
+    <Socket name="socketAppender" host="localhost" port="4560">
+    <SerializedLayout />
+    </Socket>
+    <Async name="Async">
+      <AppenderRef ref="socketAppender"/>
+    </Async>
+  </Appenders>
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="Async"/>
+    </Root>
+  </Loggers>
+</Configuration>

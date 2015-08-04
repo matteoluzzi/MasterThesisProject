@@ -13,8 +13,8 @@ import no.vimond.StorageArchitecture.Jobs.Job;
 import no.vimond.StorageArchitecture.Jobs.JobName;
 import no.vimond.StorageArchitecture.Jobs.JobsFactory;
 import no.vimond.StorageArchitecture.Jobs.LoadDataJob;
-import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Utils.Constants;
+import no.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;

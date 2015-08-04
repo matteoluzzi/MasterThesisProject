@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
+import no.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -34,7 +34,7 @@ public class SimpleTopAppJob extends WorkingJob
 	{
 		JavaPairRDD<String, String> pair_rdd = this.inputDataset.mapToPair(e -> new Tuple2<String, String>(e.getAppName(), e.getIpAddress()));
 		
-		pair_rdd = pair_rdd.distinct();
+	//	pair_rdd = pair_rdd.distinct();
 		
 		JavaPairRDD<String, Integer> mapped_rdd = pair_rdd.mapToPair(t -> new Tuple2<String, Integer>(t._1(), 1));
 		
@@ -56,7 +56,8 @@ public class SimpleTopAppJob extends WorkingJob
 							SimpleModel tm = new SimpleModel();
 							tm.eventName = "TopApp";
 							tm.genericValues.put("data.appName", t._1());
-							tm.genericValues.put("data.counter", t._2());
+							tm.genericValues.put("counter", t._2());
+							tm.setOriginator("VimondAnalytics");
 							tm.setRandomGuid();
 							tm.setTimestamp(timestamp);
 							tm.setGenericValue("timewindow", timewindow);
@@ -67,6 +68,6 @@ public class SimpleTopAppJob extends WorkingJob
 				});
 		
 		
-		JavaEsSpark.saveJsonToEs(models, "spark/TopAppName");
+		JavaEsSpark.saveJsonToEs(models, "vimond-batch/batch-topApp");
 	}
 }

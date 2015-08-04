@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import no.vimond.StorageArchitecture.Model.Event;
 import no.vimond.StorageArchitecture.Model.SimpleModel;
+import no.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -34,7 +34,7 @@ public class SimpleTopCountriesJob extends WorkingJob
 	{
 		JavaPairRDD<String, String> pair_rdd_cn_ip = this.inputDataset.mapToPair(e -> new Tuple2<String, String>(e.getCountryName(), e.getIpAddress()));
 
-		pair_rdd_cn_ip = pair_rdd_cn_ip.distinct();
+	//	pair_rdd_cn_ip = pair_rdd_cn_ip.distinct();
 
 		JavaPairRDD<String, Integer> mapped_rdd_cn = pair_rdd_cn_ip.mapToPair(t -> new Tuple2<String, Integer>(t._1(), 1));
 
@@ -54,8 +54,9 @@ public class SimpleTopCountriesJob extends WorkingJob
 					Tuple2<String, Integer> t = tuples.next();
 					SimpleModel tm = new SimpleModel();
 					tm.eventName = "TopRanking";
-					tm.genericValues.put("data.country", t._1());
-					tm.genericValues.put("data.counter", t._2());
+					tm.genericValues.put("data.geo.country", t._1());
+					tm.genericValues.put("counter", t._2());
+					tm.setOriginator("VimondAnalytics");
 					tm.setRandomGuid();
 					tm.setTimestamp(timestamp);
 					tm.setGenericValue("timewindow", timewindow);
@@ -65,6 +66,6 @@ public class SimpleTopCountriesJob extends WorkingJob
 			}
 		});
 
-		JavaEsSpark.saveJsonToEs(models_cn, "spark/TopRanking");
+		JavaEsSpark.saveJsonToEs(models_cn, "vimond-batch/batch-topRanking");
 	}
 }

@@ -1,20 +1,14 @@
 package no.vimond.StorageArchitecture;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 import no.vimond.StorageArchitecture.HDFS.DataPoller;
-import no.vimond.StorageArchitecture.Model.Event;
-import no.vimond.StorageArchitecture.Model.SimpleModel;
 import no.vimond.StorageArchitecture.Utils.AppProperties;
 import no.vimond.StorageArchitecture.Utils.Constants;
 import no.vimond.StorageArchitecture.Utils.Utility;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -56,7 +50,6 @@ public class App
 
 		JavaSparkContext ctx = new JavaSparkContext(cfg);
 		
-
 		DataPoller dataInit = new DataPoller(path);
 
 		if (dataInit.getMasterPail() != null)
