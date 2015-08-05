@@ -43,7 +43,6 @@ public class UpdateRecords
 		LOG.debug("here");
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
-		
 		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("172.24.1.229", 9300));
 		this.formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm");
 	}
@@ -67,7 +66,7 @@ public class UpdateRecords
 				
 				UpdateRecords ur = new UpdateRecords();
 				ur.deleteRecordsFromES(path, batchTimeInMinutes);
-				ur.shutDown();
+
 			}
 			else
 				LOG.error("Can't execute the action with this paramenters: folder {}, timeframe {}", path, batchTimeInMinutes);
@@ -115,7 +114,7 @@ public class UpdateRecords
 			{
 				for(SearchHit hit : sr.getHits().getHits())
 				{
-					LOG.info("Found an hit: {}", hit.id());
+				//	LOG.info("Found an hit: {}", hit.id());
 					bp.add(new DeleteRequest(hit.getIndex(), hit.getType(), hit.getId()));
 				}
 				sr = this.esClient.prepareSearchScroll(sr.getScrollId())
@@ -146,12 +145,14 @@ public class UpdateRecords
 			{
 				LOG.error("Bulk requested failed: " + failure.getMessage());
 				
+				
 			}
 			
 			public void afterBulk(long executionId, BulkRequest request, BulkResponse response)
 			{
 				if(!response.hasFailures())
 					LOG.info("Bulk requested completed in: {} ", response.getTook());
+				
 				
 			}
 		}).setBulkActions(1000)

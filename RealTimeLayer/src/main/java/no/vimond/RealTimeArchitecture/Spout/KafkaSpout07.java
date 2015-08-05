@@ -4,14 +4,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import no.vimond.RealTimeArchitecture.Bolt.GeoLookUpBolt;
 import no.vimond.RealTimeArchitecture.Kafka.KafkaConsumer;
 import no.vimond.RealTimeArchitecture.Kafka.StormEventProcessor;
 import no.vimond.RealTimeArchitecture.Utils.Constants;
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
+
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
@@ -36,7 +37,7 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 public class KafkaSpout07 implements IRichSpout
 {
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOG = LogManager.getLogger(GeoLookUpBolt.class);
+	private static final Logger LOG = LogManager.getLogger(KafkaSpout07.class);
 
 	private SpoutOutputCollector collector;
 
@@ -86,21 +87,24 @@ public class KafkaSpout07 implements IRichSpout
 	public void nextTuple()
 	{
 		StormEvent message = this.consumer.takeNoBlock();
+		
 		if(message != null)
 		{
-			
+//			message.setInitTime(new DateTime().getMillis());
 			Values output = new Values(message);
 			UUID id = UUID.randomUUID();
 			this.collector.emit(output, id);
+			this.count.incrementAndGet();
 	//		LOG.info("Received message: id = " + id + ", message = " + this.count.incrementAndGet() + " "
 	//				+ message);
 			this.consumer.addInProcessMessage(id, message);
+			LOG.info("Processed message");
 		}
 		else
 		{
 			try
 			{
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e)
 			{
 				e.printStackTrace();
@@ -125,7 +129,7 @@ public class KafkaSpout07 implements IRichSpout
 		{
 			UUID id = (UUID) msgId;
 			this.failed.incrementAndGet();
-			LOG.debug(msgId + " failed, trying to recover it");
+			LOG.error(msgId + " failed, trying to recover it");
 			this.consumer.handleFailedEvents(id);
 		}		
 	}
@@ -133,7 +137,7 @@ public class KafkaSpout07 implements IRichSpout
 	public void close()
 	{
 		this.consumer.shutdown();
-		LOG.debug("Shutting down....\nProcessed messages = " + this.count + "\nAcked messages = " + this.acked + "\nFailed messages = " + this.failed);
+	//	LOG.debug("Shutting down....\nProcessed messages = " + this.count + "\nAcked messages = " + this.acked + "\nFailed messages = " + this.failed);
 	}
 
 	public void activate()

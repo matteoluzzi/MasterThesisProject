@@ -24,6 +24,7 @@ import backtype.storm.tuple.Values;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CountryResponse;
@@ -49,7 +50,8 @@ public class GeoLookUpBolt extends BaseBasicBolt
 	public void prepare(Map stormConf, TopologyContext context)
 	{
 		this.dbReader = GeoIP.getDbReader();
-		this.mapper = ObjectMapperConfiguration.configure();
+		this.mapper = new ObjectMapper();
+		this.mapper.registerModule(new JodaModule());
 	}
 
 	/**
@@ -123,6 +125,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 		} else
 			throw new FailedException(); // i.e. fail on processing tuple
 		LOG.info("Processed message");
+		LOG.info("Received message with init time : " + initTime);
 	}
 
 	/**

@@ -79,7 +79,6 @@ public class ContentLocalizationJob extends WorkingJob
 				return result;
 			}
 		});
-		System.out.println(models.collect());
 		JavaEsSpark.saveJsonToEs(models, "vimond-batch/batch-contentLocation");
 		
 	}

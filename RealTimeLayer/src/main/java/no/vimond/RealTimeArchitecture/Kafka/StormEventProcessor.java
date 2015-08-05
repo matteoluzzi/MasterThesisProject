@@ -23,7 +23,7 @@ public class StormEventProcessor implements MessageProcessor<StormEvent>
 
 	public StormEventProcessor()
 	{
-		this.jsonDecoder = new JsonDecoder<StormEvent>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
+		this.jsonDecoder= new JsonDecoder<StormEvent>(StormEvent.class, ObjectMapperConfiguration.configurePretty());
 		this.queue = new ConcurrentLinkedQueue<StormEvent>();
 	}
 

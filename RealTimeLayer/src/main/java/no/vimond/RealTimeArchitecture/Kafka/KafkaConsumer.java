@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
@@ -21,7 +21,7 @@ import com.vimond.common.kafka07.consumer.MessageProcessor;
 public class KafkaConsumer extends KafkaConsumerService<VimondEventAny> implements KafkaConsumerStreamProducer 
 {
 	
-	private static Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
+	private static Logger LOG = LogManager.getLogger(KafkaConsumer.class);
 	
 	private StormEventProcessor eventProcessor;
 	private Map<UUID, StormEvent> inProcessEvents;
@@ -51,7 +51,7 @@ public class KafkaConsumer extends KafkaConsumerService<VimondEventAny> implemen
 				this.isRunning.set(false);
 			} catch (Exception e)
 			{
-				LOG.error(null, e);
+				LOG.error(e);
 			}
 		}
 	}
@@ -98,7 +98,7 @@ public class KafkaConsumer extends KafkaConsumerService<VimondEventAny> implemen
 			LOG.debug("Event " + id + " successfully recovered");
 		}
 		else
-			LOG.warn("Error while recovering an event");
+			LOG.error("Error while recovering an event");
 	}
 	
 	public void handleAckedEvents(UUID id)
