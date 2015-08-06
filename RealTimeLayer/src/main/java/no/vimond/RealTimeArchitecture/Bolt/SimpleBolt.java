@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.vimond.common.shared.ObjectMapperConfiguration;
 
 public class SimpleBolt extends BaseBasicBolt
 {
@@ -57,25 +56,37 @@ public class SimpleBolt extends BaseBasicBolt
 
 	public void execute(Tuple input, BasicOutputCollector collector)
 	{
-		String event = input.getString(0);
-		
+		Object msg = input.getValue(0);
 		StormEvent message = null;
-		try
+		
+		if(msg instanceof String)
 		{
-			message = this.mapper.readValue(event, StormEvent.class);
-		} catch (JsonParseException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String event = input.getString(0);
+			try
+			{
+				message = this.mapper.readValue(event, StormEvent.class);
+				message.setInitTime(new DateTime().getMillis());
+				
+			} catch (JsonParseException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		else
+		{
+			message = (StormEvent) input.getValue(0);
+			message.setInitTime(new DateTime().getMillis());
+		}
+		
 		// set the counter for aggregation purposes
 		message.setCounter();
 
@@ -90,6 +101,7 @@ public class SimpleBolt extends BaseBasicBolt
 			emitOnIpStream(message, ipAddress, collector);
 		}
 		LOG.info("Received message");
+		
 		
 	}
 

@@ -11,7 +11,6 @@ import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -47,8 +46,6 @@ public class KafkaSpout07 implements IRichSpout
 	private HealthCheckRegistry healthCheckRegistry;
 	private KafkaConfig kafkaConfig;
 	private KafkaConsumerConfig consumerConfig;
-	private AtomicInteger acked;
-	private AtomicInteger failed;
 
 	@SuppressWarnings("rawtypes")
 	public void open(Map conf, TopologyContext context,
@@ -60,9 +57,6 @@ public class KafkaSpout07 implements IRichSpout
 
 		this.collector = collector;
 		this.count = new AtomicInteger(0);
-		this.acked = new AtomicInteger(0);
-		this.failed = new AtomicInteger(0);
-
 		this.metricRegistry = new MetricRegistry();
 		this.healthCheckRegistry = new HealthCheckRegistry();
 		this.kafkaConfig = (zk_location != null) ? new KafkaConfig(zk_location)
@@ -118,7 +112,7 @@ public class KafkaSpout07 implements IRichSpout
 		{
 			UUID id = (UUID) msgId;
 			LOG.debug(msgId + " acked");
-			this.acked.incrementAndGet();
+			//this.acked.incrementAndGet();
 			this.consumer.handleAckedEvents(id);
 		}		
 	}
@@ -128,7 +122,6 @@ public class KafkaSpout07 implements IRichSpout
 		if(msgId instanceof UUID)
 		{
 			UUID id = (UUID) msgId;
-			this.failed.incrementAndGet();
 			LOG.error(msgId + " failed, trying to recover it");
 			this.consumer.handleFailedEvents(id);
 		}		

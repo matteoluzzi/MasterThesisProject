@@ -1,8 +1,13 @@
 package no.vimond.RealTimeArchitecture.Spout;
 
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import no.vimond.RealTimeArchitecture.Kafka.StormEventSchema;
+import no.vimond.RealTimeArchitecture.Utils.AppProperties;
+import no.vimond.RealTimeArchitecture.Utils.Constants;
+import no.vimond.RealTimeArchitecture.Utils.Utility;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,70 +23,76 @@ public class SpoutCreator
 {
 	private static Logger LOG = LoggerFactory.getLogger(SpoutCreator.class);
 
-	public static IRichSpout create(Map<String, String> args)
+	public static IRichSpout create(AppProperties props)
 	{
-		KafkaAPI api_version = (args.get("kafka_api_version") != null) ? KafkaAPI
-				.valueOf(args.get("kafka_api_version")) : KafkaAPI.DEFAULT;
+		KafkaAPI api_version = (props.get("kafka_api_version") != null) ? KafkaAPI.valueOf((String) props.get("kafka_api_version")) : KafkaAPI.DEFAULT;
 
 		switch (api_version)
 		{
-			case API07:
-				return createKafkaSpout07();
-			case API08:
-			//	return buildKafka08Spout(args);
-				return new KafkaSpout07();
-			default:
-			{
-				LOG.warn("Usage of default API (07)");
-				return createKafkaSpout07();
-			}
+		case API07:
+			return new KafkaSpout07();
+		case API08:
+			return buildKafka08Spout(props);
+		case API07KS:
+			return createKafkaSpout07(props);
+		default:
+		{
+			LOG.warn("Usage of default API (07)");
+			return createKafkaSpout07(props);
+		}
 		}
 	}
 
-//	private static KafkaSpout buildKafka08Spout(Map<String, String> args)
-//	{
-//		SpoutConfig cfg = buildKakfaConfig(args);
-//		return new KafkaSpout(cfg);
-//	}
-
-//	private static SpoutConfig buildKakfaConfig(Map<String, String> args)
-//	{
-//		String arg_zkHostAddress = (args.get("zkHost") != null) ? args.get("zkHost") : Constants.DEFAULT_ZK_LOCATION;
-//		String arg_topic = (args.get("topic") != null) ? args.get("topic") : Constants.DEFAULT_TOPIC;
-//		String arg_consumer_id = (args.get("consumer_group") != null) ? args.get("consumer_group") : Constants.DEFAULT_CONSUMER_GROUP_RT;
-//		
-//		InputStream propertyFileAsAInputStream = Utility.loadPropertiesFileFromClassPath("app.properties");
-//		Properties prop = new Properties();
-//		try
-//		{
-//			prop.load(propertyFileAsAInputStream);
-//		} catch (IOException e)
-//		{
-//			LOG.warn("Cannot load properties file, exiting now");
-//			System.exit(0);
-//		}
-//		
-//		String topic = (arg_topic == null) ? prop.getProperty("topic")
-//				: arg_topic;
-//		BrokerHosts zkHost = (arg_zkHostAddress == null) ? new ZkHosts(
-//				prop.getProperty("zkHost"), "/") : new ZkHosts(arg_zkHostAddress, "/");
-//
-//		
-//		SpoutConfig cfg = new SpoutConfig(zkHost, topic, "/" + topic ,arg_consumer_id);
-//
-//		//start reading from the end of the topic --> valid only for the first run of the topology, then it starts according to the offset stored on ZK
-//	//	cfg.startOffsetTime = kafka.api.OffsetRequest.LatestTime();
-//		
-//		return cfg;
-//	}
-	
-	public static KafkaSpout createKafkaSpout07()
+	private static KafkaSpout buildKafka08Spout(AppProperties props)
 	{
-		BrokerHosts z = new ZkHosts("localhost:2181", "/brokers" );
-		SpoutConfig cfg = new SpoutConfig(z, "player-events", "/player-events", "group1" );
+		SpoutConfig cfg = buildKakfaConfig(props);
+		return new KafkaSpout(cfg);
+	}
+
+	private static SpoutConfig buildKakfaConfig(Properties props)
+	{
+		String zKLocation = (props.getProperty("zookeeper.connect") != null) ? props.getProperty("zookeeper.connect") : Constants.DEFAULT_ZK_LOCATION;
+		long zKPort = (Long) ((props.get("zookeeper.port") != null) ? props.get("zookeeper.port") : Constants.DEFAULT_ZK_PORT);
+		String topic = (props.getProperty("topic") != null) ? props.getProperty("topic") : Constants.DEFAULT_TOPIC;
+		String consumer_group = (props.getProperty("group.id") != null) ? props.getProperty("group.id") : Constants.DEFAULT_CONSUMER_GROUP_RT;
+
+		InputStream propertyFileAsAInputStream = Utility.loadPropertiesFileFromClassPath("app.properties");
+		Properties prop = new Properties();
+		try
+		{
+			prop.load(propertyFileAsAInputStream);
+		} catch (IOException e)
+		{
+			LOG.warn("Cannot load properties file, exiting now");
+			System.exit(0);
+		}
+
+		BrokerHosts zkHost = new ZkHosts(zKLocation + ":" + zKPort, "/");
+
+		SpoutConfig cfg = new SpoutConfig(zkHost, topic, "/" + topic, consumer_group);
+
+		// start reading from the end of the topic --> valid only for the first
+		// run of the topology, then it starts according to the offset stored on
+		// ZK
+		// cfg.startOffsetTime = kafka.api.OffsetRequest.LatestTime();
+
+		return cfg;
+	}
+
+	public static KafkaSpoutStorm createKafkaSpout07(AppProperties props)
+	{
+		String zKLocation = (props.getProperty("zookeeper.connect") != null) ? props.getProperty("zookeeper.connect") : Constants.DEFAULT_ZK_LOCATION;
+		long zKPort = (props.getProperty("zookeeper.port") != null) ? Long.parseLong(props.getProperty("zookeeper.port")) : Constants.DEFAULT_ZK_PORT;
+		String zKBrokerPath = (props.getProperty("zookeeper.brokerPath") != null) ? props.getProperty("zookeeper.brokerPath") : Constants.DEFAULT_ZK_BROKER_PATH;
+		String topic = (props.getProperty("topic") != null) ? props.getProperty("topic") : Constants.DEFAULT_TOPIC;
+		String consumer_group = (props.getProperty("group.id") != null) ? props.getProperty("group.id") : Constants.DEFAULT_CONSUMER_GROUP_RT;
+
+		BrokerHosts z = new ZkHosts(zKLocation + ":" + zKPort, zKBrokerPath);
+		SpoutConfig cfg = new SpoutConfig(z, topic, "/" + topic, consumer_group);
 		cfg.scheme = new SchemeAsMultiScheme(new StormEventSchema());
-		KafkaSpout spout = new KafkaSpout(cfg);
+
+		KafkaSpoutStorm spout = new KafkaSpoutStorm(cfg);
 		return spout;
-		
+
 	}
 }

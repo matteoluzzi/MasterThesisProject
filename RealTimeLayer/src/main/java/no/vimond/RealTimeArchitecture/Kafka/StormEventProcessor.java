@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import kafka.serializer.Decoder;
 import no.vimond.RealTimeArchitecture.Utils.StormEvent;
 
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ public class StormEventProcessor implements MessageProcessor<StormEvent>
 		if (message != null)
 			try
 			{
-				message.setInitTime(new DateTime().getMillis());
+				
 				queue.add(message);
 				return true;
 			} catch (IllegalStateException e)

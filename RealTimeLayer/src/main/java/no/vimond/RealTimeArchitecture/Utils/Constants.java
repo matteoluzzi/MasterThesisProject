@@ -2,10 +2,13 @@ package no.vimond.RealTimeArchitecture.Utils;
 
 public class Constants
 {
-	public static final String DEFAULT_ZK_LOCATION = "localhost:2181";
+	public static final String DEFAULT_ZK_LOCATION = "localhost";
+	public static final long DEFAULT_ZK_PORT = 2181;
 	public static final String DEFAULT_TOPIC = "player-events";
 	public static final String DEFAULT_CONSUMER_GROUP_RT = "kafka-consumer-group_rt";
-	public static final String DEFAULT_CONSUMER_GROUP_B = "kafka-consumer-group_b";
+	public static final Boolean DEFAULT_LOCAL_MODE = false;
+	public static final String DEFAULT_ZK_BROKER_PATH = "zookeeper.brokerPath";
+	public static String DEFAULT_ES_INDEX = "vimond-realtime/realtime-player-events";
 	
 	public static final String PROPERTIES_FILE = "";
 	public static final String GROUP_KEY_ID = "group.id";
@@ -21,6 +24,13 @@ public class Constants
 	public static final String APPNAME = "data.appName";
 	public static final String ASSETID = "data.assetId";
 	
-	public static final long DEFAULT_FLUSH_TIME = 1;
-	public static final long MAX_MESSAGES_INTO_FILE = 10000;
+	public static final String SPOUT = "kafka-spout";
+	public static final String BOLT_ROUTER = "router-bolt";
+	public static final String BOLT_GEOIP = "geoip-bolt";
+	public static final String BOLT_ES = "es-bolt";
+
+
+	
+	
+	
 }

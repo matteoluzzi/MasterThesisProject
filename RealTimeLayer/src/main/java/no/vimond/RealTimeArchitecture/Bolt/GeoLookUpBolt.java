@@ -29,7 +29,6 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CountryResponse;
 import com.maxmind.geoip2.record.Country;
-import com.vimond.common.shared.ObjectMapperConfiguration;
 
 /**
  * Storm bolt which adds is responsible to inject a country name fields, if
@@ -109,6 +108,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 
 	private void emit(StormEvent message, BasicOutputCollector collector)
 	{
+		
 		String value = null;
 		long initTime = message.getInitTime();
 		try
@@ -125,7 +125,7 @@ public class GeoLookUpBolt extends BaseBasicBolt
 		} else
 			throw new FailedException(); // i.e. fail on processing tuple
 		LOG.info("Processed message");
-		LOG.info("Received message with init time : " + initTime);
+		
 	}
 
 	/**
