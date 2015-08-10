@@ -7,10 +7,11 @@
             <name-node>${nameNode}</name-node>
             <master>${master}</master>
             <name>SparkBatch</name>
-            <class>no.vimond.StorageArchitecture.App</class>
+            <class>com.vimond.StorageArchitecture.App</class>
             <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${jarName}</jar>
             <spark-opts>--num-executors 2 --driver-memory 2g --executor-memory 3g --executor-cores 2</spark-opts>
             <arg>${inputDir}</arg>
+            <arg>${frequency}</arg>
 		</spark>
 		<ok to="java-node"/>
         <error to="fail"/>

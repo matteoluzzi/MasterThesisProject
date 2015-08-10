@@ -2,7 +2,6 @@ package no.vimond.RealTimeArchitecture.Topology;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import no.vimond.RealTimeArchitecture.Bolt.ElasticSearchBolt;
 import no.vimond.RealTimeArchitecture.Bolt.GeoLookUpBolt;
@@ -54,8 +53,8 @@ public class StormTopologyBuilder
 		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), 10)
 		.shuffleGrouping(Constants.BOLT_ROUTER)
 		.shuffleGrouping(Constants.BOLT_GEOIP, Constants.IP_STREAM)
-		.addConfiguration("es.storm.bolt.write.ack", false)
-		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 2 minutes
+		.addConfiguration("es.storm.bolt.write.ack", true)
+		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30); //flush data into ES every 30 seconds
 		
 		
 		LOG.info("Creating topology components DONE");

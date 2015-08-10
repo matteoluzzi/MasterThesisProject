@@ -30,7 +30,12 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
-
+/**
+ * Implementation of bolt which writes record on an elasticsearch cluster. Implementation provided by elasticsearch library.</b>
+ * Source code has been reported for metrics measurement.
+ * @author matteoremoluzzi
+ *
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ElasticSearchBolt implements IRichBolt {
 

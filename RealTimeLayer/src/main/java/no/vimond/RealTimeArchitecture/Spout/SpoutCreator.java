@@ -18,7 +18,11 @@ import storm.kafka.KafkaSpout;
 import storm.kafka.SpoutConfig;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.IRichSpout;
-
+/**
+ * Class which acts as a factory for kafkaspout creation. It creates a different object according to the value specified in props file
+ * @author matteoremoluzzi
+ *
+ */
 public class SpoutCreator
 {
 	private static Logger LOG = LoggerFactory.getLogger(SpoutCreator.class);
@@ -90,6 +94,7 @@ public class SpoutCreator
 		BrokerHosts z = new ZkHosts(zKLocation + ":" + zKPort, zKBrokerPath);
 		SpoutConfig cfg = new SpoutConfig(z, topic, "/" + topic, consumer_group);
 		cfg.scheme = new SchemeAsMultiScheme(new StormEventSchema());
+		//cfg.forceFromStart = true;
 
 		KafkaSpoutStorm spout = new KafkaSpoutStorm(cfg);
 		return spout;

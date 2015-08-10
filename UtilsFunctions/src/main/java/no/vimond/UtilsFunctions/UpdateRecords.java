@@ -16,6 +16,7 @@ import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.IndicesFilterBuilder;
@@ -90,23 +91,15 @@ public class UpdateRecords
 				.includeLower(false)
 				.includeUpper(true), "vimond-realtime").noMatchFilter("none");	
 			
-				
-						/*		FilterBuilder fb = new AndFilterBuilder(new TypeFilterBuilder("player-events"), 
-						new RangeFilterBuilder("timestamp")
-						.from(params.get("start_date"))
-						.to(params.get("end_date"))
-						.includeLower(false)
-						.includeUpper(true)
-						);
-					*/
 			//search
 			SearchResponse sr = this.esClient.prepareSearch()
 					.setQuery(new MatchAllQueryBuilder())
 					.setPostFilter(fb)
-					.setScroll(new TimeValue(10000)) //keep the scroll context alive for 10 seconds
+					.setScroll(new TimeValue(10000))
+					.setSize(10000)//keep the scroll context alive for 10 seconds
 					.get();
 			
-			LOG.info("Search request completed in : " + sr.getTook());
+			LOG.info("Search request completed in : " + sr.getTook()  + " "+ sr.getHits().getTotalHits());
 			
 			//scroll the result
 			boolean scroll = true;
@@ -120,7 +113,7 @@ public class UpdateRecords
 				sr = this.esClient.prepareSearchScroll(sr.getScrollId())
 					.setScroll(new TimeValue(10000)) //keep the scroll context alive for 10 seconds
 					.get();
-				
+				LOG.info("Search request completed in : " + sr.getTook());
 				if (sr.getHits().getHits().length == 0) { //no more results
 			        scroll = false; 
 			    }
@@ -139,24 +132,22 @@ public class UpdateRecords
 			
 			public void beforeBulk(long executionId, BulkRequest request)
 			{
+				LOG.info("Going to execute new bulk composed of {} actions", request.numberOfActions());
 			}
 			
 			public void afterBulk(long executionId, BulkRequest request, Throwable failure)
 			{
 				LOG.error("Bulk requested failed: " + failure.getMessage());
-				
-				
 			}
 			
 			public void afterBulk(long executionId, BulkRequest request, BulkResponse response)
 			{
 				if(!response.hasFailures())
 					LOG.info("Bulk requested completed in: {} ", response.getTook());
-				
-				
 			}
-		}).setBulkActions(1000)
-		.setFlushInterval(TimeValue.timeValueSeconds(5))
+		}).setBulkActions(10000)
+		.setBulkSize(new ByteSizeValue(-1))
+		.setConcurrentRequests(5)
 		.build();
 	}
 

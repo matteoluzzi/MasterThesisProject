@@ -24,6 +24,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
+/**
+ * Simple bolt which acts as a tuple router according to the ip address field in the tuple
+ * @author matteoremoluzzi
+ *
+ */
 public class SimpleBolt extends BaseBasicBolt
 {
 	private static final long serialVersionUID = 1L;
@@ -65,26 +70,28 @@ public class SimpleBolt extends BaseBasicBolt
 			try
 			{
 				message = this.mapper.readValue(event, StormEvent.class);
-				message.setInitTime(new DateTime().getMillis());
+				
+				DateTime now = new DateTime();
+				message.setInitTime(now.getMillis());
+				message.setTimestamp(now);
 				
 			} catch (JsonParseException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (JsonMappingException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (IOException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 		else
 		{
 			message = (StormEvent) input.getValue(0);
-			message.setInitTime(new DateTime().getMillis());
+			
+			DateTime now = new DateTime();
+			
+			message.setInitTime(now.getMillis());
+			//TODO used for the demo presentation
+			message.setTimestamp(now);
 		}
 		
 		// set the counter for aggregation purposes

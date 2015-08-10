@@ -1,11 +1,11 @@
-<coordinator-app name="hello-coord" frequency="${coord:minutes(5)}" start="${startTime}" end="${endTime}" timezone="GMT+02:00"  
+<coordinator-app name="hello-coord" frequency="${coord:minutes(10)}" start="${startTime}" end="${endTime}" timezone="GMT+02:00"  
   xmlns="uri:oozie:coordinator:0.3">
   <controls>
-        <timeout>1</timeout>
-        <concurrency>1</concurrency>
+        <timeout>${timeout}</timeout>
+        <concurrency>${concurrency}</concurrency>
     </controls>
 	<datasets>
-  		<dataset name="vimondEvents" frequency="${coord:minutes(5)}" initial-instance="${startTime}" timezone="GMT+02:00">
+  		<dataset name="vimondEvents" frequency="${coord:minutes(10)}" initial-instance="${datasetStartTime}" timezone="GMT+02:00">
 		<uri-template>${nameNode}/user/${coord:user()}/${datasetFolder}/master/${YEAR}-${MONTH}-${DAY}/${HOUR}/${MINUTE}</uri-template>
 		<done-flag></done-flag>
 		<!-- TODO: implement a done-flag mechanism -->

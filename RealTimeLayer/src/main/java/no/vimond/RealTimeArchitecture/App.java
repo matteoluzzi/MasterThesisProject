@@ -7,7 +7,12 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import no.vimond.RealTimeArchitecture.Topology.StormTopologyBuilder;
 import no.vimond.RealTimeArchitecture.Utils.AppProperties;
 
-
+/**
+ * Main class for the real-time layer implemented with Storm. It takes a configuration file for kafka connection.</b>
+ * Topology configuration is hardcoded with execution in localmode, for cluster execution it must be specified used the storm.yaml
+ * @author matteoremoluzzi
+ *
+ */
 public class App 
 {
     public static void main( String[] args )

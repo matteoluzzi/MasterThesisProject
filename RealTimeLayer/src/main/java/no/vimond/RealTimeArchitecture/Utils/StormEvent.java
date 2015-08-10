@@ -3,8 +3,6 @@ package no.vimond.RealTimeArchitecture.Utils;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vimond.common.events.data.VimondEventAny;
@@ -19,6 +17,7 @@ public class StormEvent extends VimondEventAny implements Serializable
 	@JsonProperty("data.ip")
 	public String getIpAddress()
 	{
+		@SuppressWarnings("unchecked")
 		Map<String, Object> asset_map = (Map<String, Object>) this.getGenericValues().get("asset_playback");
 		if (asset_map != null)
 			return (String) asset_map.get("ip");
@@ -39,6 +38,7 @@ public class StormEvent extends VimondEventAny implements Serializable
 	@JsonProperty("data.appName")
 	public String getAppName()
 	{
+		@SuppressWarnings("unchecked")
 		Map<String, Object> asset_map = (Map<String, Object>) this.getGenericValues().get("asset_playback");
 		if (asset_map != null)
 			return (String) asset_map.get("appName");
@@ -49,6 +49,7 @@ public class StormEvent extends VimondEventAny implements Serializable
 	@JsonProperty("data.assetId")
 	public Integer getAssetId()
 	{
+		@SuppressWarnings("unchecked")
 		Map<String, Object> asset_map = (Map<String, Object>) this.getGenericValues().get("asset_playback");
 		if (asset_map != null)
 			return (Integer) asset_map.get("assetId");
