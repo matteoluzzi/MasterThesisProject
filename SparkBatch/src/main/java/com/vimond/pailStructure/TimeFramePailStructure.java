@@ -106,7 +106,7 @@ public class TimeFramePailStructure implements PailStructure<String>
 		if(TimeFramePailStructure.timeFrame <= 60)
 		{
 			int timeFrame = minutes / TimeFramePailStructure.timeFrame;
-			return Arrays.asList(String.valueOf(hours), String.format("%02d", timeFrame * TimeFramePailStructure.timeFrame));
+			return Arrays.asList(String.format("%02d", hours), String.format("%02d", timeFrame * TimeFramePailStructure.timeFrame));
 		}
 		//division of current day
 		else
