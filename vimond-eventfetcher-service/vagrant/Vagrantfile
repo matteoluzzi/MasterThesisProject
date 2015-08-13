@@ -1,0 +1,57 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+version = nil
+begin
+  file = File.new("../vimond-eventfetcher-service/target/classes/version.txt", "r")
+  version = file.read
+  file.close
+rescue => err
+  puts "Exception: #{err}"
+end
+
+puts version
+
+Vagrant::Config.run do |config|
+
+  config.vm.box = "OpscodeUbuntu1204"
+
+  # Ready made ubuntu image with chef 11 and ruby installed
+  config.vm.box_url = "https://opscode-vm.s3.amazonaws.com/vagrant/opscode_ubuntu-12.04_chef-11.2.0.box"
+  config.ssh.forward_agent = true
+
+  config.vm.network :hostonly, "192.168.33.101"
+
+  config.vm.forward_port 8082, 8000
+  config.vm.forward_port 8083, 8001
+
+  config.vm.share_folder "cookbooks", "/var/chef/cookbooks", "../../VimondChef/cookbooks"
+  config.vm.share_folder "mvn", "/var/mvn/repository", "~/.m2/repository"
+
+  config.vm.customize ["modifyvm", :id, "--memory", "768"]
+
+  config.vm.provision :chef_solo do |chef|
+
+    chef.cookbooks_path = ["../../VimondChef/cookbooks", "../chef"]
+
+    chef.add_recipe "java::oracle"
+    chef.add_recipe "vimond-eventfetcher-service::local"
+
+    chef.json = {
+        :vimond_eventfetcher_service => {
+            :install_flavor => 'local',
+            :repo => '/var/mvn/repository',
+            :version => version
+        },
+        :java => {
+            :install_flavor => 'oracle',
+            :oracle => {
+                'accept_oracle_download_terms' => true
+            }
+        }
+    }
+
+  end
+
+
+end

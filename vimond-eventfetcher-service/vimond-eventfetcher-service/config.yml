@@ -1,0 +1,61 @@
+# See Dropwizard's documentation for more details: 
+# https://dropwizard.github.io/dropwizard/manual/configuration.html
+
+# Jetty web server configuration
+# http://dropwizard.io/manual/configuration.html#http
+server:
+  # We are using default port for this service:
+  # https://vimond-ng.atlassian.net/wiki/display/VIS/Ports
+  # Convention: public port is even. Admin port is odd
+  # The port on which the HTTP server listens for service requests.
+  applicationConnectors:
+    - type: http
+      port: 8132
+
+  # The port on which the HTTP server listens for administrative requests.
+  adminConnectors:
+    - type: http
+      port: 8137
+
+
+#KAFKA config
+
+kafka:
+  hosts: localhost:2181
+  properties:
+    zk.connectiontimeout.ms: 20000
+    zk.sessiontimeout.ms   : 20000
+    autocommit.enable      : false
+
+consumer:
+  topic: player-events
+  mode: RELIABLE
+  consumerThreads: 3
+  groupid: eventfetcher_consumers
+  properties:
+    consumer.timeout.ms: 100
+
+
+
+#EVENT PROCESSOR  config
+
+processor:
+  id: STRING
+  config:
+    flushingTime: 60000
+    maxBatchMessages: 10000
+    path: hdfs://localhost:9000/user/matteoremoluzzi/dataset/master
+    pailstructureTimeFrameInMin: 5
+
+# Logging configuration 
+# https://dropwizard.github.io/dropwizard/manual/configuration.html#logging
+logging:
+  level: INFO
+  loggers:
+    io.dropwizard: INFO
+    com.vimond : DEBUG
+  appenders:
+    - type: console
+    - type: file
+      currentLogFilename: ./logs/vimond-eventfetcher-service.log
+      archivedLogFilenamePattern: ./logs/vimond-eventfetcher-service-%d.log.gz

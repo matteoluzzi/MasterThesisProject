@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>vimond-dropwizard-parent</artifactId>
+        <groupId>com.vimond.dropwizard</groupId>
+        <version>3.4.1</version>
+    </parent>
+
+    <modules>
+        <module>vimond-eventfetcher-api</module>
+        <module>vimond-eventfetcher-service</module>
+    </modules>
+
+    <groupId>com.vimond.service</groupId>
+
+    <artifactId>vimond-eventfetcher-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Vimond EventFetcher Service</name>
+    <inceptionYear>2015</inceptionYear>
+
+    <properties>
+        <vimond-common.version>2.2.1</vimond-common.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <server.main.class>com.vimond.eventfetcher.VimondEventFetcherService</server.main.class>
+        <dropwizard.version>0.8.0-rc1</dropwizard.version>
+        <jetty.version>9.2.4.v20141103</jetty.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vimond.common</groupId>
+            <artifactId>vimond-shared</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
