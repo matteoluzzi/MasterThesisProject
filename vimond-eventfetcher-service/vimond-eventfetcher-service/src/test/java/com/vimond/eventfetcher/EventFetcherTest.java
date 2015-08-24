@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 
 import scala.actors.threadpool.Arrays;
 
+import com.backtype.hadoop.pail.Pail;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,5 +46,17 @@ public class EventFetcherTest extends TestCase
 		assertEquals(expected, folder);
 	}
 	
+	public void testPailCreationOnFileSystem()
+	{
+		String path = "/Users/matteoremoluzzi/pailTest";
+		try
+		{
+			Pail pail = Pail.create(path, new TimeFramePailStructure(5));
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 }

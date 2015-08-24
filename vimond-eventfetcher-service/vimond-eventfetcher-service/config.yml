@@ -21,7 +21,7 @@ server:
 #KAFKA config
 
 kafka:
-  hosts: localhost:2181
+  hosts: 52.19.131.114:2181
   properties:
     zk.connectiontimeout.ms: 20000
     zk.sessiontimeout.ms   : 20000
@@ -30,7 +30,7 @@ kafka:
 consumer:
   topic: player-events
   mode: RELIABLE
-  consumerThreads: 3
+  consumerThreads: 6
   groupid: eventfetcher_consumers
   properties:
     consumer.timeout.ms: 100
@@ -43,8 +43,8 @@ processor:
   id: STRING
   config:
     flushingTime: 60000
-    maxBatchMessages: 10000
-    path: hdfs://localhost:9000/user/matteoremoluzzi/dataset/master
+    maxBatchMessages: 100000
+    path: file:///Users/matteoremoluzzi/pailTmp
     pailstructureTimeFrameInMin: 5
 
 # Logging configuration 

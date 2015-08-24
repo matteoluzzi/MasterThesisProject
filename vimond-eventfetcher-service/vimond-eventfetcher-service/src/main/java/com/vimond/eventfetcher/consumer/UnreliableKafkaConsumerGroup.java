@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +11,11 @@ import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerService;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
-import com.vimond.eventfetcher.ProcessorConfiguration;
+import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 
-import con.vimond.eventfetcher.processor.BatchProcessor;
-import con.vimond.eventfetcher.util.Constants;
-import con.vimond.eventfetcher.writer.HDFSWriter;
+import com.vimond.eventfetcher.processor.BatchProcessor;
+import com.vimond.eventfetcher.util.Constants;
+import com.vimond.eventfetcher.writer.HDFSWriter;
 
 /**
  * Unrealiable version of kafka consumer. It commits the offset after reading the message from the broker.<b>

@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 /**
  * Enum fields for a KafkaConsumer

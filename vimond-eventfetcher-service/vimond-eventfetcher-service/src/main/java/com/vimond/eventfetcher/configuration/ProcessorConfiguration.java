@@ -1,4 +1,4 @@
-package com.vimond.eventfetcher;
+package com.vimond.eventfetcher.configuration;
 
 import java.util.Map;
 

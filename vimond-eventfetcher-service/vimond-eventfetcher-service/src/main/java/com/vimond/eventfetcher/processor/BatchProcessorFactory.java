@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.processor;
+package com.vimond.eventfetcher.processor;
 
 /**
  * Factory class for creating a different message processor according to the input parameter of createMessageProcessor method.<br>

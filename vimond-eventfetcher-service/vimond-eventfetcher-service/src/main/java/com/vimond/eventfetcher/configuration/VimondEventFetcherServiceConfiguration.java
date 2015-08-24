@@ -1,4 +1,4 @@
-package com.vimond.eventfetcher;
+package com.vimond.eventfetcher.configuration;
 
 import io.dropwizard.Configuration;
 
@@ -18,7 +18,7 @@ public class VimondEventFetcherServiceConfiguration extends Configuration {
 	private KafkaConfig kafkaConfig;
 	
 	@JsonProperty("consumer")
-	private KafkaConsumerConfigEventFetcher kafkaConsumerConfig;
+	private KafkaConsumerEventFetcherConfiguration kafkaConsumerConfig;
 	
 	@JsonProperty("processor")
     private ProcessorConfiguration processor;
@@ -28,7 +28,7 @@ public class VimondEventFetcherServiceConfiguration extends Configuration {
 		return kafkaConfig;
 	}
 
-	public KafkaConsumerConfigEventFetcher getKafkaConsumerConfig()
+	public KafkaConsumerEventFetcherConfiguration getKafkaConsumerConfig()
 	{
 		return kafkaConsumerConfig;
 	}
@@ -43,7 +43,7 @@ public class VimondEventFetcherServiceConfiguration extends Configuration {
 		this.kafkaConfig = kafkaConfig;
 	}
 
-	public void setKafkaConsumerConfig(KafkaConsumerConfigEventFetcher kafkaConsumerConfig)
+	public void setKafkaConsumerConfig(KafkaConsumerEventFetcherConfiguration kafkaConsumerConfig)
 	{
 		this.kafkaConsumerConfig = kafkaConsumerConfig;
 	}

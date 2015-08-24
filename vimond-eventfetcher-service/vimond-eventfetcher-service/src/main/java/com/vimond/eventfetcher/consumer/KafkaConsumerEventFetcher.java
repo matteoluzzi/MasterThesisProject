@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 import java.util.List;
 

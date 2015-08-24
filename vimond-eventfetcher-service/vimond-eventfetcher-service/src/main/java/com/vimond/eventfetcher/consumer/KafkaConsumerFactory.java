@@ -1,13 +1,13 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.messages.MessageConsumer;
-import com.vimond.eventfetcher.ProcessorConfiguration;
+import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 
-import con.vimond.eventfetcher.processor.BatchProcessor;
+import com.vimond.eventfetcher.processor.BatchProcessor;
 
 /**
  * Factory for crating a new KafkaConsumer. It s a MessageConsumer instance

@@ -6,10 +6,11 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.vimond.eventfetcher.configuration.VimondEventFetcherServiceConfiguration;
 import com.vimond.eventfetcher.health.DummyHealthCheck;
 import com.vimond.eventfetcher.resources.PingResource;
 
-import con.vimond.eventfetcher.consumer.KafkaConsumerHandler;
+import com.vimond.eventfetcher.consumer.KafkaConsumerHandler;
 
 /**
  * Main class of vimond-event-fetcher

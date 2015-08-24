@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.processor;
+package com.vimond.eventfetcher.processor;
 
 /**
  * Enum for defining a new message processor object

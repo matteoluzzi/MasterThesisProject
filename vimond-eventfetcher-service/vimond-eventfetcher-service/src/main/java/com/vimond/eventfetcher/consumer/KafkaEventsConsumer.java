@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +21,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.Decoder;
 
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +40,11 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.messages.MessageConsumer;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
-import com.vimond.eventfetcher.KafkaConsumerConfigEventFetcher;
-import com.vimond.eventfetcher.ProcessorConfiguration;
+import com.vimond.eventfetcher.configuration.KafkaConsumerEventFetcherConfiguration;
+import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.pailStructure.TimeFramePailStructure;
-
-import con.vimond.eventfetcher.processor.BatchProcessor;
-import con.vimond.eventfetcher.util.Constants;
+import com.vimond.eventfetcher.processor.BatchProcessor;
+import com.vimond.eventfetcher.util.Constants;
 
 /**
  * Reliable version of a KafkaConsumer. It processes the events in batch commits the offset only after processing them<b>
@@ -255,7 +255,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		// threads to consume
 		Map<String, List<KafkaStream<T>>> topicMessageStreams = consumerConnector.createMessageStreams(ImmutableMap.of(this.consumerConfig.topic, this.consumerConfig.consumerThreads), decoder);
 
-		CyclicBarrier barrier = new CyclicBarrier(topicMessageStreams.get("player-events").size(), new FlushAndCommit(consumerConnector, logger, this));
+		logger.info("Create message streams");
+		
+		CyclicBarrier barrier = new CyclicBarrier(topicMessageStreams.get(this.consumerConfig.topic).size(), new FlushAndCommit(consumerConnector, logger, this));
 		
 		streams = topicMessageStreams.get(this.consumerConfig.topic);
 
@@ -394,7 +396,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 						}
 						catch (Exception e)
 						{
-							logger.debug("Exception while waiting for batch completion");
+							logger.debug("Exception while waiting for batch completion: {}", e.getMessage());
 							break;
 						}
 					}
@@ -517,7 +519,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean flushToHdfs()
 	{
-		System.out.println("Going to flush the buffer into file now!");
+		Log.info("Going to flush the buffer into file now!");
 
 		// List<Object> messages = getMessages();
 

@@ -1,9 +1,11 @@
-package con.vimond.eventfetcher.processor;
+package com.vimond.eventfetcher.processor;
 
 import kafka.serializer.Decoder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.kafka07.consumer.JsonDecoder;
@@ -18,7 +20,9 @@ import com.vimond.common.shared.ObjectMapperConfiguration;
 public class VimondEventAnyMessageProcessor extends BatchProcessor implements MessageProcessor<VimondEventAny>
 {
 	
-	private Logger LOG = LoggerFactory.getLogger(VimondEventAnyMessageProcessor.class);
+	private Logger LOG = LogManager.getLogger(VimondEventAnyMessageProcessor.class);
+	private static final Marker messages = MarkerManager.getMarker("PERFORMANCES-MESSAGE");
+	private static final Marker errors = MarkerManager.getMarker("PERFORMANCES-ERROR");
 
 	private JsonDecoder<VimondEventAny> jsonDecoder;
 	
@@ -34,7 +38,7 @@ public class VimondEventAnyMessageProcessor extends BatchProcessor implements Me
 
 	public boolean process(VimondEventAny message, int arg1)
 	{
-		LOG.info(toString() + " received message");
+		LOG.info(messages, toString() + " received message");
 		try
 		{
 			consumer.putMessageIntoBuffer(message);
@@ -42,8 +46,7 @@ public class VimondEventAnyMessageProcessor extends BatchProcessor implements Me
 		}
 		catch(Exception e)
 		{
-			LOG.info(toString() + " error while processing the message ");
-			e.printStackTrace();
+			LOG.error(errors, toString() + " error while processing the message: {}", e.getMessage());
 			return false;
 		}
 	}

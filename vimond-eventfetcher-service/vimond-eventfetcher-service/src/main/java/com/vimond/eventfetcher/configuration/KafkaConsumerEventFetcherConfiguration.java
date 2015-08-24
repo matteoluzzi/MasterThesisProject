@@ -1,9 +1,9 @@
-package com.vimond.eventfetcher;
+package com.vimond.eventfetcher.configuration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 
-public class KafkaConsumerConfigEventFetcher extends KafkaConsumerConfig
+public class KafkaConsumerEventFetcherConfiguration extends KafkaConsumerConfig
 {
 
 	@JsonProperty

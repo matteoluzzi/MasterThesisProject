@@ -1,5 +1,7 @@
 package com.vimond.eventfetcher;
 
+import com.vimond.eventfetcher.configuration.VimondEventFetcherServiceConfiguration;
+
 import io.dropwizard.cli.Command;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;

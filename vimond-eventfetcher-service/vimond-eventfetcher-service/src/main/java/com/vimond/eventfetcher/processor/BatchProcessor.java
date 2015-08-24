@@ -1,6 +1,6 @@
-package con.vimond.eventfetcher.processor;
+package com.vimond.eventfetcher.processor;
 
-import con.vimond.eventfetcher.consumer.KafkaConsumerEventFetcher;
+import com.vimond.eventfetcher.consumer.KafkaConsumerEventFetcher;
 /**
  * Abstract class for a message processor. Needed for setting the Consumer instance into it
  * @author matteoremoluzzi

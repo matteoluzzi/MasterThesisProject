@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.writer;
+package com.vimond.eventfetcher.writer;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,8 +11,8 @@ import com.backtype.hadoop.pail.Pail;
 import com.backtype.hadoop.pail.Pail.TypedRecordOutputStream;
 import com.vimond.pailStructure.TimeFramePailStructure;
 
-import con.vimond.eventfetcher.consumer.KafkaConsumerEventFetcher;
-import con.vimond.eventfetcher.consumer.UnreliableKafkaConsumerGroup;
+import com.vimond.eventfetcher.consumer.KafkaConsumerEventFetcher;
+import com.vimond.eventfetcher.consumer.UnreliableKafkaConsumerGroup;
 /**
  * TimerTask used by the unreliable version of the kafka consumer for flushing data into HDFS while keep reading from the broker
  * @author matteoremoluzzi

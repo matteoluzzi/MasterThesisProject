@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.util;
+package com.vimond.eventfetcher.util;
 
 import java.io.InputStream;
 import java.util.Properties;

@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.util;
+package com.vimond.eventfetcher.util;
 
 public class Constants
 {

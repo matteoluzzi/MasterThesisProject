@@ -72,29 +72,29 @@ public class TimeFramePailStructure implements PailStructure<String>
 	 */
 	public List<String> getTarget(String object)
 	{
-		VimondEventAny event;
-		try
-		{
-			event = mapper.readValue(object, VimondEventAny.class);
-			List<String> path = new ArrayList<String>();
-			DateTime date = event.getTimestamp();
-			path.add(formatter.format(date.toDate()));
-			path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
-			return path;
-		} catch (JsonParseException e)
-		{
-		} catch (JsonMappingException e)
-		{
-		} catch (IOException e)
-		{
-		}
-		return null;
-//		
-//		DateTime date = new DateTime();
-//		List<String> path = new ArrayList<String>();
-//		path.add(formatter.format(date.toDate()));
-//		path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
-//		return path;
+//		VimondEventAny event;
+//		try
+//		{
+//			event = mapper.readValue(object, VimondEventAny.class);
+//			List<String> path = new ArrayList<String>();
+//			DateTime date = event.getTimestamp();
+//			path.add(formatter.format(date.toDate()));
+//			path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
+//			return path;
+//		} catch (JsonParseException e)
+//		{
+//		} catch (JsonMappingException e)
+//		{
+//		} catch (IOException e)
+//		{
+//		}
+//		return null;
+		
+		DateTime date = new DateTime();
+		List<String> path = new ArrayList<String>();
+		path.add(formatter.format(date.toDate()));
+		path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
+		return path;
 		
 	}
 

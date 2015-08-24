@@ -1,12 +1,14 @@
-package con.vimond.eventfetcher.processor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vimond.common.kafka07.consumer.MessageProcessor;
+package com.vimond.eventfetcher.processor;
 
 import kafka.serializer.Decoder;
 import kafka.serializer.StringDecoder;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
+
+import com.vimond.common.kafka07.consumer.MessageProcessor;
 
 /**
  * Simple string processor. Decodes a byte array into a String and puts it into the buffer 
@@ -15,7 +17,9 @@ import kafka.serializer.StringDecoder;
  */
 public class StringMessageProcessor extends BatchProcessor implements MessageProcessor<String>
 {
-	private Logger LOG = LoggerFactory.getLogger(StringMessageProcessor.class);
+	private Logger LOG = LogManager.getLogger(StringMessageProcessor.class);
+	private static final Marker messages = MarkerManager.getMarker("PERFORMANCES-EVENTFETCHER-MESSAGE");
+	private static final Marker errors = MarkerManager.getMarker("MONITORING-EVENTFETCHER-ERROR");
 	
 	private final Decoder<String> stringDecoder = new StringDecoder();
 
@@ -26,7 +30,7 @@ public class StringMessageProcessor extends BatchProcessor implements MessagePro
 	
 	public boolean process(String message, int arg1)
 	{
-		LOG.info(toString() + " received message");
+		LOG.info(messages, toString() + " received message");
 		try
 		{
 			consumer.putMessageIntoBuffer(message);
@@ -34,8 +38,7 @@ public class StringMessageProcessor extends BatchProcessor implements MessagePro
 		}
 		catch(Exception e)
 		{
-			LOG.info(toString() + " error while processing the message ");
-			e.printStackTrace();
+			LOG.error(errors, toString() + " error while processing the message: {}", e.getMessage());
 			return false;
 		}
 	}

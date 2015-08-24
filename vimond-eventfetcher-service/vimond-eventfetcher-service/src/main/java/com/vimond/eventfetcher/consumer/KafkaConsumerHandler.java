@@ -1,4 +1,4 @@
-package con.vimond.eventfetcher.consumer;
+package com.vimond.eventfetcher.consumer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -10,14 +10,14 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.messages.MessageConsumer;
-import com.vimond.eventfetcher.KafkaConsumerConfigEventFetcher;
-import com.vimond.eventfetcher.ProcessorConfiguration;
-import com.vimond.eventfetcher.VimondEventFetcherServiceConfiguration;
+import com.vimond.eventfetcher.configuration.KafkaConsumerEventFetcherConfiguration;
+import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
+import com.vimond.eventfetcher.configuration.VimondEventFetcherServiceConfiguration;
 
-import con.vimond.eventfetcher.processor.BatchProcessor;
-import con.vimond.eventfetcher.processor.BatchProcessorEnum;
-import con.vimond.eventfetcher.processor.BatchProcessorFactory;
-import con.vimond.eventfetcher.util.Constants;
+import com.vimond.eventfetcher.processor.BatchProcessor;
+import com.vimond.eventfetcher.processor.BatchProcessorEnum;
+import com.vimond.eventfetcher.processor.BatchProcessorFactory;
+import com.vimond.eventfetcher.util.Constants;
 
 /**
  * High level abstraction over a kafka consumer. Responsible for create consumers and subscribe them to a topic
@@ -28,7 +28,7 @@ public class KafkaConsumerHandler<T> {
 	
 	private final Logger LOG = LoggerFactory.getLogger(KafkaConsumerHandler.class);
 
-	private KafkaConsumerConfigEventFetcher consumerConfig;
+	private KafkaConsumerEventFetcherConfiguration consumerConfig;
 	private Set<MessageConsumer<T>> consumerGroups;
 	private KafkaConfig kafkaConfig;
 	private ProcessorConfiguration processorConfig;
