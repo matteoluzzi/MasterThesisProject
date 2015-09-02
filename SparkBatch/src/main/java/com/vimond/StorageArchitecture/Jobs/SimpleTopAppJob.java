@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.vimond.StorageArchitecture.Model.Event;
-
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -17,14 +15,15 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.vimond.StorageArchitecture.Model.SimpleModel;
+import com.vimond.utils.data.SimpleModel;
+import com.vimond.utils.data.SparkEvent;
 
-public class SimpleTopAppJob extends WorkingJob
+public class SimpleTopAppJob extends WorkingJob<SparkEvent>
 {
 
 	private static final long serialVersionUID = -2175194420496804736L;
 
-	public SimpleTopAppJob(JavaRDD<Event> inputDataset, DateTime timestamp, String timewindow)
+	public SimpleTopAppJob(JavaRDD<SparkEvent> inputDataset, DateTime timestamp, String timewindow)
 	{
 		super(inputDataset, timestamp, timewindow);
 	}
@@ -66,7 +65,6 @@ public class SimpleTopAppJob extends WorkingJob
 						return ranking;
 					}
 				});
-		
 		
 		JavaEsSpark.saveJsonToEs(models, "vimond-batch/batch-topApp");
 	}

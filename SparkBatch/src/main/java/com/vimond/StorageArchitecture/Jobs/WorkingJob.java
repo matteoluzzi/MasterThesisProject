@@ -1,6 +1,5 @@
 package com.vimond.StorageArchitecture.Jobs;
 
-import com.vimond.StorageArchitecture.Model.Event;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.joda.time.DateTime;
@@ -10,16 +9,16 @@ import org.joda.time.DateTime;
  * @author matteoremoluzzi
  *
  */
-public abstract class WorkingJob implements Job
+public abstract class WorkingJob<T> implements Job
 {
 	
-	protected JavaRDD<Event> inputDataset;
+	protected JavaRDD<T> inputDataset;
 	protected DateTime timestamp;
 	protected String timewindow;
 	
 	private static final long serialVersionUID = -1966157014649117505L;
 	
-	public WorkingJob(JavaRDD<Event> inputDataset, DateTime timestamp, String timewindow)
+	public WorkingJob(JavaRDD<T> inputDataset, DateTime timestamp, String timewindow)
 	{
 		this.inputDataset = inputDataset;
 		this.timestamp = timestamp;

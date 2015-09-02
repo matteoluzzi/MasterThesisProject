@@ -2,10 +2,10 @@ package com.vimond.StorageArchitecture.Jobs;
 
 import java.util.Properties;
 
-import com.vimond.StorageArchitecture.Model.Event;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.joda.time.DateTime;
+
+import com.vimond.utils.data.SparkEvent;
 
 public class JobsFactory
 {
@@ -20,7 +20,8 @@ public class JobsFactory
 		return instance;
 	}
 
-	public Job createJob(JobName job_name, Properties props, JavaRDD<Event> rdd)
+	@SuppressWarnings({"unchecked" })
+	public Job createJob(JobName job_name, Properties props, JavaRDD rdd)
 	{
 		DateTime timestamp = (DateTime) props.get("timestamp");
 		String timewindow = props.getProperty("timewindow");
@@ -36,7 +37,21 @@ public class JobsFactory
 		case SIMPLE_TOP_APP:
 			return new SimpleTopAppJob(rdd, timestamp, timewindow);
 		case SIMPLE_DATA_LOADER:
-			return new LoadDataJob<Event>(props, Event.class);
+			return new LoadDataJob<SparkEvent>(props, SparkEvent.class);
+		case COUNTER_END_BY_ASSET:
+			return new EndEventsPerAssetJob(rdd, timestamp, timewindow);
+		case COUNTER_EVENT_TYPE:
+			return new PlayerEventTypeCounter(rdd, timestamp, timewindow);
+		case COUNTER_START_BY_ASSET:
+			return new StartEventsPerAssetJob(rdd, timestamp, timewindow);
+		case TOP_BROWSER:
+			return new TopBrowserJob(rdd, timestamp, timewindow);
+		case TOP_OS:
+			return new TopOsJob(rdd, timestamp, timewindow);
+		case TOP_VIDEOFORMAT:
+			return new TopVideoFormatJob(rdd, timestamp, timewindow);
+		case START_EVENTS:
+			return new StartEventsJob(rdd, timestamp, timewindow);
 		}
 		return null;
 	}

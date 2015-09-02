@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.vimond.StorageArchitecture.Model.Event;
-
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -17,13 +15,14 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.vimond.StorageArchitecture.Model.SimpleModel;
+import com.vimond.utils.data.SimpleModel;
+import com.vimond.utils.data.SparkEvent;
 
-public class ContentLocalizationJob extends WorkingJob
+public class ContentLocalizationJob extends WorkingJob<SparkEvent>
 {
 	private static final long serialVersionUID = -3085596859613929694L;
 
-	public ContentLocalizationJob(JavaRDD<Event> inputDataset, DateTime timestamp, String timewindow)
+	public ContentLocalizationJob(JavaRDD<SparkEvent> inputDataset, DateTime timestamp, String timewindow)
 	{
 		super(inputDataset, timestamp, timewindow);
 	}

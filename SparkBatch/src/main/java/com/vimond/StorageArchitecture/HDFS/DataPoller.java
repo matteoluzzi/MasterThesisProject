@@ -1,6 +1,7 @@
 package com.vimond.StorageArchitecture.HDFS;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,15 +36,15 @@ public class DataPoller
 	public String ingestNewData()
 	{
 		// set up a temporary folder for moving the snapshot
-		Path tmpPath = new Path("hdfs://localhost:9000/user/matteoremoluzzi/dataset/tmp");
+		Path tmpPath = new Path("hdfs://localhost:9000/copies");
 		try
 		{
 			this.fs.delete(tmpPath, true);
 			this.fs.mkdirs(tmpPath);
-			// TODO generate a unique folder for the snapshot, in order to have
-			// more jobs running on different data
-			masterDataPail.snapshot("hdfs://localhost:9000/user/matteoremoluzzi/dataset/tmp/snapshot");
-			return tmpPath.toString() + "/snapshot";
+			
+			UUID uuid = UUID.randomUUID();
+			masterDataPail.snapshot("hdfs://localhost:9000/copies/copy" + uuid.toString());
+			return tmpPath.toString() + "/copy" + uuid.toString();
 		} catch (IOException e)
 		{
 			return null;

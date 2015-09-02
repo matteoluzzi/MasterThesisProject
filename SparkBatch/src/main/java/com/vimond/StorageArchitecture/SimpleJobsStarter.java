@@ -9,9 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import com.vimond.StorageArchitecture.Utils.Constants;
-import com.vimond.StorageArchitecture.Model.Event;
-
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
@@ -21,6 +18,10 @@ import com.vimond.StorageArchitecture.Jobs.Job;
 import com.vimond.StorageArchitecture.Jobs.JobName;
 import com.vimond.StorageArchitecture.Jobs.JobsFactory;
 import com.vimond.StorageArchitecture.Jobs.LoadDataJob;
+import com.vimond.StorageArchitecture.Jobs.StartEventsJob;
+import com.vimond.StorageArchitecture.Utils.EventInfo;
+import com.vimond.utils.data.Constants;
+import com.vimond.utils.data.SparkEvent;
 
 /**
  * Class in charge to start at the same time some simple jobs working on the
@@ -57,20 +58,31 @@ public class SimpleJobsStarter implements Serializable
 		
 		// start loadData job before starting the other
 
-		LoadDataJob<Event> loadDataJob = (LoadDataJob<Event>) JobsFactory.getFactory().createJob(JobName.SIMPLE_DATA_LOADER, this.prop, null);
+		LoadDataJob<SparkEvent> loadDataJob = (LoadDataJob<SparkEvent>) JobsFactory.getFactory().createJob(JobName.SIMPLE_DATA_LOADER, this.prop, null);
 
 		loadDataJob.run(this.ctx);
 
-		JavaRDD<Event> data_rdd = (JavaRDD<Event>) loadDataJob.getLoadedRDD();
-
+		JavaRDD<SparkEvent> data_rdd = (JavaRDD<SparkEvent>) loadDataJob.getLoadedRDD();
+		
+		//keep in memory the input dataset for better performances
 		data_rdd.cache();
-
+		
 		// submit worker jobs to the executor
 
-		this.submittedJobs.add(this.submitJob(JobName.SIMPLE_CONTENT_LOCATION, data_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.SIMPLE_TOP_APP, data_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.SIMPLE_TOP_ASSETS, data_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.SIMPLE_TOP_COUNTRIES, data_rdd));
+		//submit one-step jobs
+		this.submittedJobs.add(this.submitJob(JobName.COUNTER_EVENT_TYPE, data_rdd));
+		this.submittedJobs.add(this.submitJob(JobName.COUNTER_END_BY_ASSET, data_rdd));
+		
+		StartEventsJob startEventJob = (StartEventsJob) JobsFactory.getFactory().createJob(JobName.START_EVENTS, this.prop, data_rdd);
+		startEventJob.run(this.ctx);
+		
+		JavaRDD<EventInfo> start_events_rdd = startEventJob.getFilteredRDD();
+		
+		this.submittedJobs.add(this.submitJob(JobName.COUNTER_START_BY_ASSET, start_events_rdd));
+		this.submittedJobs.add(this.submitJob(JobName.TOP_BROWSER, start_events_rdd));
+		this.submittedJobs.add(this.submitJob(JobName.TOP_OS, start_events_rdd));
+		this.submittedJobs.add(this.submitJob(JobName.TOP_VIDEOFORMAT, start_events_rdd));
+		
 
 		// close the executor
 		this.pool.shutdown();
@@ -82,18 +94,19 @@ public class SimpleJobsStarter implements Serializable
 				f.get();
 			} catch (InterruptedException | ExecutionException e)
 			{
-				LOG.error("Error while executing a job");
+				LOG.error("Error while executing a job: {}", e);
 				return -1;
 			}
 		}
 
+		//remove data from memory after completing the jobs
 		data_rdd.unpersist();
 		
 		return 0;
 	}
 
 	@SuppressWarnings("rawtypes")
-	private Future submitJob(JobName name, JavaRDD<Event> data_rdd)
+	private Future submitJob(JobName name, JavaRDD data_rdd)
 	{
 		return this.pool.submit(new Runnable()
 		{

@@ -5,9 +5,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 
-import com.vimond.StorageArchitecture.Processing.ExtractGeoIPInfo;
-import com.vimond.StorageArchitecture.Utils.Constants;
-
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -21,7 +18,9 @@ import scala.Tuple2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.vimond.StorageArchitecture.Processing.ExtractGeoIPInfo;
 import com.vimond.common.events.data.VimondEventAny;
+import com.vimond.utils.data.Constants;
 
 /**
  * Generic job for loading events from an hdfs folder. It contains information about
@@ -58,8 +57,8 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 		// broadcast dblite value so it can be used by every executor
 		Broadcast<Boolean> dbLite = ctx.broadcast(dbLiteVersion);
 
-		
-		JavaPairRDD<BytesWritable,NullWritable> string_data = ctx.sequenceFile(this.props.getProperty("dataPath") + "/*.pailfile", BytesWritable.class, NullWritable.class, 3);
+		//read from dataPath folder all the .pailfile available
+		JavaPairRDD<BytesWritable,NullWritable> string_data = ctx.sequenceFile(this.props.getProperty("dataPath") + "/*.pailfile", BytesWritable.class, NullWritable.class);
 		
 		this.inputDataset = string_data.mapPartitions(new FlatMapFunction<Iterator<Tuple2<BytesWritable,NullWritable>>, T>()
 		{
@@ -83,6 +82,9 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 				return events;
 			}
 		});
+		
+		//calculate the distinct values over the dataset due to "at-least-once" message semantic of kafka.
+//		this.inputDataset = inputDataset.distinct();
 				
 		this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
 	}
