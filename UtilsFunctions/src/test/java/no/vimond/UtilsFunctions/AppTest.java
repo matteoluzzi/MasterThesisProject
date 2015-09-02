@@ -1,5 +1,7 @@
 package no.vimond.UtilsFunctions;
 
+import com.vimond.utils.functions.UpdateRecords;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -36,10 +38,6 @@ public class AppTest
     	
     	UpdateRecords ur = new UpdateRecords();
     	
-    	ur.deleteRecordsFromES(folder_path, timeframe);
     	
-    	
-    	
- 
     }
 }

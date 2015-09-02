@@ -1,4 +1,4 @@
-package no.vimond.UtilsFunctions;
+package com.vimond.utils.functions;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;

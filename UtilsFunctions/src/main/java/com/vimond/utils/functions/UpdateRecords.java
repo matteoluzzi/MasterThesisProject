@@ -1,4 +1,4 @@
-package no.vimond.UtilsFunctions;
+package com.vimond.utils.functions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,6 @@ public class UpdateRecords
 
 	public UpdateRecords()
 	{
-		LOG.debug("here");
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
 		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("172.24.1.229", 9300));
@@ -89,7 +88,7 @@ public class UpdateRecords
 				.from(params.get("start_date"))
 				.to(params.get("end_date"))
 				.includeLower(false)
-				.includeUpper(true), "vimond-realtime").noMatchFilter("none");	
+				.includeUpper(true), "vimond-batch").noMatchFilter("none");	
 			
 			//search
 			SearchResponse sr = this.esClient.prepareSearch()
