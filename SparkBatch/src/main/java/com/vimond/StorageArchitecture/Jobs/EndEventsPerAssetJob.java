@@ -40,7 +40,7 @@ public class EndEventsPerAssetJob extends WorkingJob<SparkEvent>
 			@Override
 			public Boolean call(SparkEvent event) throws Exception
 			{
-				String playerEvent = event.getPlayerEventType();
+				String playerEvent = event.getPlayerEvent();
 				if (playerEvent != null && playerEvent.equals("end"))
 				{
 					return true;

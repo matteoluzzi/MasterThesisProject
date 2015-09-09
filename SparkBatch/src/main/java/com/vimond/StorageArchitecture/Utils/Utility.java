@@ -4,12 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
@@ -20,8 +16,6 @@ import com.maxmind.geoip2.record.Location;
 
 public class Utility
 {
-	private static Logger LOG = LoggerFactory.getLogger(Utility.class);
-
 	public static InputStream loadPropertiesFileFromClassPath(String filename)
 	{
 		Thread currentThread = Thread.currentThread();
@@ -31,20 +25,6 @@ public class Utility
 		return propertiesStream;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T getPropertyValue(Properties prop, String key)
-	{
-		Object value = prop.get(key);
-		if (value == null)
-		{
-			LOG.warn("Could not find property value for the key " + key);
-			return null;
-		} else
-		{
-			return (T) value;
-		}
-
-	}
 
 	public static GeoInfo getCountryAndCoordinatesFromIp(DatabaseReader dbReader, String ipAddress, boolean liteVersion)
 	{

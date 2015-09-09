@@ -35,7 +35,7 @@ public class StartEventsJob extends WorkingJob<SparkEvent>
 			@Override
 			public Boolean call(SparkEvent event) throws Exception
 			{
-				String playerEvent = event.getPlayerEventType();
+				String playerEvent = event.getPlayerEvent();
 				if(playerEvent != null && playerEvent.equals("str-start"))
 					return true;
 				else return false;

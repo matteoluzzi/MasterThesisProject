@@ -48,6 +48,7 @@ public class SimpleJobsStarter implements Serializable
 		this.prop = prop;
 		this.submittedJobs = new ArrayList<Future>();
 
+		
 		final int poolSize = Integer.parseInt(this.prop.getProperty(Constants.POOL_SIZE_KEY));
 		this.pool = Executors.newFixedThreadPool(poolSize);
 	}

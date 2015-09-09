@@ -40,7 +40,7 @@ public class PlayerEventTypeCounter extends WorkingJob<SparkEvent>
 			@Override
 			public Boolean call(SparkEvent e) throws Exception
 			{
-				String playerEvent = e.getPlayerEventType();
+				String playerEvent = e.getPlayerEvent();
 				if(playerEvent != null && (playerEvent.equals("str-start") || playerEvent.equals("end")))
 					return true;
 				else return false;
@@ -54,7 +54,7 @@ public class PlayerEventTypeCounter extends WorkingJob<SparkEvent>
 			@Override
 			public Tuple2<String, Integer> call(SparkEvent t) throws Exception
 			{
-				Tuple2<String, Integer> output = new Tuple2<String, Integer>(t.getPlayerEventType(), 1);
+				Tuple2<String, Integer> output = new Tuple2<String, Integer>(t.getPlayerEvent(), 1);
 				return output;
 			}
 		});

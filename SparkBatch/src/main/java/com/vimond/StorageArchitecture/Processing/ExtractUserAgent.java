@@ -13,6 +13,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 
 import com.vimond.StorageArchitecture.Utils.EventInfo;
 import com.vimond.utils.data.SparkEvent;
+import com.vimond.utils.functions.UserAgentParser;
 
 /**
  * Initialize a userAgent parser is expensive, the best approach is to do it in a mapParition function. 
@@ -21,10 +22,7 @@ import com.vimond.utils.data.SparkEvent;
  */
 public class ExtractUserAgent implements FlatMapFunction<Iterator<SparkEvent>, EventInfo>
 {
-	private static UserAgentStringParser uaParser;
-	static {
-		uaParser = UADetectorServiceFactory.getResourceModuleParser();
-	}
+	private static UserAgentStringParser uaParser = UADetectorServiceFactory.getResourceModuleParser();
 	
 	private static final long serialVersionUID = 8557410115713662281L;
 
