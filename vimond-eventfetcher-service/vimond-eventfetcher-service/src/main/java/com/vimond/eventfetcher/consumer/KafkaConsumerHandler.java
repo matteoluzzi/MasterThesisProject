@@ -13,7 +13,6 @@ import com.vimond.common.messages.MessageConsumer;
 import com.vimond.eventfetcher.configuration.KafkaConsumerEventFetcherConfiguration;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.eventfetcher.configuration.VimondEventFetcherServiceConfiguration;
-
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.processor.BatchProcessorEnum;
 import com.vimond.eventfetcher.processor.BatchProcessorFactory;
@@ -41,6 +40,7 @@ public class KafkaConsumerHandler<T> {
 		this.kafkaConfig = configuration.getKafkaConfig();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void registerConsumerGroup()
 	{
 		initializeKafkaConfig();

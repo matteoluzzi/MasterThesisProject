@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.backtype.hadoop.pail.PailStructure;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -26,20 +27,13 @@ public class TimeFramePailStructure implements PailStructure<String>
 {
 	private static final long serialVersionUID = 9195695651901130252L;
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-	@SuppressWarnings("unused")
 	private static ObjectMapper mapper = ObjectMapperConfiguration.configure();
-	//TODO export the value in the configuration file
 	private static int timeFrame;
 	
 	
 	public TimeFramePailStructure()
 	{
 		
-	}
-	
-	public TimeFramePailStructure(int timeframe)
-	{
-		TimeFramePailStructure.timeFrame = timeframe;
 	}
 	
 	public boolean isValidTarget(String... dirs)
@@ -67,35 +61,25 @@ public class TimeFramePailStructure implements PailStructure<String>
 		return object.getBytes();
 	}
 
-	/**
-	 * TODO decomment the code later
-	 */
 	public List<String> getTarget(String object)
 	{
-//		VimondEventAny event;
-//		try
-//		{
-//			event = mapper.readValue(object, VimondEventAny.class);
-//			List<String> path = new ArrayList<String>();
-//			DateTime date = event.getTimestamp();
-//			path.add(formatter.format(date.toDate()));
-//			path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
-//			return path;
-//		} catch (JsonParseException e)
-//		{
-//		} catch (JsonMappingException e)
-//		{
-//		} catch (IOException e)
-//		{
-//		}
-//		return null;
-		
-		DateTime date = new DateTime();
-		List<String> path = new ArrayList<String>();
-		path.add(formatter.format(date.toDate()));
-		path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
-		return path;
-		
+		VimondEventAny event;
+		try
+		{
+			event = mapper.readValue(object, VimondEventAny.class);
+			List<String> path = new ArrayList<String>();
+			DateTime date = event.getTimestamp().toDateTime(DateTimeZone.forID("Europe/Oslo"));
+			path.add(formatter.format(date.toDate()));
+			path.addAll(getCorrectFolder(date.getHourOfDay(), date.getMinuteOfHour()));
+			return path;
+		} catch (JsonParseException e)
+		{
+		} catch (JsonMappingException e)
+		{
+		} catch (IOException e)
+		{
+		}
+		return null;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -118,8 +102,15 @@ public class TimeFramePailStructure implements PailStructure<String>
 		{
 			int current_minutes = hours * 60 + minutes;
 			int timeFrame = current_minutes / TimeFramePailStructure.timeFrame;
-			return Arrays.asList(String.format("%02d", timeFrame * TimeFramePailStructure.timeFrame), "00");
+			return Arrays.asList(String.format("%02d", timeFrame), "00");
 		}
+	}
+	
+	public static void initialize(int timeframe) {
+		if(60 % timeframe == 0 || 60 * 24 % timeframe == 0)
+			TimeFramePailStructure.timeFrame = timeframe;
+		else
+			throw new IllegalArgumentException("Timeframe must be a divisor of the hour or of the day");
 	}
 
 }

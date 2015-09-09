@@ -8,8 +8,10 @@ import com.vimond.eventfetcher.consumer.KafkaConsumerEventFetcher;
  */
 public abstract class BatchProcessor
 {
+	@SuppressWarnings("rawtypes")
 	protected KafkaConsumerEventFetcher consumer;
 	
+	@SuppressWarnings("rawtypes")
 	public void setEventsKafkaConsumer(KafkaConsumerEventFetcher consumer)
 	{
 		this.consumer = consumer;

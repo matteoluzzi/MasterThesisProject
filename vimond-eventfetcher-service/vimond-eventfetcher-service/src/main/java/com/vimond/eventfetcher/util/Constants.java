@@ -10,7 +10,8 @@ public class Constants
 	public static final long DEFAULT_MAX_MESSAGES_INTO_FILE = 50000;
 	public static final int DEFAULT_CONSUMER_THREAD = 1;
 	public static final int DEFAULT_TIME_FRAME = 5;
-	public static final String DEFAULT_PATH_TO_LOCATION = "hdfs://localhost:9000/user/matteoremoluzzi/dataset/master";
+	public static final String DEFAULT_HDFS_PATH_TO_LOCATION = "hdfs://localhost:9000/user/matteoremoluzzi/dataset/master";
+	public static final String DEFAULT_FS_PATH_TO_LOCATION = "file:///home/vimond-eventfetcher-service/localFS/dataset";
 	
 	public static final String PROPERTIES_FILE = "kafkasettings.properties";
 	public static final String GROUP_KEY_ID = "group.id";
@@ -32,6 +33,8 @@ public class Constants
 	public static final String MAX_MESSAGES_KEY = "maxBatchMessages";
 	public static final String TIME_FRAME_KEY = "pailstructureTimeFrameInMin";
 	public static final String TOPIC_KEY = "topic";
-	public static final String PATH_TO_LOCATION_KEY = "path";
+	public static final String FS_PATH_TO_LOCATION_KEY = "diskPath";
+	public static final String HDFS_PATH_TO_LOCATION_KEY = "HDFSPath";
+	public static final int BATCH_STATISTICS = 1000;
 	
 }

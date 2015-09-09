@@ -9,7 +9,6 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vimond.eventfetcher.configuration.VimondEventFetcherServiceConfiguration;
 import com.vimond.eventfetcher.health.DummyHealthCheck;
 import com.vimond.eventfetcher.resources.PingResource;
-
 import com.vimond.eventfetcher.consumer.KafkaConsumerHandler;
 
 /**
@@ -38,7 +37,8 @@ public class VimondEventFetcherService extends Application<VimondEventFetcherSer
         environment.jersey().register(new PingResource(environment.metrics()));
         environment.healthChecks().register(DummyHealthCheck.NAME, new DummyHealthCheck());
         
-        KafkaConsumerHandler consumerHandler = new KafkaConsumerHandler(configuration);
+        @SuppressWarnings("rawtypes")
+		KafkaConsumerHandler consumerHandler = new KafkaConsumerHandler(configuration);
         consumerHandler.registerConsumerGroup();
         consumerHandler.startListening();
     }

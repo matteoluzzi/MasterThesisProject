@@ -12,10 +12,10 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerService;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
-
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.util.Constants;
-import com.vimond.eventfetcher.writer.HDFSWriter;
+import com.vimond.eventfetcher.writer.Writer;
+import com.vimond.pailStructure.TimeFramePailStructure;
 
 /**
  * Unrealiable version of kafka consumer. It commits the offset after reading the message from the broker.<b>
@@ -46,8 +46,10 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 		this.flush_buffer = new ArrayList<Object>();
 		this.flushingTime = conf.getConfig().get(Constants.FLUSHING_TIME_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.FLUSHING_TIME_KEY)) : Constants.DEFAULT_FLUSH_TIME;
 		this.maxMessageIntoFile = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
-		this.pathToLocation = conf.getConfig().get(Constants.PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.PATH_TO_LOCATION_KEY) : Constants.DEFAULT_PATH_TO_LOCATION;
+		this.pathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
 		this.timeFrameInMinutes = conf.getConfig().get(Constants.TIME_FRAME_KEY) != null ? Integer.parseInt(conf.getConfig().get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;
+		
+		this.initializeTimeFramePail();
 		
 		this.setUpTimerTask();
 		// procedure for controlled shutdown
@@ -65,17 +67,12 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 		return buffer;
 	}
 
-	public List<Object> getFlush_buffer()
-	{
-		return flush_buffer;
-	}
-
 	public int getTimeFrameInMinutes()
 	{
 		return timeFrameInMinutes;
 	}
 
-	public String getPathToLocation()
+	public String getHDFSPathToLocation()
 	{
 		return pathToLocation;
 	}
@@ -97,7 +94,7 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 					//delete timertaks and launch it now
 					this.deleteTimerTask();
 					copyMessagesOnFlushArray();
-					new HDFSWriter<T>(this).run();
+					new Writer<T>(this).run();
 					this.setUpTimerTask();
 				}
 			}
@@ -107,7 +104,7 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 	public void setUpTimerTask()
 	{
 		this.flushTimer = new Timer();
-		this.flushTimer.scheduleAtFixedRate(new HDFSWriter<T>(this), this.flushingTime, this.flushingTime);
+		this.flushTimer.scheduleAtFixedRate(new Writer<T>(this), this.flushingTime, this.flushingTime);
 	}
 
 	public void deleteTimerTask()
@@ -130,6 +127,11 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 	{
 		this.executor.shutdown();
 		// flush the buffer to disk
-		new HDFSWriter<T>(this).run();
+		new Writer<T>(this).run();
+	}
+	
+	public void initializeTimeFramePail()
+	{
+		TimeFramePailStructure.initialize(getTimeFrameInMinutes());
 	}
 }

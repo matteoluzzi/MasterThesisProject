@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,7 +23,6 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.Decoder;
 
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,13 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.ecyrd.speed4j.StopWatch;
+import com.github.rholder.retry.RetryException;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -40,15 +48,16 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.messages.MessageConsumer;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
-import com.vimond.eventfetcher.configuration.KafkaConsumerEventFetcherConfiguration;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.pailStructure.TimeFramePailStructure;
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.util.Constants;
 
 /**
- * Reliable version of a KafkaConsumer. It processes the events in batch commits the offset only after processing them<b>
- * Usage of CyclicBarrier for thread synchronization
+ * Reliable version of a KafkaConsumer. It processes the events in batch commits
+ * the offset only after processing them<b> Usage of CyclicBarrier for thread
+ * synchronization
+ * 
  * @author matteoremoluzzi
  *
  * @param <T>
@@ -72,12 +81,12 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	protected LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
 	protected long batchEndTime;
 
-	protected String pathToLocation;
+	protected String HDFSPathToLocation;
 	private int timeFrameInMinutes;
 
 	protected final MetricRegistry metricRegistry;
 	protected ZookeeperHealthCheck healthCheck;
-
+	
 	@SuppressWarnings("unchecked")
 	public KafkaEventsConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
 	{
@@ -87,12 +96,14 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		this.consumerConfig = consumerConfig;
 		this.messageProcessor = (MessageProcessor<T>) fsProcessor;
 		this.name = "KafkaConsumer[" + consumerConfig.topic + "][" + consumerConfig.groupid + "]";
-	//	this.consumerConfig.properties.put("consumer.timeout.ms", "30");
+		// this.consumerConfig.properties.put("consumer.timeout.ms", "30");
 		this.flushingTime = conf.getConfig().get(Constants.FLUSHING_TIME_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.FLUSHING_TIME_KEY)) : Constants.DEFAULT_FLUSH_TIME;
 		this.batchSize = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
-		this.pathToLocation = conf.getConfig().get(Constants.PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.PATH_TO_LOCATION_KEY) : Constants.DEFAULT_PATH_TO_LOCATION;
+		this.HDFSPathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
 		this.timeFrameInMinutes = conf.getConfig().get(Constants.TIME_FRAME_KEY) != null ? Integer.parseInt(conf.getConfig().get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;
 
+		this.initializeTimeFramePail();
+		
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 
 		// procedure for controlled shutdown
@@ -120,9 +131,11 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		this.name = "KafkaConsumer[" + consumerConfig.topic + "][" + consumerConfig.groupid + "]";
 		this.batchSize = Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
 		this.flushingTime = Constants.DEFAULT_FLUSH_TIME;
-		this.pathToLocation = Constants.DEFAULT_PATH_TO_LOCATION;
+		this.HDFSPathToLocation = Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
 		this.timeFrameInMinutes = Constants.DEFAULT_TIME_FRAME;
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
+		
+		this.initializeTimeFramePail();
 
 		// procedure for controlled shutdown
 		Runtime.getRuntime().addShutdownHook(new Thread()
@@ -161,22 +174,22 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		return timeFrameInMinutes;
 	}
 
-	public String getPathToLocation()
+	public String getHDFSPathToLocation()
 	{
-		return pathToLocation;
+		return HDFSPathToLocation;
 	}
-	
+
 	@Override
 	public List<Object> getMessages()
 	{
 		return new ArrayList<Object>(this.buffer);
 	}
-	
+
 	private void setBatchEndTime(long endTime)
 	{
 		this.batchEndTime = endTime;
 	}
-	
+
 	private long getBatchEndTime()
 	{
 		return this.batchEndTime;
@@ -238,7 +251,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		p.setProperty("zk.connect", kafkaConfig.hosts);
 
 		p.setProperty("groupid", consumerConfig.groupid);
-	//	p.setProperty("consumer.timeout.ms", "500");
+		// p.setProperty("consumer.timeout.ms", "500");
 
 		// Create the connection to the cluster
 		ConsumerConfig consumerConfig = new ConsumerConfig(p);
@@ -256,20 +269,21 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		Map<String, List<KafkaStream<T>>> topicMessageStreams = consumerConnector.createMessageStreams(ImmutableMap.of(this.consumerConfig.topic, this.consumerConfig.consumerThreads), decoder);
 
 		logger.info("Create message streams");
-		
-		CyclicBarrier barrier = new CyclicBarrier(topicMessageStreams.get(this.consumerConfig.topic).size(), new FlushAndCommit(consumerConnector, logger, this));
-		
+
 		streams = topicMessageStreams.get(this.consumerConfig.topic);
 
 		// create list of X threads to consume from each of the partitions
 		executor = getExecutorService();
+		
+		CyclicBarrier barrier = new CyclicBarrier(this.consumerConfig.consumerThreads, new FlushAndCommit(consumerConnector, logger, this));
 
 		// consume the messages in the threads
 		OurMetrics metrics = new OurMetrics(metricRegistry, name);
-		
-		//set the first batch end time, the next ones will be set by the thread in the barrier
+
+		// set the first batch end time, the next ones will be set by the thread
+		// in the barrier
 		setBatchEndTime(System.currentTimeMillis() + this.flushingTime);
-		
+
 		for (final KafkaStream<T> stream : streams)
 		{
 			executor.submit(new KafkaStreamReader<T>(metrics, logger, name, millsToSleepWhenError, messageProcessor, stream, this, barrier));
@@ -299,7 +313,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	}
 
 	/**
-	 * Task for committing the offset of the current batch. Executed by the last thread of the executor service
+	 * Task for committing the offset of the current batch. Executed by the last
+	 * thread of the executor service
+	 * 
 	 * @author matteoremoluzzi
 	 *
 	 */
@@ -309,34 +325,64 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		private final ConsumerConnector connector;
 		private final Logger logger;
 		private final KafkaEventsConsumer<T> consumer;
-		
+
 		public FlushAndCommit(ConsumerConnector connector, Logger logger, KafkaEventsConsumer<T> consumer)
 		{
 			this.connector = connector;
 			this.logger = logger;
 			this.consumer = consumer;
 		}
-		
+
+		/**
+		 * try to write the batch into hdfs, applying a exponential backoff
+		 * retrying mechanism for 10 minutes
+		 */
 		@Override
 		public void run()
 		{
-			if(consumer.flushToHdfs())
+
+			Callable<Boolean> writeFunction = new Callable<Boolean>()
+			{
+
+				@Override
+				public Boolean call() throws Exception
+				{
+					return flushToHdfs();
+				}
+			};
+
+			Retryer<Boolean> retryer = RetryerBuilder.<Boolean> newBuilder().retryIfExceptionOfType(IOException.class).retryIfRuntimeException().retryIfResult(Predicates.<Boolean> equalTo(false)).withWaitStrategy(WaitStrategies.exponentialWait(50, 5, TimeUnit.MINUTES)).withStopStrategy(StopStrategies.stopAfterDelay(10, TimeUnit.MINUTES)).build();
+
+			boolean writeSucceeded = false;
+			try
+			{
+				writeSucceeded = retryer.call(writeFunction);
+			} catch (RetryException e)
+			{
+				logger.info("error while flushing data and committing the offset: {}", e);
+				this.consumer.setBatchEndTime(System.currentTimeMillis() + this.consumer.flushingTime);
+				return;
+			} catch (ExecutionException e)
+			{
+				logger.info("error while flushing data and committing the offset: {}", e);
+				this.consumer.setBatchEndTime(System.currentTimeMillis() + this.consumer.flushingTime);
+				return;
+			}
+
+			if (writeSucceeded)
 			{
 				logger.info("Committing the offset");
 				this.connector.commitOffsets();
 				this.consumer.clearBuffer();
 				this.consumer.setBatchEndTime(System.currentTimeMillis() + this.consumer.flushingTime);
-			}
-			else
+			} else
 			{
-				logger.info("error while flushing data and committing the offset");
+				logger.warn("Error while wrting the offset, Namenode not reachable?");
 				this.consumer.setBatchEndTime(System.currentTimeMillis() + this.consumer.flushingTime);
 			}
-				
 		}
-		
 	}
-	
+
 	protected static class KafkaStreamReader<T> implements Runnable
 	{
 
@@ -369,52 +415,39 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 				logger.info("Thread " + name + " starting to process stream");
 				long batchEndTime = this.consumer.getBatchEndTime();
 				boolean read = true;
-				
+
 				while (read)
 				{
 					try
 					{
 						if (it.hasNext())
 						{
-								MessageAndMetadata<T> msgAndMetadata = it.next();
-								metrics.receivedMessages.inc();
-								final boolean processed = processMessage(msgAndMetadata.message());
-								if (msgAndMetadata.message() == null || !processed)
-									metrics.receivedMessagesWithError.inc();
+							MessageAndMetadata<T> msgAndMetadata = it.next();
+							metrics.receivedMessages.inc();
+							final boolean processed = processMessage(msgAndMetadata.message());
+							if (msgAndMetadata.message() == null || !processed)
+								metrics.receivedMessagesWithError.inc();
 						}
-					}
-					catch(ConsumerTimeoutException e) //caught when there are no messages available in the set timeout
+					} catch (ConsumerTimeoutException e) // caught when there
+															// are no messages
+															// available in the
+															// set timeout
 					{
 					}
-					if(this.consumer.getBufferSize() >= this.consumer.batchSize || System.currentTimeMillis() >= batchEndTime)
+					if (this.consumer.getBufferSize() >= this.consumer.batchSize || System.currentTimeMillis() >= batchEndTime)
 					{
 						try
 						{
 							barrier.await();
-							//after the barrier all thread are synchronized with the next batch execution
+							// after the barrier all thread are synchronized
+							// with the next batch execution
 							batchEndTime = this.consumer.getBatchEndTime();
-						}
-						catch (Exception e)
+						} catch (Exception e)
 						{
 							logger.debug("Exception while waiting for batch completion: {}", e.getMessage());
 							break;
 						}
 					}
-
-					// for(MessageAndMetadata<T> msgAndMetadata: stream) {
-					// // only pass the msg along if it is not null - we get
-					// null if we could not decode the message
-					// metrics.receivedMessages.inc();
-					// final boolean processed =
-					// processMessage(msgAndMetadata.message());
-					// if (msgAndMetadata.message() == null || !processed) {
-					// metrics.receivedMessagesWithError.inc();
-					// } else {
-					// // don't commit the offset. Do it after processing the
-					// whole batch
-					// // consumerConnector.commitOffsets();
-					// }
-					// }
 				}
 
 			} catch (Throwable e)
@@ -519,24 +552,25 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean flushToHdfs()
 	{
-		Log.info("Going to flush the buffer into file now!");
-
-		// List<Object> messages = getMessages();
-
 		// Write only if there are messages
 		if (buffer.size() > 0)
 		{
+			logger.debug("Going to write {} messages to HDFS", buffer.size());
+			
 			Pail pail;
 			try
 			{
-				pail = Pail.create(getPathToLocation(), new TimeFramePailStructure(getTimeFrameInMinutes()));
+				pail = new Pail(getHDFSPathToLocation());
 			} catch (java.lang.IllegalArgumentException | IOException e)
 			{
+				logger.debug("Error when accessing pail: {}", e.getMessage());
 				try
 				{
-					pail = new Pail(getPathToLocation());
+					pail = Pail.create(getHDFSPathToLocation(), new TimeFramePailStructure());
+
 				} catch (IOException e1)
 				{
+					logger.error("Error when creating pail: {}", e.getMessage());
 					return false;
 				}
 			}
@@ -548,12 +582,18 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 				os.close();
 			} catch (IOException e)
 			{
+				logger.error("Error when writing on HDFS: {}", e.getMessage());
 				return false;
 			}
 			buffer.clear();
 			return true;
 		}
 		return false;
-
 	}
+	
+	public void initializeTimeFramePail()
+	{
+		TimeFramePailStructure.initialize(getTimeFrameInMinutes());
+	}
+
 }
