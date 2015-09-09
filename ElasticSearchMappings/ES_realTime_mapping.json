@@ -2,101 +2,24 @@
     "mappings": {
         "realtime-player-events": {
             "properties": {
-                "asset_playback.geo.country": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "asset_playback.playType": {
-                    "type": "string"
-                },
-                "originator": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "asset_playback.videoFileId": {
-                    "type": "long"
-                },
-                "eventName": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "asset_playback.categoryPlatformId": {
-                    "type": "short"
-                },
-                "asset_playback.geo.isp": {
-                    "type": "string"
-                },
-                "asset_playback.orderId": {
-                    "type": "long"
-                },
-                "asset_playback.geo.organization": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "date",
-                    "format": "dateOptionalTime"
-                },
-                "asset_playback.bandwidth": {
-                    "type": "short"
-                },
-                "ipAddress": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "asset_playback.assetId": {
-                    "type": "long"
-                },
-                "asset_playback.userId": {
-                    "type": "long"
-                },
-                "version": {
-                    "type": "string",
-                    "index": "no"
-                },
-                "asset_playback.ip": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "guid": {
-                    "type": "string"
-                },
-                "_id": {
-                    "type": "long"
-                },
-                "asset_playback.categoryId": {
-                    "type": "integer"
-                },
-                "asset_playback.appName": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "asset_playback.geo.coordinates": {
-                    "type": "geo_point",
-                    "doc_value": "true"
-                },
-                "counter": {
-                    "type": "integer",
-                    "null_value": 1
-                }
-            }
-        },
-        "realtime-player-log-events": {
-            "properties": {
                 "eventName": {
                     "type": "string",
                     "index": "not_analyzed"
                 },
                 "originator": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 },
                 "tenant": {
-                    "type": "string"
+                    "type": "string",
+                    "index": "not_analyzed"
                 },
                 "originatorId": {
                     "type": "long"
                 },
                 "versions": {
-                    "type": "double"
+                    "type": "string",
+                    "index": "no"
                 },
                 "timestamp": {
                     "type": "date",
@@ -110,54 +33,194 @@
                     "type": "string",
                     "index": "not_analyzed"
                 },
-                "client.isLive": {
-                    "type": "boolean"
+                "client": {
+                    "type": "object",
+                    "properties": {
+                        "isLive": {
+                            "type": "boolean",
+                            "index": "not_analyzed"
+                        },
+                        "clientDate": {
+                            "type": "date",
+                            "format": "dateOptionalTime"
+                        },
+                        "playerEvent": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "playerState": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "userAgent": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "env": {
+                            "type": "object",
+                            "properties": {
+                                "platform": {
+                                    "type": "string",
+                                    "index": "not_analyzed"
+                                },
+                                "version": {
+                                    "type": "string",
+                                    "index": "not_analyzed"
+                                }
+                            }
+                        },
+                        "buildVersion": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "buildName": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "platform": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "pageurl": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "video": {
+                            "type": "object",
+                            "properties": {
+                                "format": {
+                                    "type": "string",
+                                    "index": "not_analyzed"
+                                },
+                                "protocol": {
+                                    "type": "string",
+                                    "index": "not_analyzed"
+                                }
+                            }
+                        },
+                        "streamUrl": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "drm": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "viewingSession": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        }
+                    }
                 },
-                "progress.playbackType": {
-                    "type": "string"
+                "progress": {
+                    "type": "object",
+                    "properties": {
+                        "playbackType": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "liveResumePossible": {
+                            "type": "boolean"
+                        },
+                        "title": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
+                        "assetId": {
+                            "type": "long"
+                        },
+                        "category": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "index": "no"
+                                },
+                                "id": {
+                                    "type": "long"
+                                }
+                            }
+                        },
+                        "offset": {
+                            "type": "object",
+                            "properties": {
+                                "duration": {
+                                    "type": "long"
+                                },
+                                "pos": {
+                                    "type": "long"
+                                },
+                                "unit": {
+                                    "type": "string",
+                                    "index": "not_analyzed"
+                                }
+                            }
+                        },
+                        "enc": {
+                            "type": "object",
+                            "properties": {
+                                "start": {
+                                    "type": "date",
+                                    "format": "dateOptionalTime"
+                                },
+                                "end": {
+                                    "type": "date",
+                                    "format": "dateOptionalTime"
+                                },
+                                "pos": {
+                                    "type": "date",
+                                    "format": "dateOptionalTime"
+                                }
+                            }
+                        }
+                    }
                 },
-                "progress.liveResumePossible": {
-                    "type": "boolean"
+                "data.geo.coordinates": {
+                    "type": "geo_point",
+                    "doc_value": "true"
                 },
-                "progress.title": {
+                "data.geo.country": {
                     "type": "string",
                     "index": "not_analyzed"
                 },
-                "progress.assetId": {
-                    "type": "long"
-                },
-                "progress.category.name": {
+                "data.geo.city": {
                     "type": "string",
                     "index": "not_analyzed"
                 },
-                "progress.category.id": {
-                    "type": "long"
-                },
-                "progress.offset.duration": {
-                    "type": "long"
-                },
-                "progress.offset.pos": {
-                    "type": "long"
-                },
-                "progress.enc.unit": {
+                "data.appName": {
                     "type": "string",
                     "index": "not_analyzed"
-                },
-                "progress.enc.start": {
-                    "type": "date",
-                    "format": "dateOptionalTime"
-                },
-                "progress.enc.end": {
-                    "type": "date",
-                    "format": "dateOptionalTime"
-                },
-                "progress.enc.pos": {
-                    "type": "date",
-                    "format": "dateOptionalTime"
                 },
                 "counter": {
                     "type": "integer",
                     "null_value": 1
+                },
+                "data.assetId": {
+                    "type": "long"
+                },
+                "data.ip": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "data.videoFormat": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "data.playerEvent": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "data.browser": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "data.assetName": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "data.os": {
+                    "type": "string",
+                    "index": "not_analyzed"
                 }
             }
         }
