@@ -1,7 +1,5 @@
 package no.vimond.UtilsFunctions;
 
-import com.vimond.utils.functions.UpdateRecords;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -28,16 +26,5 @@ public class AppTest
     public static Test suite()
     {
         return new TestSuite( AppTest.class );
-    }
-
-    public void testFromFolderToDate()
-    {
-    	
-    	String folder_path = "2015-07-23/12/10";
-    	int timeframe = 5;
-    	
-    	UpdateRecords ur = new UpdateRecords();
-    	
-    	
     }
 }

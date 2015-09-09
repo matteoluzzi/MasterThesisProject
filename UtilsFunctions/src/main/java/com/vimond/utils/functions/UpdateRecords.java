@@ -12,9 +12,6 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
@@ -23,6 +20,10 @@ import org.elasticsearch.index.query.IndicesFilterBuilder;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.search.SearchHit;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,41 +40,50 @@ public class UpdateRecords
 	private Client esClient;
 	private DateTimeFormatter formatter;
 
-	public UpdateRecords()
+	public UpdateRecords(String es_address) throws Exception
 	{
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
-		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("172.24.1.229", 9300));
-		this.formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm");
+		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress(es_address, 9300));
+		this.formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm").withZone(DateTimeZone.forID("Europe/Oslo"));
 	}
 
 	public static void main(String[] args)
 	{
-		if(args.length != 2)
+		if(args.length != 3)
 		{
 			LOG.error("Error with the paramenters: {}", (Object[]) args);
 		}
 		else
 		{
+			
 			String path = args[0]; //something like hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/YYYY-MM-DD/HH/mm
 			int batchTimeInMinutes = Integer.parseInt(args[1]);
+			
+			String es_address = args[2];
 			
 			path = extractDate(path); //something like YYYY-MM-DD/HH/mm
 			
 			if(path != null)
 			{
-				LOG.info("Parameters: folder {}, timeframe {}", path, batchTimeInMinutes);
+				LOG.info("Parameters: folder {}, timeframe {}, es {}", path, batchTimeInMinutes, es_address);
 				
-				UpdateRecords ur = new UpdateRecords();
-				ur.deleteRecordsFromES(path, batchTimeInMinutes);
-
+				try
+				{
+					UpdateRecords ur = new UpdateRecords(es_address);
+					ur.deleteRecordsFromES(path, batchTimeInMinutes);
+				}
+				catch(Exception e)
+				{
+					LOG.error("Error while executing delete function: {}, {}", e.getClass(), e.getMessage());
+				}
 			}
 			else
-				LOG.error("Can't execute the action with this paramenters: folder {}, timeframe {}", path, batchTimeInMinutes);
+				LOG.error("Can't execute the action with this paramenters: folder {}, timeframe {}, es {}", path, batchTimeInMinutes, es_address);
 		}
 	}
 
-	public void deleteRecordsFromES(String path, int timeFrameInMinutes)
+	public void deleteRecordsFromES(String path, int timeFrameInMinutes) throws Exception
 	{
 		//Usage of Search API to identify the matching ids and then perform bulk delete operations
 		
@@ -82,13 +92,12 @@ public class UpdateRecords
 		
 		if(params.size() == 2)
 		{
-			
 			//Filter is better than a query because we need to filter on exact values, not interested in score matching
 			FilterBuilder fb = new IndicesFilterBuilder(new RangeFilterBuilder("timestamp")
 				.from(params.get("start_date"))
 				.to(params.get("end_date"))
 				.includeLower(false)
-				.includeUpper(true), "vimond-batch").noMatchFilter("none");	
+				.includeUpper(true), "vimond-realtime").noMatchFilter("none");	
 			
 			//search
 			SearchResponse sr = this.esClient.prepareSearch()
@@ -106,7 +115,6 @@ public class UpdateRecords
 			{
 				for(SearchHit hit : sr.getHits().getHits())
 				{
-				//	LOG.info("Found an hit: {}", hit.id());
 					bp.add(new DeleteRequest(hit.getIndex(), hit.getType(), hit.getId()));
 				}
 				sr = this.esClient.prepareSearchScroll(sr.getScrollId())

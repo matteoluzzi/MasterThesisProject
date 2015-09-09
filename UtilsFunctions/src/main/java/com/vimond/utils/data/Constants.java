@@ -36,22 +36,19 @@ public class Constants
 	public static final String BOLT_ES = "es-bolt";
 	public static final String BOLT_USER_AGENT = "useragent-bolt";
 	
-	public static final String APP_NAME_KEY = "AppName";
+	public static final String APP_NAME_KEY = "app.name";
 	public static final String DB_LITE_KEY = "MaxMindLiteVersion";
 	public static final String POOL_SIZE_KEY = "executorThreads";
-	public static final String ES_INDEX_AUTO_CREATE_KEY = "es.index.auto.create";
-	public static final String ES_INDEX_NAME_KEY = "es_index";
-	public static final String INPUT_PATH_KEY = "inputPath";
 
 	public static final String NEW_DATA_PATH = "/Users/matteoremoluzzi/dataset/newData";
 
 	public static final String MASTER_DATA_PATH = "/Users/matteoremoluzzi/dataset/masterData";
 	public static final int DEFAULT_STORM_BATCH_SIZE = 1000;
 	
-	public static final int SPOUT_TASKS = 6;
+	public static final int SPOUT_TASKS = 3;
 	public static final int EL_TASKS = 3;
-	public static final int ROUTER_TASKS = 6;
-	public static final int USER_AGENT_TASKS = 3;
+	public static final int ROUTER_TASKS = 2;
+	public static final int USER_AGENT_TASKS = 2;
 	
 	
 	

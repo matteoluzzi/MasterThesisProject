@@ -1,37 +1,45 @@
 package com.vimond.utils.functions;
 
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vimond.utils.functions.query.Query;
+import com.vimond.utils.functions.query.QueryFactory;
+import com.vimond.utils.functions.query.QueryType;
+
+/**
+ * Class for executing a query and get statistics
+ * @author matteoremoluzzi
+ *
+ */
 public class ElasticSearchQueryInterface
 {
 	private static final Logger LOG = LoggerFactory.getLogger(UpdateRecords.class);
 
 	private Client esClient;
+	
 
 	public ElasticSearchQueryInterface()
 	{
 		TransportClient transportClient = new TransportClient();
 
-		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("172.24.1.229", 9300));
+		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("52.18.78.197", 9300));
 	}
 
 	public static void main(String[] args)
 	{
 		ElasticSearchQueryInterface esqi = new ElasticSearchQueryInterface();
 		
-		SearchResponse sr = esqi.esClient.prepareSearch("vimond-realtime")
-				.addAggregation(AggregationBuilders.dateHistogram("by_date").field("timestamp").interval(DateHistogram.Interval.YEAR))
-				.get();
+		Query q = QueryFactory.getFactory().createQuery(QueryType.TOP_ASSET_START);
+		q.executeMultiple(esqi.esClient, "", 30000, 90);
 		
-		sr.getHits();
-
 	}
-
+	
+	
+	
+	
+	
 }
