@@ -15,7 +15,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -144,7 +143,7 @@ public class ElasticSearchBolt implements IRichBolt {
 				
 				this.throughput.start();
 			}
-            this.latency.addValue(new TimeStamp(new Date()).getTime() - initTime);
+            this.latency.addValue(System.nanoTime() - initTime);
             
         }
         try {
