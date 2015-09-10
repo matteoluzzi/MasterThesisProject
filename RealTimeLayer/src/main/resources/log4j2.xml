@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug" name="MyApp" packages="">
-  <Appenders>
-    <Socket name="socketAppender" host="localhost" port="4560">
-    <SerializedLayout />
-    </Socket>
-    <Async name="Async">
-      <AppenderRef ref="socketAppender"/>
-    </Async>
-  </Appenders>
-  <Loggers>
-    <Root level="debug">
-      <AppenderRef ref="Async"/>
-    </Root>
-  </Loggers>
+<Configuration name="RealTimeLayer">
+	<Appenders>
+		<Socket name="socketAppender" host="localhost" port="4560" immediateFlush="false">
+			<filters>
+				<MarkerFilter marker="PERFORMANCES-REALTIME-THROUGHPUT" onMatch="ACCEPT" onMismatch="DENY" />
+				<MarkerFilter marker="PERFORMANCES-REALTIME-GLOBAL_LATENCY" onMatch="ACCEPT" onMismatch="DENY" />
+			</filters>
+			<SerializedLayout />
+		</Socket>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="socketAppender" />
+		</Root>
+	</Loggers>
 </Configuration>
