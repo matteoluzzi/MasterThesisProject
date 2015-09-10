@@ -1,7 +1,5 @@
 package com.vimond.RealTimeArchitecture.Bolt;
 
-import java.io.File;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +16,12 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-import com.ecyrd.speed4j.StopWatch;
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.UniformReservoir;
+
 import com.vimond.utils.data.Constants;
 
 /**
@@ -33,9 +36,10 @@ public class RouterBolt implements IRichBolt
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOG = LogManager.getLogger(RouterBolt.class);
 	private OutputCollector collector;
-	private StopWatch throughput;
 	private boolean acking;
-	private int processedTuples;
+	private MetricRegistry metricRegister;
+	private Timer timer;
+	private Meter counter;
 
 	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
 
@@ -43,7 +47,7 @@ public class RouterBolt implements IRichBolt
 
 	public RouterBolt()
 	{
-		this.throughput = new StopWatch();
+		
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -51,8 +55,15 @@ public class RouterBolt implements IRichBolt
 	{
 		this.acking = Boolean.parseBoolean((String) stormConf.get("acking"));
 		this.collector = collector;
-		this.processedTuples = 0;
-		this.throughput.start();
+		this.metricRegister = new MetricRegistry();
+		this.timer = new Timer(new UniformReservoir());
+		this.counter = metricRegister.meter(MetricRegistry.name(RouterBolt.class, "events/sec"));
+		metricRegister.register(MetricRegistry.name(RouterBolt.class, "latency-time"), this.timer);
+		final ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegister)
+									.convertRatesTo(TimeUnit.SECONDS)
+									.convertDurationsTo(TimeUnit.NANOSECONDS)
+									.build();
+		reporter.start(10, TimeUnit.SECONDS);
 	}
 
 	public Map<String, Object> getComponentConfiguration()
@@ -74,7 +85,7 @@ public class RouterBolt implements IRichBolt
 
 	public void execute(Tuple input)
 	{
-		
+		final Timer.Context ctx = this.timer.time();
 		String message = input.getString(0);
 		long initTime = input.getLong(1);
 
@@ -94,15 +105,8 @@ public class RouterBolt implements IRichBolt
 			{
 				emitOnUAStream(input, message, initTime);
 			}
-			// get statistics on current batch
-			if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-			{
-				this.throughput.stop();
-				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-				LOG.info(THROUGHPUT, avg_throughput);
-				processedTuples = 0;
-				this.throughput.start();
-			}
+			ctx.stop();
+			this.counter.mark();
 		}
 	}
 
