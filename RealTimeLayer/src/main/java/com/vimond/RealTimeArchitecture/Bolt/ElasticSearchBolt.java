@@ -5,12 +5,14 @@ import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_BATCH_SIZE_EN
 import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_RESOURCE_WRITE;
 import static org.elasticsearch.storm.cfg.StormConfigurationOptions.ES_STORM_BOLT_ACK;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +38,12 @@ import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 
-import com.ecyrd.speed4j.StopWatch;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Reservoir;
+import com.codahale.metrics.UniformReservoir;
 import com.vimond.utils.data.Constants;
 /**
  * Implementation of bolt which writes record on an elasticsearch cluster. Implementation provided by elasticsearch library.</b>
@@ -50,18 +57,10 @@ public class ElasticSearchBolt implements IRichBolt {
 	private static final long serialVersionUID = 3656656932100012895L;
 
 	private transient static Log log = LogFactory.getLog(ElasticSearchBolt.class);
-	private static final Logger LOGGER = LogManager.getLogger(ElasticSearchBolt.class);
-	private final static Marker GLOBAL_LATENCY = MarkerManager.getMarker("PERFORMANCES-REALTIME-GLOBAL_LATENCY");
-	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
-	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
 	
-	//latency is measured when the bold correctly processed the message, not when it writes it on es (due to batch writing latency)
-	private SummaryStatistics latency = new SummaryStatistics();
+	private transient Histogram globalLatency;
+	private transient Meter counter;
 	
-	private StopWatch throughput;
-	private int processedTuples;
-	
-
     private Map boltConfig = new LinkedHashMap();
 
     private transient PartitionWriter writer;
@@ -71,22 +70,22 @@ public class ElasticSearchBolt implements IRichBolt {
     private transient List<Tuple> inflightTuples = null;
     private transient int numberOfEntries = 0;
     private transient OutputCollector collector;
+    
+    private long reportFrequency;
+	private String reportPath;
 
     public ElasticSearchBolt(String target) {
         boltConfig.put(ES_RESOURCE_WRITE, target);
-        this.throughput = new StopWatch();
     }
 
     public ElasticSearchBolt(String target, boolean writeAck) {
         boltConfig.put(ES_RESOURCE_WRITE, target);
         boltConfig.put(ES_STORM_BOLT_ACK, Boolean.toString(writeAck));
-        this.throughput = new StopWatch();
     }
 
     public ElasticSearchBolt(String target, Map configuration) {
         boltConfig.putAll(configuration);
         boltConfig.put(ES_RESOURCE_WRITE, target);
-        this.throughput = new StopWatch();
     }
 
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
@@ -117,9 +116,27 @@ public class ElasticSearchBolt implements IRichBolt {
         InitializationUtils.setFieldExtractorIfNotSet(settings, StormTupleFieldExtractor.class, log);
 
         writer = RestService.createWriter(settings, context.getThisTaskIndex(), totalTasks, log);
-        this.latency = new SummaryStatistics();
-        this.throughput.start();
+        this.reportFrequency = (Long) conf.get("metric.report.interval");
+		this.reportPath = (String) conf.get("metric.report.path");
+        initializeMetricsReport();
     }
+    
+    public void initializeMetricsReport()
+	{
+		final MetricRegistry metricRegister = new MetricRegistry();	
+		
+		this.globalLatency = new Histogram(new UniformReservoir());
+		metricRegister.register(MetricRegistry.name(ElasticSearchBolt.class, Thread.currentThread().getName() + "global_latency"), this.globalLatency);
+		
+		//register the meter metric
+		this.counter = metricRegister.meter(MetricRegistry.name(ElasticSearchBolt.class, Thread.currentThread().getName() + "-events_sec"));
+		
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.convertDurationsTo(TimeUnit.NANOSECONDS)
+				.build(new File(this.reportPath));
+		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
+	}
 
     public void execute(Tuple input) {
     	
@@ -127,25 +144,12 @@ public class ElasticSearchBolt implements IRichBolt {
             flush();
             return;
         }
+        
         long initTime = (Long) input.getValues().remove(1);
         if (ackWrites) {
             inflightTuples.add(input);
-            if(++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-			{
-				this.throughput.stop();
-				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-				LOGGER.info(THROUGHPUT, avg_throughput);
-				processedTuples = 0;
-				
-				LOGGER.info(GLOBAL_LATENCY, "MaxLatency: " + this.latency.getMax());
-				LOGGER.info(GLOBAL_LATENCY, "MinLatency: " + this.latency.getMin());
-				LOGGER.info(GLOBAL_LATENCY, "AvgLatency: " + this.latency.getMean());
-				LOGGER.info(GLOBAL_LATENCY, "VarianceLatency: " + this.latency.getVariance());
-				
-				this.throughput.start();
-			}
-            this.latency.addValue(new TimeStamp(new Date()).getTime() - initTime);
-            
+            this.globalLatency.update(System.nanoTime() - initTime);
+            this.counter.mark();
         }
         try {
             writer.repository.writeToIndex(input);
@@ -156,22 +160,8 @@ public class ElasticSearchBolt implements IRichBolt {
             }
 
             if (!ackWrites) {
-            	if(++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-    			{
-    				this.throughput.stop();
-    				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-    				LOGGER.info(THROUGHPUT, avg_throughput);
-    				processedTuples = 0;
-    				
-    				LOGGER.info(GLOBAL_LATENCY, "MaxLatency: " + this.latency.getMax());
-    				LOGGER.info(GLOBAL_LATENCY, "MinLatency: " + this.latency.getMin());
-    				LOGGER.info(GLOBAL_LATENCY, "AvgLatency: " + this.latency.getMean());
-    				LOGGER.info(GLOBAL_LATENCY, "VarianceLatency: " + this.latency.getVariance());
-    				
-    				this.throughput.start();
-    			}
-            	this.latency.addValue(System.nanoTime() - initTime);
-//                collector.ack(input);
+            	this.globalLatency.update(System.nanoTime() - initTime);
+                this.counter.mark();
             }
         } catch (RuntimeException ex) {
             if (!ackWrites) {

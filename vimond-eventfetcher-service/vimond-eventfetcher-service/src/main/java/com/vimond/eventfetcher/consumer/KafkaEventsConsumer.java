@@ -23,6 +23,9 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.Decoder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -394,6 +397,13 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		private final KafkaEventsConsumer<T> consumer;
 		private ConsumerIterator<T> it;
 		private final CyclicBarrier barrier;
+		private int processedTuples;
+		private final org.apache.logging.log4j.Logger performaces = LogManager.getLogger(KafkaStreamReader.class);
+		
+		private StopWatch timer;
+		private final static Marker ERROR = MarkerManager.getMarker("BATCH-ERRORS");
+		private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-BATCH-THROUGHPUT");
+		private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
 
 		public KafkaStreamReader(OurMetrics metrics, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, KafkaEventsConsumer<T> consumer, CyclicBarrier barrier)
 		{
@@ -405,6 +415,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 			this.consumer = consumer;
 			this.barrier = barrier;
 			this.it = stream.iterator();
+			this.timer = new StopWatch();
 		}
 
 		public void run()
@@ -415,6 +426,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 				logger.info("Thread " + name + " starting to process stream");
 				long batchEndTime = this.consumer.getBatchEndTime();
 				boolean read = true;
+				this.timer.start();
 
 				while (read)
 				{
@@ -427,6 +439,17 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 							final boolean processed = processMessage(msgAndMetadata.message());
 							if (msgAndMetadata.message() == null || !processed)
 								metrics.receivedMessagesWithError.inc();
+							else
+							{
+								if (++processedTuples % 10000 == 0)
+								 {
+									 this.timer.stop();
+									 double avg_throughput = 10000 /	 (this.timer.getTimeNanos() * FROM_NANOS_TO_SECONDS);
+									 performaces.info(THROUGHPUT, avg_throughput);
+									 processedTuples = 0;
+									 this.timer.start();
+								 }
+							}
 						}
 					} catch (ConsumerTimeoutException e) // caught when there
 															// are no messages

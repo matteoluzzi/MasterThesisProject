@@ -1,6 +1,9 @@
 package com.vimond.eventfetcher;
 
 import static com.vimond.common.shared.ObjectMapperConfiguration.configure;
+
+import java.util.Properties;
+
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -26,12 +29,14 @@ public class VimondEventFetcherService extends Application<VimondEventFetcherSer
     public void initialize(Bootstrap<VimondEventFetcherServiceConfiguration> bootstrap) {
 
         bootstrap.getObjectMapper().registerModule(new JodaModule());
-
     }
 
     @Override
     public void run(final VimondEventFetcherServiceConfiguration configuration, Environment environment) throws Exception {
 
+    	Properties sys_props = System.getProperties();
+    	sys_props.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+    	
         configure(environment.getObjectMapper());
 
         environment.jersey().register(new PingResource(environment.metrics()));

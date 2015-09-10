@@ -43,7 +43,7 @@ processor:
   id: STRING
   config:
     flushingTime: 600000
-    maxBatchMessages: 300000
+    maxBatchMessages: 100000
     HDFSPath: hdfs://localhost:9000/user/matteoremoluzzi/newDataset/master
     pailstructureTimeFrameInMin: 30
 

@@ -8,7 +8,7 @@
             <master>${master}</master>
             <name>SparkBatch</name>
             <class>com.vimond.StorageArchitecture.App</class>
-            <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${jarName}</jar>
+            <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${sparkJarName}</jar>
             <spark-opts>--num-executors 2 --driver-memory 2g --executor-memory 3g --executor-cores 2</spark-opts>
             <arg>${inputDir}</arg>
             <arg>${frequency}</arg>
@@ -20,7 +20,7 @@
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <main-class>no.vimond.UtilsFunctions.UpdateRecords</main-class>
+            <main-class>com.vimond.utils.functions.UpdateRecords</main-class>
             <arg>${inputDir}</arg>
             <arg>${frequency}</arg>
         </java>

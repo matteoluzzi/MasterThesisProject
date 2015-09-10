@@ -1,6 +1,8 @@
 package com.vimond.RealTimeArchitecture.Bolt;
 
+import java.io.File;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,12 +18,11 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.UniformReservoir;
-
 import com.vimond.utils.data.Constants;
 
 /**
@@ -37,33 +38,43 @@ public class RouterBolt implements IRichBolt
 	private static final Logger LOG = LogManager.getLogger(RouterBolt.class);
 	private OutputCollector collector;
 	private boolean acking;
-	private MetricRegistry metricRegister;
-	private Timer timer;
-	private Meter counter;
-
-	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
-
-	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
+	private long reportFrequency;
+	private String reportPath;
+	
+	private transient Timer timer;
+	private transient Meter counter;
 
 	public RouterBolt()
 	{
-		
 	}
 
 	@SuppressWarnings("rawtypes")
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector)
 	{
-		this.acking = Boolean.parseBoolean((String) stormConf.get("acking"));
+		this.acking = (Boolean) stormConf.get("acking");
 		this.collector = collector;
-		this.metricRegister = new MetricRegistry();
+		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
+		this.reportPath = (String) stormConf.get("metric.report.path");
+		initializeMetricsReport();
+	}
+	
+	public void initializeMetricsReport()
+	{
+		final MetricRegistry metricRegister = new MetricRegistry();	
+		
+		//use sampling when detecting the latency for not affecting the performances
 		this.timer = new Timer(new UniformReservoir());
-		this.counter = metricRegister.meter(MetricRegistry.name(RouterBolt.class, "events/sec"));
-		metricRegister.register(MetricRegistry.name(RouterBolt.class, "latency-time"), this.timer);
-		final ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegister)
-									.convertRatesTo(TimeUnit.SECONDS)
-									.convertDurationsTo(TimeUnit.NANOSECONDS)
-									.build();
-		reporter.start(10, TimeUnit.SECONDS);
+		metricRegister.register(MetricRegistry.name(RouterBolt.class, Thread.currentThread().getName() + "latency"), this.timer);
+		
+		//register the meter metric
+		this.counter = metricRegister.meter(MetricRegistry.name(RouterBolt.class, Thread.currentThread().getName() + "-events_sec"));
+		
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.convertDurationsTo(TimeUnit.NANOSECONDS)
+				.build(new File(this.reportPath));
+		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
+		
 	}
 
 	public Map<String, Object> getComponentConfiguration()
@@ -85,6 +96,7 @@ public class RouterBolt implements IRichBolt
 
 	public void execute(Tuple input)
 	{
+		this.counter.mark();
 		final Timer.Context ctx = this.timer.time();
 		String message = input.getString(0);
 		long initTime = input.getLong(1);
@@ -106,7 +118,6 @@ public class RouterBolt implements IRichBolt
 				emitOnUAStream(input, message, initTime);
 			}
 			ctx.stop();
-			this.counter.mark();
 		}
 	}
 

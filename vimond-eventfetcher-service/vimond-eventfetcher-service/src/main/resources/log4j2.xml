@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug" name="VimondAnalyticsMonitoring" packages="">
-  <Appenders>
-    <Socket name="socketAppender" host="localhost" port="4560">
-    <SerializedLayout />
-    </Socket>
-    <Async name="Async">
-      <AppenderRef ref="socketAppender"/>
-    </Async>
-    <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-    </Console>
-  </Appenders>
-  <Loggers>
-    <Root level="debug">
-    <!--   <AppenderRef ref="Console"/>  -->
-      <AppenderRef ref="Async" />
-    </Root>
-  </Loggers>
+<Configuration name="EventFetcherLayer">
+	<Appenders>
+		<Socket name="socketAppender" host="localhost" port="4560" immediateFlush="false">
+			<filters>
+				<MarkerFilter marker="PERFORMANCES-BATCH-THROUGHPUT" onMatch="ACCEPT" onMismatch="DENY" />
+			</filters>
+			<SerializedLayout />
+		</Socket>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="socketAppender" />
+		</Root>
+	</Loggers>
 </Configuration>
