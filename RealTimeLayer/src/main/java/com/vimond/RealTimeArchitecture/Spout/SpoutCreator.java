@@ -115,11 +115,11 @@ public class SpoutCreator
 		BrokerHosts bhs = StaticHosts.fromHostString(Arrays.asList(new String[] {zKLocation}), 6);
 		
 		//final ZkHosts z = new ZkHosts(zKLocation + ":" + zKPort, zKBrokerPath);
-		final SpoutConfig cfg = new SpoutConfig(bhs, topic, "/consumers", consumer_group);
+		final SpoutConfig cfg = new SpoutConfig(bhs, topic, "/" + topic, consumer_group);
 		
 		cfg.zkServers = serverAddresses;
 		cfg.zkPort = zkPort_;
-		cfg.zkRoot = "/consumers";
+		cfg.zkRoot = "/" + topic;
 		
 		cfg.scheme = new SchemeAsMultiScheme(new StormEventSchema());
 		cfg.forceFromStart = Boolean.parseBoolean(forceFromStart);

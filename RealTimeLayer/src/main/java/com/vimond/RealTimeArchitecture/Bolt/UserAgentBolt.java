@@ -48,18 +48,12 @@ public class UserAgentBolt implements IRichBolt
 	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
 
 	private int processedTuples;
-	private static ObjectMapper mapper;
-	private static UserAgentStringParser userAgentParser;
+	private transient ObjectMapper mapper;
+	private transient UserAgentStringParser userAgentParser;
 	private OutputCollector collector;
 	private boolean acking;
 	private StopWatch throughput;
 
-	static
-	{
-		mapper = new ObjectMapper();
-		mapper.registerModule(new JodaModule());
-		userAgentParser = new UserAgentParser();
-	}
 
 	public UserAgentBolt()
 	{
@@ -69,8 +63,12 @@ public class UserAgentBolt implements IRichBolt
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector)
 	{
 		this.collector = collector;
-		this.acking = Boolean.parseBoolean((String) stormConf.get("acking"));
+//		this.acking = (Boolean) stormConf.get("acking");
+		this.acking = false;
 		this.throughput.start();
+		this.mapper = new ObjectMapper();
+		this.mapper.registerModule(new JodaModule());
+		this.userAgentParser = new UserAgentParser();
 
 	}
 
@@ -110,15 +108,16 @@ public class UserAgentBolt implements IRichBolt
 			event.setOs(os_str);
 
 			emit(input, event, initTime);
-			 if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-			 {
-				 this.throughput.stop();
-				 double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE /
-				 (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-				 LOG.info(THROUGHPUT, avg_throughput);
-				 processedTuples = 0;
-				 this.throughput.start();
-			 }
+//			testEmit(input, event, initTime);
+//			 if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
+//			 {
+//				 this.throughput.stop();
+//				 double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE /
+//				 (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
+//				 LOG.info(THROUGHPUT, avg_throughput);
+//				 processedTuples = 0;
+//				 this.throughput.start();
+//			 }
 		}
 		// else just skip the tuple. Here we are not interested in high
 		// accuracy, we need to process the messages as fast as possible
@@ -151,6 +150,11 @@ public class UserAgentBolt implements IRichBolt
 			} else
 				collector.emit(Constants.UA_STREAM, new Values(value, initTime));
 		}
+	}
+	
+	public void testEmit(Tuple input, StormEvent event, long initTime)
+	{
+		collector.emit(Constants.UA_STREAM, input, new Values(event, initTime));
 	}
 
 	public void cleanup()

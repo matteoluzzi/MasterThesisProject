@@ -49,7 +49,8 @@ public class RouterBolt implements IRichBolt
 	@SuppressWarnings("rawtypes")
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector)
 	{
-		this.acking = Boolean.parseBoolean((String) stormConf.get("acking"));
+//		this.acking = (Boolean) stormConf.get("acking");
+		this.acking = false;
 		this.collector = collector;
 		this.processedTuples = 0;
 		this.throughput.start();
@@ -85,24 +86,20 @@ public class RouterBolt implements IRichBolt
 
 			int userAgent_index = message.indexOf("userAgent");
 
-			if (userAgent_index == -1)
-			{
-				emitOnDefaultStream(input, message, initTime);
-			}
-
-			else
+			if (userAgent_index != -1)
 			{
 				emitOnUAStream(input, message, initTime);
 			}
+			
 			// get statistics on current batch
-			if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-			{
-				this.throughput.stop();
-				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-				LOG.info(THROUGHPUT, avg_throughput);
-				processedTuples = 0;
-				this.throughput.start();
-			}
+//			if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
+//			{
+//				this.throughput.stop();
+//				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
+//				LOG.info(THROUGHPUT, avg_throughput);
+//				processedTuples = 0;
+//				this.throughput.start();
+//			}
 		}
 	}
 

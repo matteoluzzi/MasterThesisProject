@@ -3,6 +3,7 @@ package com.vimond.RealTimeArchitecture.Topology;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.elasticsearch.storm.EsBolt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,6 @@ public class StormTopologyBuilder
 		int router_tasks = this.props.getProperty("router_tasks") != null ? Integer.parseInt(this.props.getProperty("router_tasks")) : Constants.ROUTER_TASKS;
 		int elasticsearch_tasks = this.props.getProperty("el_tasks") != null ? Integer.parseInt(this.props.getProperty("el_tasks")) : Constants.EL_TASKS;
 		
-		
 		/*
 		 * Kafka Spout
 		 */
@@ -77,12 +77,10 @@ public class StormTopologyBuilder
 		/*
 		 * Bolt that writes the result tuple to elasticsearch cluster
 		 */
-//		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
-//		.shuffleGrouping(Constants.BOLT_ROUTER)
-//		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
-//		.addConfiguration("es.storm.bolt.write.ack", acking)
-//		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 30); //flush data into ES every 30 seconds
-//		
+		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
+		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
+		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 180); //flush data into ES every 30 seconds
+		
 		
 		LOG.info("Creating topology components DONE");
 		
@@ -149,10 +147,11 @@ public class StormTopologyBuilder
 		
 		//ElasticSearch bolt configuration
 		conf.put("es.index.auto.create", "true");
-		conf.put("es.nodes", "52.18.197.119");
+		conf.put("es.nodes", "localhost");
 		conf.put("es.port", "9200");
 		conf.put("es.input.json", "true");
-		conf.put("es.storm.bolt.flush.entries.size", 10000);
+		conf.put("es.storm.bolt.write.ack", "true");
+		conf.put("es.storm.bolt.flush.entries.size", 50000);
 		
 		//custom serialization
 		List<String> customSerializationClasses = new ArrayList<String>();

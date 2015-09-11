@@ -164,14 +164,14 @@ public class PartitionManager {
                 for(List<Object> tup: tups)
                 {
                     collector.emit(tup, new KafkaMessageId(_partition, toEmit.offset));
-                    if(++emittedTuple % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-                    {
-                    	this.throughput.stop();
-        				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-        				LOGGER.info(THROUGHPUT, avg_throughput);
-        				emittedTuple = 0;
-        				this.throughput = new StopWatch();
-                    }
+//                    if(++emittedTuple % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
+//                    {
+//                    	this.throughput.stop();
+//        				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
+//        				LOGGER.info(THROUGHPUT, avg_throughput);
+//        				emittedTuple = 0;
+//        				this.throughput = new StopWatch();
+//                    }
                 }
                 break;
             } else {
