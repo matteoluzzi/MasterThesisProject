@@ -79,7 +79,7 @@ public class StormTopologyBuilder
 		 */
 		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
 		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
-		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 180); //flush data into ES every 30 seconds
+		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 30 seconds
 		
 		
 		LOG.info("Creating topology components DONE");
@@ -150,8 +150,11 @@ public class StormTopologyBuilder
 		conf.put("es.nodes", "localhost");
 		conf.put("es.port", "9200");
 		conf.put("es.input.json", "true");
-		conf.put("es.storm.bolt.write.ack", "true");
-		conf.put("es.storm.bolt.flush.entries.size", 50000);
+		conf.put("es.storm.bolt.write.ack", "false");
+		conf.put("es.storm.bolt.flush.entries.size", 25000);
+		conf.put("es.batch.size.entries", 25000);
+		conf.put("es.batch.size.bytes", "100mb");
+		conf.put("es.storm.bolt.tick.tuple.flush", "true");
 		
 		//custom serialization
 		List<String> customSerializationClasses = new ArrayList<String>();
