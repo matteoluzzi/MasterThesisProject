@@ -1,26 +1,17 @@
 package com.vimond.eventfetcher;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.Progressable;
-
 import scala.actors.threadpool.Arrays;
 
-import com.backtype.hadoop.pail.Pail;
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vimond.pailStructure.TimeFramePailStructure;
@@ -51,5 +42,25 @@ public class EventFetcherTest extends TestCase
 		List<String> expected = Arrays.asList(new String[] {"2014-09-12", "03", "00"});
 		
 		assertEquals(expected, folder);
+	}
+	
+	public void testReport()
+	{
+		MetricRegistry registry = new MetricRegistry();
+		
+		Meter meter = registry.meter("test-meter");
+		
+		ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
+									.convertRatesTo(TimeUnit.SECONDS)
+									.convertDurationsTo(TimeUnit.MILLISECONDS)
+									.build();
+		
+		for(int i=0; i< 100; i++)
+		{
+			meter.mark();
+		}
+		
+		reporter.report();
+		
 	}
 }

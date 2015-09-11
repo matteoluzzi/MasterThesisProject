@@ -1,8 +1,10 @@
 package com.vimond.eventfetcher.consumer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -23,20 +25,19 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.Decoder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.backtype.hadoop.pail.Pail;
 import com.backtype.hadoop.pail.Pail.TypedRecordOutputStream;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.ecyrd.speed4j.StopWatch;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
@@ -52,9 +53,9 @@ import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.messages.MessageConsumer;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
-import com.vimond.pailStructure.TimeFramePailStructure;
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.util.Constants;
+import com.vimond.pailStructure.TimeFramePailStructure;
 
 /**
  * Reliable version of a KafkaConsumer. It processes the events in batch commits
@@ -83,6 +84,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	protected long millsToSleepWhenError = 1000 * 5;
 	protected LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
 	protected long batchEndTime;
+	protected final CsvReporter reporter;
 
 	protected String HDFSPathToLocation;
 	private int timeFrameInMinutes;
@@ -106,6 +108,12 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		this.timeFrameInMinutes = conf.getConfig().get(Constants.TIME_FRAME_KEY) != null ? Integer.parseInt(conf.getConfig().get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;
 
 		this.initializeTimeFramePail();
+	
+		this.reporter = CsvReporter.forRegistry(metricRegistry)
+						.convertDurationsTo(TimeUnit.MILLISECONDS)
+						.convertRatesTo(TimeUnit.SECONDS)
+						.formatFor(Locale.ITALY)
+						.build(new File("/Users/matteoremoluzzi"));
 		
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 
@@ -139,6 +147,12 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 		
 		this.initializeTimeFramePail();
+		
+		this.reporter = CsvReporter.forRegistry(metricRegistry)
+				.convertDurationsTo(TimeUnit.MILLISECONDS)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.formatFor(Locale.ITALY)
+				.build(new File("/var/log/vimond-eventfetcher-service"));
 
 		// procedure for controlled shutdown
 		Runtime.getRuntime().addShutdownHook(new Thread()
@@ -155,6 +169,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 			}
 		});
 	}
+	
 
 	private void setupHealthchecks(HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig)
 	{
@@ -289,7 +304,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 
 		for (final KafkaStream<T> stream : streams)
 		{
-			executor.submit(new KafkaStreamReader<T>(metrics, logger, name, millsToSleepWhenError, messageProcessor, stream, this, barrier));
+			executor.submit(new KafkaStreamReader<T>(metrics, reporter, logger, name, millsToSleepWhenError, messageProcessor, stream, this, barrier));
 		}
 		isRunning.set(true);
 	}
@@ -301,17 +316,19 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 
 	protected static class OurMetrics
 	{
-		public final Counter receivedMessages;
+		public final Meter receivedMessages;
 		public final Counter receivedMessagesWithError;
 		public final Counter retryCountWhenProcessingEvent;
 		public final Timer messageProcessingTime;
+		public final Timer hdfsWritingTime;
 
 		public OurMetrics(MetricRegistry metricsRegistry, String name)
 		{
-			receivedMessages = metricsRegistry.counter(name + "_kafka-consumer-receivedMessages");
+			receivedMessages = metricsRegistry.meter(name + "_kafka-consumer-receivedMessages");
 			receivedMessagesWithError = metricsRegistry.counter(name + "_kafka-consumer-receivedMessagesWithError");
 			retryCountWhenProcessingEvent = metricsRegistry.counter(name + "_kafka-consumer-retryCountWhenProcessingEvent");
 			messageProcessingTime = metricsRegistry.timer(name + "_kafka-consumer-messageProcessingTime");
+			hdfsWritingTime = metricsRegistry.timer(name + "_kafka-consumer-hdfsWritingTime");
 		}
 	}
 
@@ -343,7 +360,6 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		@Override
 		public void run()
 		{
-
 			Callable<Boolean> writeFunction = new Callable<Boolean>()
 			{
 
@@ -397,15 +413,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		private final KafkaEventsConsumer<T> consumer;
 		private ConsumerIterator<T> it;
 		private final CyclicBarrier barrier;
-		private int processedTuples;
-		private final org.apache.logging.log4j.Logger performaces = LogManager.getLogger(KafkaStreamReader.class);
+		private final CsvReporter reporter;
 		
-		private StopWatch timer;
-		private final static Marker ERROR = MarkerManager.getMarker("BATCH-ERRORS");
-		private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-BATCH-THROUGHPUT");
-		private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
-
-		public KafkaStreamReader(OurMetrics metrics, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, KafkaEventsConsumer<T> consumer, CyclicBarrier barrier)
+		public KafkaStreamReader(OurMetrics metrics, CsvReporter reporter, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, KafkaEventsConsumer<T> consumer, CyclicBarrier barrier)
 		{
 			this.metrics = metrics;
 			this.logger = logger;
@@ -414,8 +424,8 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 			this.messageProcessor = messageProcessor;
 			this.consumer = consumer;
 			this.barrier = barrier;
+			this.reporter = reporter;
 			this.it = stream.iterator();
-			this.timer = new StopWatch();
 		}
 
 		public void run()
@@ -426,7 +436,6 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 				logger.info("Thread " + name + " starting to process stream");
 				long batchEndTime = this.consumer.getBatchEndTime();
 				boolean read = true;
-				this.timer.start();
 
 				while (read)
 				{
@@ -435,20 +444,12 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 						if (it.hasNext())
 						{
 							MessageAndMetadata<T> msgAndMetadata = it.next();
-							metrics.receivedMessages.inc();
+							metrics.receivedMessages.mark();
 							final boolean processed = processMessage(msgAndMetadata.message());
 							if (msgAndMetadata.message() == null || !processed)
 								metrics.receivedMessagesWithError.inc();
 							else
 							{
-								if (++processedTuples % 10000 == 0)
-								 {
-									 this.timer.stop();
-									 double avg_throughput = 10000 /	 (this.timer.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-									 performaces.info(THROUGHPUT, avg_throughput);
-									 processedTuples = 0;
-									 this.timer.start();
-								 }
 							}
 						}
 					} catch (ConsumerTimeoutException e) // caught when there
@@ -461,15 +462,19 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 					{
 						try
 						{
+							Context ctx = metrics.hdfsWritingTime.time();
 							barrier.await();
+							ctx.stop();
 							// after the barrier all thread are synchronized
 							// with the next batch execution
 							batchEndTime = this.consumer.getBatchEndTime();
 						} catch (Exception e)
 						{
 							logger.debug("Exception while waiting for batch completion: {}", e.getMessage());
+							reporter.report();
 							break;
 						}
+						reporter.report();
 					}
 				}
 

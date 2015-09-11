@@ -9,6 +9,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>vimond-eventfetcher-service</artifactId>
+	<version>0.0.2-SNAPSHOT</version>
 
 	<dependencies>
 
@@ -147,11 +148,6 @@
 			<version>2.3</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.lmax</groupId>
-			<artifactId>disruptor</artifactId>
-			<version>3.3.0</version>
-		</dependency>
 
 
 	</dependencies>

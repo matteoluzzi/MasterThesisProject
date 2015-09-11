@@ -33,9 +33,6 @@ public class VimondEventFetcherService extends Application<VimondEventFetcherSer
 
     @Override
     public void run(final VimondEventFetcherServiceConfiguration configuration, Environment environment) throws Exception {
-
-    	Properties sys_props = System.getProperties();
-    	sys_props.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
     	
         configure(environment.getObjectMapper());
 
