@@ -82,7 +82,7 @@ public class App
 				System.exit(0);
 			}
 
-			SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+			JobsStarter starter = new JobsStarter(ctx, props);
 			starter.startJobs();
 		}
 

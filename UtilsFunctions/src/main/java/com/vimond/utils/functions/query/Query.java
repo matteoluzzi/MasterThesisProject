@@ -5,7 +5,9 @@ import java.util.concurrent.Executors;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.joda.time.DateTime;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class representing a query for elasticsearch. Each sub class must implement the execute method.
@@ -17,6 +19,7 @@ public abstract class Query
 	protected SearchResponse searchResponse;
 	protected ExecutorService executor;
 	protected SummaryStatistics stats;
+	protected static final Logger LOG = LoggerFactory.getLogger(Query.class);
 	
 	
 	public Query()
@@ -36,7 +39,7 @@ public abstract class Query
 				{
 					execute(c, index);
 					long time = getTimeExecution();
-					System.out.println("Execution: " + time + " ms" + " " + new org.joda.time.DateTime());
+					LOG.info("Execution: " + time + " ms" + " " + new DateTime());
 					stats.addValue(time);
 				}
 			});
@@ -48,7 +51,7 @@ public abstract class Query
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
+		LOG.info("Results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
 		
 		this.executor.shutdown();
 	}

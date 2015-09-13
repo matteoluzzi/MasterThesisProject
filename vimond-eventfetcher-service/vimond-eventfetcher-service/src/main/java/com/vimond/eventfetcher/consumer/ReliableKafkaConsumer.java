@@ -50,7 +50,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
-import com.vimond.common.messages.MessageConsumer;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.eventfetcher.processor.BatchProcessor;
@@ -67,33 +66,33 @@ import com.vimond.pailStructure.TimeFramePailStructure;
  * @param <T>
  */
 
-public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumerEventFetcher<T>
+public final class ReliableKafkaConsumer<T> implements KafkaConsumerEventFetcher<T>
 {
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	protected final KafkaConfig kafkaConfig;
-	protected final KafkaConsumerConfig consumerConfig;
-	protected MessageProcessor<T> messageProcessor;
-	protected ExecutorService executor;
-	protected List<KafkaStream<T>> streams;
-	protected ConsumerConnector consumerConnector;
-	protected final AtomicBoolean isRunning = new AtomicBoolean(false);
-	protected final String name;
-	protected long batchSize;
-	protected long flushingTime;
-	protected long millsToSleepWhenError = 1000 * 5;
-	protected LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
-	protected long batchEndTime;
-	protected final CsvReporter reporter;
+	private final KafkaConfig kafkaConfig;
+	private final KafkaConsumerConfig consumerConfig;
+	private MessageProcessor<T> messageProcessor;
+	private ExecutorService executor;
+	private List<KafkaStream<T>> streams;
+	private ConsumerConnector consumerConnector;
+	private final AtomicBoolean isRunning = new AtomicBoolean(false);
+	private final String name;
+	private long batchSize;
+	private long flushingTime;
+	private long millsToSleepWhenError = 1000 * 5;
+	private LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
+	private long batchEndTime;
+	private final CsvReporter reporter;
 
-	protected String HDFSPathToLocation;
+	private String HDFSPathToLocation;
 	private int timeFrameInMinutes;
 
-	protected final MetricRegistry metricRegistry;
-	protected ZookeeperHealthCheck healthCheck;
+	private final MetricRegistry metricRegistry;
+	private ZookeeperHealthCheck healthCheck;
 	
 	@SuppressWarnings("unchecked")
-	public KafkaEventsConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
+	public ReliableKafkaConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
 	{
 		fsProcessor.setEventsKafkaConsumer(this);
 		this.metricRegistry = metricRegistry;
@@ -113,7 +112,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 						.convertDurationsTo(TimeUnit.MILLISECONDS)
 						.convertRatesTo(TimeUnit.SECONDS)
 						.formatFor(Locale.ITALY)
-						.build(new File("/Users/matteoremoluzzi"));
+						.build(new File("/var/log/vimond-eventfetcher-service"));
 		
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 
@@ -132,44 +131,6 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 			}
 		});
 	}
-
-	public KafkaEventsConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, MessageProcessor<T> messageProcessor)
-	{
-		this.metricRegistry = metricRegistry;
-		this.kafkaConfig = kafkaConfig;
-		this.consumerConfig = consumerConfig;
-		this.messageProcessor = messageProcessor;
-		this.name = "KafkaConsumer[" + consumerConfig.topic + "][" + consumerConfig.groupid + "]";
-		this.batchSize = Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
-		this.flushingTime = Constants.DEFAULT_FLUSH_TIME;
-		this.HDFSPathToLocation = Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
-		this.timeFrameInMinutes = Constants.DEFAULT_TIME_FRAME;
-		setupHealthchecks(healthCheckRegistry, kafkaConfig);
-		
-		this.initializeTimeFramePail();
-		
-		this.reporter = CsvReporter.forRegistry(metricRegistry)
-				.convertDurationsTo(TimeUnit.MILLISECONDS)
-				.convertRatesTo(TimeUnit.SECONDS)
-				.formatFor(Locale.ITALY)
-				.build(new File("/var/log/vimond-eventfetcher-service"));
-
-		// procedure for controlled shutdown
-		Runtime.getRuntime().addShutdownHook(new Thread()
-		{
-			public void run()
-			{
-				try
-				{
-					shutdown();
-				} catch (Exception e)
-				{
-					flushToHdfs();
-				}
-			}
-		});
-	}
-	
 
 	private void setupHealthchecks(HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig)
 	{
@@ -198,9 +159,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	}
 
 	@Override
-	public List<Object> getMessages()
+	public List<T> getMessages()
 	{
-		return new ArrayList<Object>(this.buffer);
+		return new ArrayList<T>(this.buffer);
 	}
 
 	private void setBatchEndTime(long endTime)
@@ -344,9 +305,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 
 		private final ConsumerConnector connector;
 		private final Logger logger;
-		private final KafkaEventsConsumer<T> consumer;
+		private final ReliableKafkaConsumer<T> consumer;
 
-		public FlushAndCommit(ConsumerConnector connector, Logger logger, KafkaEventsConsumer<T> consumer)
+		public FlushAndCommit(ConsumerConnector connector, Logger logger, ReliableKafkaConsumer<T> consumer)
 		{
 			this.connector = connector;
 			this.logger = logger;
@@ -410,12 +371,12 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		private final long millsToSleepWhenError;
 		private final MessageProcessor<T> messageProcessor;
 		private final OurMetrics metrics;
-		private final KafkaEventsConsumer<T> consumer;
+		private final ReliableKafkaConsumer<T> consumer;
 		private ConsumerIterator<T> it;
 		private final CyclicBarrier barrier;
 		private final CsvReporter reporter;
 		
-		public KafkaStreamReader(OurMetrics metrics, CsvReporter reporter, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, KafkaEventsConsumer<T> consumer, CyclicBarrier barrier)
+		public KafkaStreamReader(OurMetrics metrics, CsvReporter reporter, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, ReliableKafkaConsumer<T> consumer, CyclicBarrier barrier)
 		{
 			this.metrics = metrics;
 			this.logger = logger;
@@ -463,7 +424,8 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 						try
 						{
 							Context ctx = metrics.hdfsWritingTime.time();
-							barrier.await();
+							//wait 10 minutes for the writing process to complete, otherwise raise an exception a exit the program
+							barrier.await(10, TimeUnit.MINUTES);
 							ctx.stop();
 							// after the barrier all thread are synchronized
 							// with the next batch execution
@@ -472,7 +434,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 						{
 							logger.debug("Exception while waiting for batch completion: {}", e.getMessage());
 							reporter.report();
-							break;
+							throw new RuntimeException("Error while waiting for the writing process, check the log for more information");
 						}
 						reporter.report();
 					}

@@ -1,7 +1,6 @@
 package com.vimond.StorageArchitecture.Jobs;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -35,8 +34,6 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 {
 	private static final long serialVersionUID = 4238953880867095830L;
 
-	protected Date minDate;
-	protected Date maxDate;
 	protected JavaRDD<T> inputDataset;
 	protected Properties props;
 	protected final Class<T> clazz;
@@ -92,15 +89,5 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 	public JavaRDD<? extends VimondEventAny> getLoadedRDD()
 	{
 		return this.inputDataset;
-	}
-
-	public Date getBeginDate()
-	{
-		return this.minDate;
-	}
-
-	public Date getEndingDate()
-	{
-		return this.maxDate;
 	}
 }

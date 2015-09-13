@@ -31,23 +31,24 @@ import com.vimond.utils.data.SparkEvent;
  * @author matteoremoluzzi
  *
  */
-public class SimpleJobsStarter implements Serializable
+public class JobsStarter implements Serializable
 {
 
 	private static final long serialVersionUID = 1L;
-	private Logger LOG = LoggerFactory.getLogger(SimpleJobsStarter.class);
+	private Logger LOG = LoggerFactory.getLogger(JobsStarter.class);
 
 	private JavaSparkContext ctx;
 	private Properties prop;
 	private ExecutorService pool;
 	private List<Future> submittedJobs;
+	private JobsFactory jobFactory;
 	
-	public SimpleJobsStarter(JavaSparkContext ctx, Properties prop)
+	public JobsStarter(JavaSparkContext ctx, Properties prop)
 	{
 		this.ctx = ctx;
 		this.prop = prop;
 		this.submittedJobs = new ArrayList<Future>();
-
+		this.jobFactory = JobsFactory.getFactory();
 		
 		final int poolSize = Integer.parseInt(this.prop.getProperty(Constants.POOL_SIZE_KEY));
 		this.pool = Executors.newFixedThreadPool(poolSize);
@@ -74,7 +75,7 @@ public class SimpleJobsStarter implements Serializable
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_EVENT_TYPE, data_rdd));
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_END_BY_ASSET, data_rdd));
 		
-		StartEventsJob startEventJob = (StartEventsJob) JobsFactory.getFactory().createJob(JobName.START_EVENTS, this.prop, data_rdd);
+		StartEventsJob startEventJob = (StartEventsJob) this.jobFactory.createJob(JobName.START_EVENTS, this.prop, data_rdd);
 		startEventJob.run(this.ctx);
 		
 		JavaRDD<EventInfo> start_events_rdd = startEventJob.getFilteredRDD();
@@ -114,7 +115,7 @@ public class SimpleJobsStarter implements Serializable
 			@Override
 			public void run()
 			{
-				Job job = JobsFactory.getFactory().createJob(name, prop, data_rdd);
+				Job job = jobFactory.createJob(name, prop, data_rdd);
 				job.run(ctx);
 			}
 		});

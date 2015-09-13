@@ -10,7 +10,6 @@ import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
-import org.apache.commons.net.ntp.TimeStamp;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -70,13 +69,5 @@ public class AppTest extends TestCase
 		
 		System.out.println(agent.getName() + "/" + agent.getVersionNumber().getMajor());
 		System.out.println(agent.getOperatingSystem().getName() + " " + agent.getOperatingSystem().getVersionNumber().getMajor());
-	}
-	
-	public void testNTPTime() throws InterruptedException
-	{
-		TimeStamp now = new TimeStamp(new Date());
-		System.out.println(now.getTime());
-		System.out.println(new TimeStamp(new Date()).getTime());
-		
 	}
 }
