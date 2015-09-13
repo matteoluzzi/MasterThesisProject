@@ -14,10 +14,9 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 
-public class TopPlayerStartEventsPerAsset extends Query
+public class TopPlayerEndEventsPerAsset extends Query
 {
-
-	public TopPlayerStartEventsPerAsset()
+	public TopPlayerEndEventsPerAsset()
 	{
 		super();
 	}
@@ -25,14 +24,15 @@ public class TopPlayerStartEventsPerAsset extends Query
 	@Override
 	public void execute(Client esClient, String index, boolean verbose)
 	{
-		FilterBuilder fb = new OrFilterBuilder(new TermFilterBuilder("eventName", "StartEventPerAsset"), new TermFilterBuilder("data.playerEvent", "str-start"));
-
+		FilterBuilder fb = new OrFilterBuilder(new TermFilterBuilder("eventName", "StopEventPerAsset"), new TermFilterBuilder("data.playerEvent", "end"));
+		
 		AbstractAggregationBuilder aggregations = AggregationBuilders
-												.terms("by_assetName")
-												.field("data.assetName")
-												.size(50)
-												.subAggregation(AggregationBuilders.sum("sum").field("counter"))
-												.order(Terms.Order.aggregation("sum", false));
+				.terms("by_assetName")
+				.field("data.assetName")
+				.size(50)
+				.subAggregation(AggregationBuilders.sum("sum").field("counter"))
+				.order(Terms.Order.aggregation("sum", false));
+		
 		if(index.equals(""))
 		{
 			this.searchResponse = esClient.prepareSearch()
@@ -53,10 +53,11 @@ public class TopPlayerStartEventsPerAsset extends Query
 		}
 		if(verbose)
 			printResult();
+		
 	}
 
 	@Override
-	protected void printResult()
+	public void printResult()
 	{
 		Terms byAssetName = this.searchResponse.getAggregations().get("by_assetName");
 		List<org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket> buckets = byAssetName.getBuckets();
@@ -70,4 +71,5 @@ public class TopPlayerStartEventsPerAsset extends Query
 			}
 		});
 	}
+
 }

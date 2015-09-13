@@ -19,6 +19,18 @@ public class QueryFactory
 		{
 		case TOP_ASSET_START:
 			return new TopPlayerStartEventsPerAsset();
+		case STARTS_COUNT:
+			return new PlayerStartEventsCounter();
+		case TOP_BROWSER:
+			return new TopBrowsers();
+		case TOP_OS:
+			return new TopOs();
+		case TOP_VIDEOFORMAT:
+			return new TopVideoFormat();
+		case ENDS_COUNT:
+			return new PlayerEndEventsCounter();
+		case TOP_ASSET_END:
+			return new TopPlayerEndEventsPerAsset();
 		default:
 		break;
 		}

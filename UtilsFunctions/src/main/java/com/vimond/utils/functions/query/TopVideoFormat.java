@@ -14,25 +14,21 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 
-public class TopPlayerStartEventsPerAsset extends Query
+public class TopVideoFormat extends Query
 {
-
-	public TopPlayerStartEventsPerAsset()
-	{
-		super();
-	}
 
 	@Override
 	public void execute(Client esClient, String index, boolean verbose)
 	{
-		FilterBuilder fb = new OrFilterBuilder(new TermFilterBuilder("eventName", "StartEventPerAsset"), new TermFilterBuilder("data.playerEvent", "str-start"));
-
+		FilterBuilder fb = new OrFilterBuilder(new TermFilterBuilder("eventName", "TopVideoFormat"), new TermFilterBuilder("data.playerEvent", "str-start"));
+		
 		AbstractAggregationBuilder aggregations = AggregationBuilders
-												.terms("by_assetName")
-												.field("data.assetName")
-												.size(50)
-												.subAggregation(AggregationBuilders.sum("sum").field("counter"))
-												.order(Terms.Order.aggregation("sum", false));
+				.terms("by_videoFormat")
+				.field("data.videoFormat")
+				.size(50)
+				.subAggregation(AggregationBuilders.sum("sum").field("counter"))
+				.order(Terms.Order.aggregation("sum", false));
+		
 		if(index.equals(""))
 		{
 			this.searchResponse = esClient.prepareSearch()
@@ -53,12 +49,14 @@ public class TopPlayerStartEventsPerAsset extends Query
 		}
 		if(verbose)
 			printResult();
+		
+		
 	}
 
 	@Override
 	protected void printResult()
 	{
-		Terms byAssetName = this.searchResponse.getAggregations().get("by_assetName");
+		Terms byAssetName = this.searchResponse.getAggregations().get("by_videoFormat");
 		List<org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket> buckets = byAssetName.getBuckets();
 		buckets.forEach(new Consumer<Bucket>()
 		{
@@ -70,4 +68,5 @@ public class TopPlayerStartEventsPerAsset extends Query
 			}
 		});
 	}
+
 }

@@ -5,7 +5,9 @@ import java.util.concurrent.Executors;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.joda.time.DateTime;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class representing a query for elasticsearch. Each sub class must implement the execute method.
@@ -17,15 +19,16 @@ public abstract class Query
 	protected SearchResponse searchResponse;
 	protected ExecutorService executor;
 	protected SummaryStatistics stats;
+	protected static final Logger LOG = LoggerFactory.getLogger(Query.class);
 	
 	
 	public Query()
 	{
-		this.executor = Executors.newFixedThreadPool(10);
+		this.executor = Executors.newFixedThreadPool(5);
 		this.stats = new SummaryStatistics();
 	}
 	
-	public void executeMultiple(Client c, String index, long interval, long repetitions)
+	public void executeMultiple(Client c, String index, long interval, long repetitions, boolean verbose)
 	{
 		while(--repetitions >= 0)
 		{
@@ -34,9 +37,9 @@ public abstract class Query
 				@Override
 				public void run()
 				{
-					execute(c, index);
+					execute(c, index, verbose);
 					long time = getTimeExecution();
-					System.out.println("Execution: " + time + " ms" + " " + new org.joda.time.DateTime());
+					LOG.info("Execution: " + time + " ms" + " " + new DateTime());
 					stats.addValue(time);
 				}
 			});
@@ -48,7 +51,8 @@ public abstract class Query
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
+		
+		printQueryStatistics();
 		
 		this.executor.shutdown();
 	}
@@ -62,8 +66,13 @@ public abstract class Query
 		else return -1;
 	}
 	
-	public abstract void execute(Client c, String index);
+	private void printQueryStatistics()
+	{
+		LOG.info("Results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
+	}
 	
-	public abstract void printResult();
+	protected abstract void execute(Client c, String index, boolean verbose);
+	
+	protected abstract void printResult();
 
 }
