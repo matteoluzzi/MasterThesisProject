@@ -1,14 +1,9 @@
 package com.vimond.RealTimeArchitecture.Bolt;
 
-import java.io.File;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -18,7 +13,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-import com.ecyrd.speed4j.StopWatch;
 import com.vimond.utils.data.Constants;
 
 /**
@@ -33,17 +27,10 @@ public class RouterBolt implements IRichBolt
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOG = LogManager.getLogger(RouterBolt.class);
 	private OutputCollector collector;
-	private StopWatch throughput;
 	private boolean acking;
-	private int processedTuples;
-
-	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
-
-	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
 
 	public RouterBolt()
 	{
-		this.throughput = new StopWatch();
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -52,8 +39,6 @@ public class RouterBolt implements IRichBolt
 //		this.acking = (Boolean) stormConf.get("acking");
 		this.acking = false;
 		this.collector = collector;
-		this.processedTuples = 0;
-		this.throughput.start();
 	}
 
 	public Map<String, Object> getComponentConfiguration()
@@ -90,16 +75,6 @@ public class RouterBolt implements IRichBolt
 			{
 				emitOnUAStream(input, message, initTime);
 			}
-			
-			// get statistics on current batch
-//			if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-//			{
-//				this.throughput.stop();
-//				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-//				LOG.info(THROUGHPUT, avg_throughput);
-//				processedTuples = 0;
-//				this.throughput.start();
-//			}
 		}
 	}
 
@@ -114,6 +89,8 @@ public class RouterBolt implements IRichBolt
 			this.collector.emit(Constants.UA_STREAM, new Values(message, initTime));
 	}
 
+	@SuppressWarnings("unused")
+	@Deprecated
 	private void emitOnDefaultStream(Tuple input, String message, long initTime)
 	{
 		if (this.acking)

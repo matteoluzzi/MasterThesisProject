@@ -44,10 +44,7 @@ public class UserAgentBolt implements IRichBolt
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOG = LogManager.getLogger(UserAgentBolt.class);
 	private final static Marker ERROR = MarkerManager.getMarker("REALTIME-ERRORS");
-	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
-	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
 
-	private int processedTuples;
 	private transient ObjectMapper mapper;
 	private transient UserAgentStringParser userAgentParser;
 	private OutputCollector collector;

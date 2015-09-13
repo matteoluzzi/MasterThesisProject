@@ -63,11 +63,6 @@ import com.vimond.utils.data.Constants;
 
 public class PartitionManager {
     public static final Logger LOG = LoggerFactory.getLogger(PartitionManager.class);
-    private org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(KafkaSpout.class);
-	private final static Marker THROUGHPUT = MarkerManager.getMarker("PERFORMANCES-REALTIME-THROUGHPUT");
-	private static final double FROM_NANOS_TO_SECONDS = 0.000000001;
-	private int emittedTuple;
-	private StopWatch throughput;
     
     private final CombinedMetric _fetchAPILatencyMax;
     private final ReducedMetric _fetchAPILatencyMean;
@@ -137,7 +132,6 @@ public class PartitionManager {
         _fetchAPILatencyMean = new ReducedMetric(new MeanReducer());
         _fetchAPICallCount = new CountMetric();
         _fetchAPIMessageCount = new CountMetric();
-        this.throughput = new StopWatch();
     }
 
     public Map getMetricsDataMap() {
@@ -164,14 +158,6 @@ public class PartitionManager {
                 for(List<Object> tup: tups)
                 {
                     collector.emit(tup, new KafkaMessageId(_partition, toEmit.offset));
-//                    if(++emittedTuple % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-//                    {
-//                    	this.throughput.stop();
-//        				double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE / (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-//        				LOGGER.info(THROUGHPUT, avg_throughput);
-//        				emittedTuple = 0;
-//        				this.throughput = new StopWatch();
-//                    }
                 }
                 break;
             } else {

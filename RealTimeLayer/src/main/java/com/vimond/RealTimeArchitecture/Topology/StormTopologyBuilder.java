@@ -3,7 +3,6 @@ package com.vimond.RealTimeArchitecture.Topology;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.storm.EsBolt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

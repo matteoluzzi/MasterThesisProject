@@ -47,7 +47,9 @@ import static org.elasticsearch.storm.cfg.StormConfigurationOptions.*;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ElasticSearchBolt implements IRichBolt {
 
-    private transient static Log log = LogFactory.getLog(ElasticSearchBolt.class);
+	private static final long serialVersionUID = -3277652166051865760L;
+
+	private transient static Log log = LogFactory.getLog(ElasticSearchBolt.class);
 
     private Map boltConfig = new LinkedHashMap();
 
