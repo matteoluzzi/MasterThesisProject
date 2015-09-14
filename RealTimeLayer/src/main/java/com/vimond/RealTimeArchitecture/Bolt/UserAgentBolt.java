@@ -17,10 +17,7 @@ import org.apache.logging.log4j.MarkerManager;
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.UniformReservoir;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -30,7 +27,6 @@ import com.vimond.utils.functions.UserAgentParser;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.FailedException;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
@@ -59,7 +55,6 @@ public class UserAgentBolt implements IRichBolt
 	private long reportFrequency;
 	private String reportPath;
 	
-	private transient Timer timer;
 	private transient Meter counter;
 
 	public UserAgentBolt()
@@ -85,10 +80,6 @@ public class UserAgentBolt implements IRichBolt
 	{
 		final MetricRegistry metricRegister = new MetricRegistry();	
 		
-		//use sampling when detecting the latency for not affecting the performances
-		this.timer = new Timer(new UniformReservoir());
-		metricRegister.register(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "latency"), this.timer);
-		
 		//register the meter metric
 		this.counter = metricRegister.meter(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "-events_sec"));
 		
@@ -103,7 +94,6 @@ public class UserAgentBolt implements IRichBolt
 	public void execute(Tuple input)
 	{
 		this.counter.mark();
-		final Timer.Context ctx = this.timer.time();
 		
 		String jsonEvent = input.getString(0);
 		long initTime = input.getLong(1);
@@ -146,8 +136,6 @@ public class UserAgentBolt implements IRichBolt
 		{
 			LOG.error(ERROR, "Error while processing a tuple");
 		}
-		ctx.stop();
-
 	}
 
 	public void emit(Tuple input, StormEvent event, long initTime)

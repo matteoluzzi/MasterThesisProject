@@ -2,7 +2,6 @@ package com.vimond.RealTimeArchitecture.Bolt;
 
 import java.util.Map;
 import java.io.File;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,8 +18,6 @@ import backtype.storm.tuple.Values;
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.UniformReservoir;
 import com.vimond.utils.data.Constants;
 
 /**
@@ -40,9 +37,7 @@ public class RouterBolt implements IRichBolt
 	private long reportFrequency;
 	private String reportPath;
 	
-	private transient Timer timer;
 	private transient Meter counter;
-
 
 	public RouterBolt()
 	{
@@ -65,10 +60,6 @@ public class RouterBolt implements IRichBolt
 	public void initializeMetricsReport()
 	{
 		final MetricRegistry metricRegister = new MetricRegistry();	
-		
-		//use sampling when detecting the latency for not affecting the performances
-		this.timer = new Timer(new UniformReservoir());
-		metricRegister.register(MetricRegistry.name(RouterBolt.class, Thread.currentThread().getName() + "latency"), this.timer);
 		
 		//register the meter metric
 		this.counter = metricRegister.meter(MetricRegistry.name(RouterBolt.class, Thread.currentThread().getName() + "-events_sec"));
@@ -101,7 +92,6 @@ public class RouterBolt implements IRichBolt
 	public void execute(Tuple input)
 	{
 		this.counter.mark();
-		final Timer.Context ctx = this.timer.time();
 		String message = input.getString(0);
 		long initTime = input.getLong(1);
 
@@ -116,7 +106,6 @@ public class RouterBolt implements IRichBolt
 			{
 				emitOnUAStream(input, message, initTime);
 			}
-			ctx.stop();
 		}
 	}
 

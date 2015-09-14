@@ -34,8 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-
 import org.elasticsearch.hadoop.EsHadoopException;
 import org.elasticsearch.hadoop.rest.InitializationUtils;
 import org.elasticsearch.hadoop.rest.RestService;
@@ -51,16 +49,12 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
-import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.*;
-import static org.elasticsearch.storm.cfg.StormConfigurationOptions.*;
 
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Reservoir;
 import com.codahale.metrics.UniformReservoir;
-import com.vimond.utils.data.Constants;
 
 /**
  * Implementation of bolt which writes record on an elasticsearch cluster.
@@ -199,7 +193,6 @@ public class ElasticSearchBolt implements IRichBolt
 
 					this.globalLatency.update(System.nanoTime() - initTime);
 					this.counter.mark();
-
 				}
 			} catch (RuntimeException ex)
 			{
