@@ -42,19 +42,20 @@ public class StormTopologyBuilder
 	public void buildAndRun()
 	{
 		
-		String es_index = this.props.getProperty("es_index") != null ? this.props.getProperty("es_index") : Constants.DEFAULT_ES_INDEX;
-		boolean localMode = this.props.getProperty("localmode") != null ? Boolean.parseBoolean(this.props.getProperty("localmode")) : Constants.DEFAULT_LOCAL_MODE;
-		boolean acking = this.props.getProperty("acking") != null ? Boolean.parseBoolean(this.props.getProperty("acking")) : Constants.DEFAULT_ACKING_MODE;
-		
-		
+		final String es_index = this.props.getProperty("es_index") != null ? this.props.getProperty("es_index") : Constants.DEFAULT_ES_INDEX;
+		final boolean localMode = this.props.getProperty("localmode") != null ? Boolean.parseBoolean(this.props.getProperty("localmode")) : Constants.DEFAULT_LOCAL_MODE;
+		final boolean acking = this.props.getProperty("acking") != null ? Boolean.parseBoolean(this.props.getProperty("acking")) : Constants.DEFAULT_ACKING_MODE;
+		final int reportFrequency = this.props.getProperty("metric.report.interval") != null ? Integer.parseInt(this.props.getProperty("metric.report.interval")) : Constants.DEFAULT_METRIC_FREQUENCY;
+		final String reportPath = this.props.getProperty("metric.report.path") != null ? this.props.getProperty("metric.report.path") : Constants.DEFAULT_METRIC_PATH;
+	
 		TopologyBuilder builder = new TopologyBuilder();
 
 		LOG.info("Creating topology components.....");
 		
-		int spout_tasks = this.props.getProperty("spout_tasks") != null ? Integer.parseInt(this.props.getProperty("spout_tasks")) : Constants.SPOUT_TASKS;
-		int userAgent_tasks = this.props.getProperty("userAgent_tasks") != null ? Integer.parseInt(this.props.getProperty("userAgent_tasks")) : Constants.USER_AGENT_TASKS;
-		int router_tasks = this.props.getProperty("router_tasks") != null ? Integer.parseInt(this.props.getProperty("router_tasks")) : Constants.ROUTER_TASKS;
-		int elasticsearch_tasks = this.props.getProperty("el_tasks") != null ? Integer.parseInt(this.props.getProperty("el_tasks")) : Constants.EL_TASKS;
+		final int spout_tasks = this.props.getProperty("spout_tasks") != null ? Integer.parseInt(this.props.getProperty("spout_tasks")) : Constants.SPOUT_TASKS;
+	 	final int userAgent_tasks = this.props.getProperty("userAgent_tasks") != null ? Integer.parseInt(this.props.getProperty("userAgent_tasks")) : Constants.USER_AGENT_TASKS;
+		final int router_tasks = this.props.getProperty("router_tasks") != null ? Integer.parseInt(this.props.getProperty("router_tasks")) : Constants.ROUTER_TASKS;
+		final int elasticsearch_tasks = this.props.getProperty("el_tasks") != null ? Integer.parseInt(this.props.getProperty("el_tasks")) : Constants.EL_TASKS;
 		
 		/*
 		 * Kafka Spout
@@ -89,7 +90,8 @@ public class StormTopologyBuilder
 		if(localMode)
 		{
 			topConfig = getTopologyConfiguration();
-			
+			topConfig.put("metric.report.interval", reportFrequency);
+			topConfig.put("metric.report.path", reportPath);
 			LocalCluster cluster = new LocalCluster();
 			cluster.submitTopology("RealTimeTopology", topConfig, builder.createTopology());
 			
@@ -112,6 +114,9 @@ public class StormTopologyBuilder
 		{
 			topConfig = new Config();
 			topConfig.put("acking", acking);
+			topConfig.put("metric.report.interval", reportFrequency);
+			topConfig.put("metric.report.path", reportPath);
+			
 			try
 			{
 				StormSubmitter.submitTopology("RealTimeTopology", topConfig, builder.createTopology());

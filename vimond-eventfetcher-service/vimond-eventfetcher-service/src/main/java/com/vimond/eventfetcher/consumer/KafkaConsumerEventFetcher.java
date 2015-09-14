@@ -16,7 +16,7 @@ public interface KafkaConsumerEventFetcher<T> extends MessageConsumer<T>
 
 	public String getHDFSPathToLocation();
 	
-	public List<Object> getMessages();
+	public List<T> getMessages();
 
 	public int getTimeFrameInMinutes();
 }

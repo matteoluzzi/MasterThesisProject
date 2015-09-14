@@ -51,7 +51,6 @@ public abstract class Query
 				e.printStackTrace();
 			}
 		}
-		
 		printQueryStatistics();
 		
 		this.executor.shutdown();

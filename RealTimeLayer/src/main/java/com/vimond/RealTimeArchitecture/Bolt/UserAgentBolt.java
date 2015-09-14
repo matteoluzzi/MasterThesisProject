@@ -1,7 +1,9 @@
 package com.vimond.RealTimeArchitecture.Bolt;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
@@ -12,7 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-import com.ecyrd.speed4j.StopWatch;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.UniformReservoir;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -47,13 +53,17 @@ public class UserAgentBolt implements IRichBolt
 
 	private transient ObjectMapper mapper;
 	private transient UserAgentStringParser userAgentParser;
+
 	private OutputCollector collector;
 	private boolean acking;
-	private StopWatch throughput;
+	private long reportFrequency;
+	private String reportPath;
+	
+	private transient Timer timer;
+	private transient Meter counter;
 
 	public UserAgentBolt()
 	{
-		this.throughput = new StopWatch();
 	}
 
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector)
@@ -61,15 +71,40 @@ public class UserAgentBolt implements IRichBolt
 		this.collector = collector;
 		// this.acking = (Boolean) stormConf.get("acking");
 		this.acking = false;
-		this.throughput.start();
 		this.mapper = new ObjectMapper();
 		this.mapper.registerModule(new JodaModule());
 		this.userAgentParser = new UserAgentParser();
+		this.acking = (Boolean) stormConf.get("acking");
+		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
+		this.reportPath = (String) stormConf.get("metric.report.path");
+		initializeMetricsReport();
 
+	}
+	
+	public void initializeMetricsReport()
+	{
+		final MetricRegistry metricRegister = new MetricRegistry();	
+		
+		//use sampling when detecting the latency for not affecting the performances
+		this.timer = new Timer(new UniformReservoir());
+		metricRegister.register(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "latency"), this.timer);
+		
+		//register the meter metric
+		this.counter = metricRegister.meter(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "-events_sec"));
+		
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.convertDurationsTo(TimeUnit.NANOSECONDS)
+				.build(new File(this.reportPath));
+		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
+		
 	}
 
 	public void execute(Tuple input)
 	{
+		this.counter.mark();
+		final Timer.Context ctx = this.timer.time();
+		
 		String jsonEvent = input.getString(0);
 		long initTime = input.getLong(1);
 
@@ -111,6 +146,7 @@ public class UserAgentBolt implements IRichBolt
 		{
 			LOG.error(ERROR, "Error while processing a tuple");
 		}
+		ctx.stop();
 
 	}
 

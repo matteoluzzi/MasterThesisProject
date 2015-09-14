@@ -18,9 +18,6 @@ public class App
 {
     public static void main( String[] args )
     {
-//    	Properties sys_props = System.getProperties();
-//    	sys_props.setProperty("Log4jContextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-    	
     	ArgumentParser parser = ArgumentParsers.newArgumentParser("RealTimeArchitecture");
     	
     	parser.addArgument("-conf", "--configuration").help("Configuration time").type(String.class).required(true).dest("cfg");

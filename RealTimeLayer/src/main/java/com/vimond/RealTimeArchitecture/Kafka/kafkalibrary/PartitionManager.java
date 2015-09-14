@@ -22,12 +22,14 @@ package com.vimond.RealTimeArchitecture.Kafka.kafkalibrary;
  * This class has been copied and modified for monitor purposes. 
  * The code was originally copied from https://github.com/nathanmarz/storm-contrib/tree/master/storm-kafka/src/jvm/storm/kafka
  */
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import kafka.api.FetchRequest;
 import kafka.api.OffsetRequest;
@@ -36,9 +38,6 @@ import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.javaapi.message.ByteBufferMessageSet;
 import kafka.message.MessageAndOffset;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,18 +55,29 @@ import backtype.storm.metric.api.ReducedMetric;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.utils.Utils;
 
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.UniformReservoir;
 import com.ecyrd.speed4j.StopWatch;
 import com.google.common.collect.ImmutableMap;
+import com.vimond.RealTimeArchitecture.Bolt.RouterBolt;
 import com.vimond.RealTimeArchitecture.Kafka.kafkalibrary.KafkaSpout.EmitState;
 import com.vimond.utils.data.Constants;
 
 public class PartitionManager {
     public static final Logger LOG = LoggerFactory.getLogger(PartitionManager.class);
-    
+
     private final CombinedMetric _fetchAPILatencyMax;
     private final ReducedMetric _fetchAPILatencyMean;
     private final CountMetric _fetchAPICallCount;
     private final CountMetric _fetchAPIMessageCount;
+    
+	private long reportFrequency;
+	private String reportPath;
+    
+	private transient Meter counter;
 
     static class KafkaMessageId {
         public GlobalPartitionId partition;
@@ -132,7 +142,24 @@ public class PartitionManager {
         _fetchAPILatencyMean = new ReducedMetric(new MeanReducer());
         _fetchAPICallCount = new CountMetric();
         _fetchAPIMessageCount = new CountMetric();
+        this.reportFrequency = (Long) stormConf.get("metric.report.interval");
+		this.reportPath = (String) stormConf.get("metric.report.path");
+        initializeMetricsReport();
     }
+    
+    public void initializeMetricsReport()
+	{
+		final MetricRegistry metricRegister = new MetricRegistry();	
+		
+		//register the meter metric
+		this.counter = metricRegister.meter(MetricRegistry.name(KafkaSpout.class, Thread.currentThread().getName() + "events_sec"));
+		
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.convertDurationsTo(TimeUnit.NANOSECONDS)
+				.build(new File(this.reportPath));
+		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
+	}
 
     public Map getMetricsDataMap() {
         Map ret = new HashMap();
@@ -158,6 +185,7 @@ public class PartitionManager {
                 for(List<Object> tup: tups)
                 {
                     collector.emit(tup, new KafkaMessageId(_partition, toEmit.offset));
+                    this.counter.mark();
                 }
                 break;
             } else {
