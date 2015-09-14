@@ -108,12 +108,12 @@ public class App
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
-		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
+//		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+//		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
+//		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
 		
 //		// ES settings
-		cfg.set("es.index.auto.create", "true");
+//		cfg.set("es.index.auto.create", "true");
 		cfg.set("es.nodes", (String) props.getOrDefault("es.nodes", "localhost"));
 		cfg.set("es.input.json", "true");
 		for(Tuple2<String, String> prop : cfg.getAll())
