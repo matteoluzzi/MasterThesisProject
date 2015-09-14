@@ -51,7 +51,6 @@ public class UserAgentBolt implements IRichBolt
 	private boolean acking;
 	private StopWatch throughput;
 
-
 	public UserAgentBolt()
 	{
 		this.throughput = new StopWatch();
@@ -60,7 +59,7 @@ public class UserAgentBolt implements IRichBolt
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context, OutputCollector collector)
 	{
 		this.collector = collector;
-//		this.acking = (Boolean) stormConf.get("acking");
+		// this.acking = (Boolean) stormConf.get("acking");
 		this.acking = false;
 		this.throughput.start();
 		this.mapper = new ObjectMapper();
@@ -117,28 +116,15 @@ public class UserAgentBolt implements IRichBolt
 
 	public void emit(Tuple input, StormEvent event, long initTime)
 	{
-		String value = null;
-		try
+
+		if (this.acking)
 		{
-			value = mapper.writeValueAsString(event);
-		} catch (JsonProcessingException e)
-		{
-			LOG.error(ERROR, "Error while converting to JSON String: {}", e.getMessage());
-			if (this.acking)
-				throw new FailedException(); // i.e. fail on processing the
-												// tuple
-		}
-		if (value != null)
-		{
-			if (this.acking)
-			{
-				collector.emit(Constants.UA_STREAM, input, new Values(value, initTime));
-				collector.ack(input);
-			} else
-				collector.emit(Constants.UA_STREAM, new Values(value, initTime));
-		}
+			collector.emit(Constants.UA_STREAM, input, new Values(event, initTime));
+			collector.ack(input);
+		} else
+			collector.emit(Constants.UA_STREAM, new Values(event, initTime));
 	}
-	
+
 	public void testEmit(Tuple input, StormEvent event, long initTime)
 	{
 		collector.emit(Constants.UA_STREAM, input, new Values(event, initTime));
