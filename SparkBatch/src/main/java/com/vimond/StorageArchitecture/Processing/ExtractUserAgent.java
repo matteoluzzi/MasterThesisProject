@@ -20,19 +20,20 @@ import com.vimond.utils.functions.UserAgentParser;
  */
 public class ExtractUserAgent implements FlatMapFunction<Iterator<SparkEvent>, EventInfo>
 {
-	private UserAgentParser parser;
+	private transient UserAgentParser parser;
 	
 	private static final long serialVersionUID = 8557410115713662281L;
 
 	public ExtractUserAgent()
 	{
-		this.parser = new UserAgentParser();
+		
 	}
 	
 	@Override
 	public Iterable<EventInfo> call(Iterator<SparkEvent> events) throws Exception
 	{
 		Collection<EventInfo> result = new ArrayList<EventInfo>();
+		this.parser = new UserAgentParser();
 		
 		while(events.hasNext())
 		{

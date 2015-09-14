@@ -31,18 +31,18 @@ import com.vimond.utils.data.SparkEvent;
  * @author matteoremoluzzi
  *
  */
-public class SimpleJobsStarter implements Serializable
+public class JobsStarter implements Serializable
 {
 
 	private static final long serialVersionUID = 1L;
-	private Logger LOG = LoggerFactory.getLogger(SimpleJobsStarter.class);
+	private Logger LOG = LoggerFactory.getLogger(JobsStarter.class);
 
 	private JavaSparkContext ctx;
 	private Properties prop;
 	private ExecutorService pool;
 	private List<Future> submittedJobs;
 	
-	public SimpleJobsStarter(JavaSparkContext ctx, Properties prop)
+	public JobsStarter(JavaSparkContext ctx, Properties prop)
 	{
 		this.ctx = ctx;
 		this.prop = prop;
@@ -115,6 +115,7 @@ public class SimpleJobsStarter implements Serializable
 			public void run()
 			{
 				Job job = JobsFactory.getFactory().createJob(name, prop, data_rdd);
+				ctx.setLocalProperty("spark.scheduler.pool", "production");
 				job.run(ctx);
 			}
 		});

@@ -1,5 +1,6 @@
 package com.vimond.utils.functions;
 
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import net.sf.uadetector.ReadableUserAgent;
@@ -9,9 +10,10 @@ import net.sf.uadetector.service.UADetectorServiceFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-public class UserAgentParser implements UserAgentStringParser
+public class UserAgentParser implements UserAgentStringParser, Serializable
 {
 	
+	private static final long serialVersionUID = 5490903168446548986L;
 	private final UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
 	private final Cache<String, ReadableUserAgent> cache = CacheBuilder.newBuilder().maximumSize(200).expireAfterAccess(2, TimeUnit.HOURS).build();
 	

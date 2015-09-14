@@ -82,7 +82,7 @@ public class App
 				System.exit(0);
 			}
 
-			SimpleJobsStarter starter = new SimpleJobsStarter(ctx, props);
+			JobsStarter starter = new JobsStarter(ctx, props);
 			starter.startJobs();
 		}
 
@@ -115,7 +115,7 @@ public class App
 //		// ES settings
 //		cfg.set("es.index.auto.create", "true");
 		cfg.set("es.nodes", (String) props.getOrDefault("es.nodes", "localhost"));
-		cfg.set("es.input.json", "true");
+//		cfg.set("es.input.json", "true");
 		for(Tuple2<String, String> prop : cfg.getAll())
 			LOG.info(prop._1() + " = " + prop._2());
 		
