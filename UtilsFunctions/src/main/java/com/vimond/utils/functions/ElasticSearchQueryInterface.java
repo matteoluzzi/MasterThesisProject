@@ -32,12 +32,12 @@ public class ElasticSearchQueryInterface
 	private Client esClient;
 	private ExecutorService executor;
 
-	public ElasticSearchQueryInterface()
+	public ElasticSearchQueryInterface(String address)
 	{
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
-
-		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress("52.19.66.243", 9300));
+	
+		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress(address, 9300));
 	}
 
 	public static void main(String[] args)
@@ -68,15 +68,14 @@ public class ElasticSearchQueryInterface
 
 	private static void startQueries(AppProperties props)
 	{
-		ElasticSearchQueryInterface esqi = new ElasticSearchQueryInterface();
-		
 		String[] queriesList = props.getProperty("queries").split(",");
 		boolean verbose = Boolean.parseBoolean(props.getProperty("verbose", "true"));
 		String index = props.getProperty("index", "");
 		long interval = Long.parseLong(props.getProperty("interval", "0"));
 		long numberOfExecution = Long.parseLong(props.getProperty("numberOfExecution", "1"));
+		String address = props.getProperty("elasticsearch_address", "localhost");
 		
-		
+		ElasticSearchQueryInterface esqi = new ElasticSearchQueryInterface(address);
 		if(queriesList.length > 0)
 		{
 			esqi.executor = Executors.newFixedThreadPool(queriesList.length);
