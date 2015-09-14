@@ -6,8 +6,6 @@ import java.util.Iterator;
 
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
-import net.sf.uadetector.UserAgentStringParser;
-import net.sf.uadetector.service.UADetectorServiceFactory;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
 
@@ -22,10 +20,15 @@ import com.vimond.utils.functions.UserAgentParser;
  */
 public class ExtractUserAgent implements FlatMapFunction<Iterator<SparkEvent>, EventInfo>
 {
-	private static UserAgentStringParser uaParser = UADetectorServiceFactory.getResourceModuleParser();
+	private UserAgentParser parser;
 	
 	private static final long serialVersionUID = 8557410115713662281L;
 
+	public ExtractUserAgent()
+	{
+		this.parser = new UserAgentParser();
+	}
+	
 	@Override
 	public Iterable<EventInfo> call(Iterator<SparkEvent> events) throws Exception
 	{
@@ -35,7 +38,7 @@ public class ExtractUserAgent implements FlatMapFunction<Iterator<SparkEvent>, E
 		{
 			SparkEvent event = events.next();
 			String ua = event.getUserAgent();
-			ReadableUserAgent userAgent = uaParser.parse(ua);
+			ReadableUserAgent userAgent = this.parser.parse(ua);
 
 			OperatingSystem os = userAgent.getOperatingSystem();
 			String os_str = os.getName() + " " + os.getVersionNumber().getMajor();

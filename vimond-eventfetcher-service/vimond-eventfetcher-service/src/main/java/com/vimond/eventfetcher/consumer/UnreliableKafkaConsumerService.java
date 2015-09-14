@@ -24,19 +24,19 @@ import com.vimond.pailStructure.TimeFramePailStructure;
  * @author matteoremoluzzi
  *
  */
-public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> implements KafkaConsumerEventFetcher<T>
+public class UnreliableKafkaConsumerService<T> extends KafkaConsumerService<T> implements KafkaConsumerEventFetcher<T>
 {
 	private LinkedBlockingQueue<Object> buffer;
 	private List<Object> flush_buffer;
 	private Timer flushTimer;
 
 	private long flushingTime;
-	private long maxMessageIntoFile;
-	private String pathToLocation;
+	private long batchSize;
+	private String HDFSPathToLocation;
 	private int timeFrameInMinutes;
 
 	@SuppressWarnings({ "unchecked" })
-	public UnreliableKafkaConsumerGroup(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
+	public UnreliableKafkaConsumerService(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
 	{
 		super(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, (MessageProcessor<T>) fsProcessor);
 		// bind message processor to this
@@ -45,8 +45,8 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 		this.buffer = new LinkedBlockingQueue<Object>();
 		this.flush_buffer = new ArrayList<Object>();
 		this.flushingTime = conf.getConfig().get(Constants.FLUSHING_TIME_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.FLUSHING_TIME_KEY)) : Constants.DEFAULT_FLUSH_TIME;
-		this.maxMessageIntoFile = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
-		this.pathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
+		this.batchSize = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
+		this.HDFSPathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
 		this.timeFrameInMinutes = conf.getConfig().get(Constants.TIME_FRAME_KEY) != null ? Integer.parseInt(conf.getConfig().get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;
 		
 		this.initializeTimeFramePail();
@@ -74,7 +74,7 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 
 	public String getHDFSPathToLocation()
 	{
-		return pathToLocation;
+		return HDFSPathToLocation;
 	}
 
 	public void putMessageIntoBuffer(T message)
@@ -85,11 +85,11 @@ public class UnreliableKafkaConsumerGroup<T> extends KafkaConsumerService<T> imp
 		} catch (InterruptedException e)
 		{
 		}
-		if(this.buffer.size() >= this.maxMessageIntoFile)
+		if(this.buffer.size() >= this.batchSize)
 		{
 			synchronized (this)
 			{
-				if(this.buffer.size() >= this.maxMessageIntoFile)
+				if(this.buffer.size() >= this.batchSize)
 				{
 					//delete timertaks and launch it now
 					this.deleteTimerTask();

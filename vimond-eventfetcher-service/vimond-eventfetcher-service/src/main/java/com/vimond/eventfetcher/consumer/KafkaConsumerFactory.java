@@ -33,11 +33,11 @@ public class KafkaConsumerFactory
 		switch (type)
 		{
 		case UNRELIABLE:
-			return new UnreliableKafkaConsumerGroup(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
+			return new UnreliableKafkaConsumerService(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
 		case RELIABLE:
-			return new KafkaEventsConsumer(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
+			return new ReliableKafkaConsumerService(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
 		default:
-			return new UnreliableKafkaConsumerGroup(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
+			return new UnreliableKafkaConsumerService(metricRegistry, healthCheckRegistry, kafkaConfig, consumerConfig, fsProcessor, conf);
 		}
 	}
 }

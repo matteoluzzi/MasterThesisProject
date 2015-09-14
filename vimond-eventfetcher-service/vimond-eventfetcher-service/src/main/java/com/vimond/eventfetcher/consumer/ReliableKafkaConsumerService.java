@@ -33,7 +33,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.ecyrd.speed4j.StopWatch;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
@@ -46,7 +45,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.vimond.common.kafka07.KafkaConfig;
 import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
-import com.vimond.common.messages.MessageConsumer;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.pailStructure.TimeFramePailStructure;
@@ -63,7 +61,7 @@ import com.vimond.eventfetcher.util.Constants;
  * @param <T>
  */
 
-public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumerEventFetcher<T>
+public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetcher<T>
 {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -88,7 +86,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 	protected ZookeeperHealthCheck healthCheck;
 	
 	@SuppressWarnings("unchecked")
-	public KafkaEventsConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
+	public ReliableKafkaConsumerService(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, BatchProcessor fsProcessor, ProcessorConfiguration conf)
 	{
 		fsProcessor.setEventsKafkaConsumer(this);
 		this.metricRegistry = metricRegistry;
@@ -122,7 +120,7 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		});
 	}
 
-	public KafkaEventsConsumer(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, MessageProcessor<T> messageProcessor)
+	public ReliableKafkaConsumerService(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, MessageProcessor<T> messageProcessor)
 	{
 		this.metricRegistry = metricRegistry;
 		this.kafkaConfig = kafkaConfig;
@@ -324,9 +322,9 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 
 		private final ConsumerConnector connector;
 		private final Logger logger;
-		private final KafkaEventsConsumer<T> consumer;
+		private final ReliableKafkaConsumerService<T> consumer;
 
-		public FlushAndCommit(ConsumerConnector connector, Logger logger, KafkaEventsConsumer<T> consumer)
+		public FlushAndCommit(ConsumerConnector connector, Logger logger, ReliableKafkaConsumerService<T> consumer)
 		{
 			this.connector = connector;
 			this.logger = logger;
@@ -391,11 +389,11 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 		private final long millsToSleepWhenError;
 		private final MessageProcessor<T> messageProcessor;
 		private final OurMetrics metrics;
-		private final KafkaEventsConsumer<T> consumer;
+		private final ReliableKafkaConsumerService<T> consumer;
 		private ConsumerIterator<T> it;
 		private final CyclicBarrier barrier;
 
-		public KafkaStreamReader(OurMetrics metrics, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, KafkaEventsConsumer<T> consumer, CyclicBarrier barrier)
+		public KafkaStreamReader(OurMetrics metrics, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, ReliableKafkaConsumerService<T> consumer, CyclicBarrier barrier)
 		{
 			this.metrics = metrics;
 			this.logger = logger;
@@ -438,14 +436,14 @@ public class KafkaEventsConsumer<T> implements MessageConsumer<T>, KafkaConsumer
 					{
 						try
 						{
-							barrier.await();
+							barrier.await(10, TimeUnit.MINUTES);
 							// after the barrier all thread are synchronized
 							// with the next batch execution
 							batchEndTime = this.consumer.getBatchEndTime();
 						} catch (Exception e)
 						{
-							logger.debug("Exception while waiting for batch completion: {}", e.getMessage());
-							break;
+							logger.error("Exception while waiting for batch completion: {}", e.getMessage());
+							throw new RuntimeException("Error while waiting on the barrier, check the log for more information");
 						}
 					}
 				}

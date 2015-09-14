@@ -105,16 +105,6 @@ public class UserAgentBolt implements IRichBolt
 			event.setOs(os_str);
 
 			emit(input, event, initTime);
-//			testEmit(input, event, initTime);
-//			 if (++processedTuples % Constants.DEFAULT_STORM_BATCH_SIZE == 0)
-//			 {
-//				 this.throughput.stop();
-//				 double avg_throughput = Constants.DEFAULT_STORM_BATCH_SIZE /
-//				 (this.throughput.getTimeNanos() * FROM_NANOS_TO_SECONDS);
-//				 LOG.info(THROUGHPUT, avg_throughput);
-//				 processedTuples = 0;
-//				 this.throughput.start();
-//			 }
 		}
 		// else just skip the tuple. Here we are not interested in high
 		// accuracy, we need to process the messages as fast as possible

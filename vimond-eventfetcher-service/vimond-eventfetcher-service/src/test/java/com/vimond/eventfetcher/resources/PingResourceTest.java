@@ -1,12 +1,15 @@
 package com.vimond.eventfetcher.resources;
 
 import com.vimond.eventfetcher.VimondEventFetcherService;
+
 import io.dropwizard.testing.junit.DropwizardAppRule;
+
 import org.junit.Rule;
 import org.junit.Test;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.UriBuilder;
+
 import java.net.URI;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -19,7 +22,8 @@ import static org.fest.assertions.api.Assertions.assertThat;
  */
 public class PingResourceTest {
 
-    @Rule
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Rule
     public final DropwizardAppRule application = new DropwizardAppRule(VimondEventFetcherService.class, null);
 
     @Test
