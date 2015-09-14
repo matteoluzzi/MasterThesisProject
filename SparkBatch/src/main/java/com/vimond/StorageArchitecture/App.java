@@ -23,7 +23,7 @@ public class App
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
 
-		if (args.length != 3)
+		if (args.length != 2)
 		{
 			LOG.error("Missing arguments, exiting now!");
 			System.exit(-1);
@@ -32,13 +32,10 @@ public class App
 		AppProperties props = null;
 		String path = null;
 		String freq = null;
-		String es_addr = null;
-
 		try
 		{
 			path = args[0];
 			freq = args[1];
-			es_addr = args[2];
 
 			LOG.info("Folder: " + path);
 			LOG.info("Frequency: " + freq);
@@ -49,7 +46,6 @@ public class App
 			// of the program
 			props.addOrUpdateProperty("path", path);
 			props.addOrUpdateProperty("freq", freq);
-			props.addOrUpdateProperty("es.nodes", es_addr);
 		} catch (Exception e)
 		{
 			LOG.error("Error while parsing input arguments: {}, {}", e.getClass(), e.getMessage());
@@ -108,14 +104,19 @@ public class App
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
+		/**
+		 * Properties file are passed through a configuration file, see oozie spark for details
+		 */
+		
 //		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 //		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
 //		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
 		
 //		// ES settings
 //		cfg.set("es.index.auto.create", "true");
-		cfg.set("es.nodes", (String) props.getOrDefault("es.nodes", "localhost"));
+//		cfg.set("es.nodes", (String) props.getOrDefault("es.nodes", "localhost"));
 //		cfg.set("es.input.json", "true");
+		
 		for(Tuple2<String, String> prop : cfg.getAll())
 			LOG.info(prop._1() + " = " + prop._2());
 		
