@@ -1,28 +1,27 @@
-<coordinator-app name="hello-coord" frequency="${coord:minutes(10)}" start="${startTime}" end="${endTime}" timezone="GMT+02:00"  
-  xmlns="uri:oozie:coordinator:0.3">
+<coordinator-app name="BatchCoordinator" frequency="${coord:minutes(30)}" start="${startTime}" end="${endTime}" timezone="GMT+02:00" xmlns="uri:oozie:coordinator:0.3">
   <controls>
         <timeout>${timeout}</timeout>
         <concurrency>${concurrency}</concurrency>
     </controls>
 	<datasets>
-  		<dataset name="vimondEvents" frequency="${coord:minutes(10)}" initial-instance="${datasetStartTime}" timezone="GMT+02:00">
-		<uri-template>${nameNode}/user/${coord:user()}/${datasetFolder}/master/${YEAR}-${MONTH}-${DAY}/${HOUR}/${MINUTE}</uri-template>
+  		<dataset name="vimondEvents" frequency="${coord:minutes(30)}" initial-instance="${datasetStartTime}" timezone="GMT+02:00">
+		<uri-template>${nameNode}/${datasetFolder}/${YEAR}-${MONTH}-${DAY}/${HOUR}/${MINUTE}</uri-template>
 		<done-flag></done-flag>
 		<!-- TODO: implement a done-flag mechanism -->
 	</dataset>
   	</datasets>
   	<input-events>
   		<data-in name="input" dataset="vimondEvents">
-  			<instance>${coord:current(-1)}</instance>
+  			<instance>${coord:current(-2)}</instance>
 		</data-in>
   	</input-events>
   	<action>
   		<workflow>
 	  		<app-path>${nameNode}/user/${coord:user()}/${batchAppFolder}</app-path>
 	  		<configuration>
-	  			<property>
-	  				<name>user.name</name>
-	        		<value>matteoremoluzzi</value>
+	  		<property>
+	  			<name>user.name</name>
+	        		<value>hduser</value>
 	        	</property>
 	        	<property>
 	                <name>jobTracker</name>
@@ -41,8 +40,8 @@
 	                <value>${coord:dataIn("input")}</value>
 	            </property>
 	            <property>
-	                <name>jarName</name>
-	                <value>${jarName}</value>
+	                <name>sparkJarName</name>
+	                <value>${sparkJarName}</value>
 	            </property>
 	             <property>
 	                <name>batchAppFolder</name>
@@ -51,6 +50,10 @@
 	            <property>
 	            	<name>frequency</name>
 	            	<value>${frequency}</value>
+	            </property>
+	            <property>
+	            	<name>es_address</name>
+	            	<value>${es_address}</value>
 	            </property>
 	  		</configuration>
   		</workflow>

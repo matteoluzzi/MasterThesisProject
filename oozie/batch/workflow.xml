@@ -1,34 +1,36 @@
 <workflow-app xmlns='uri:oozie:workflow:0.5' name='vimondSparkBatch'>
-	<start to='spark-node' />
+    <start to='spark-node' />
 
-	<action name='spark-node'>
-		<spark xmlns="uri:oozie:spark-action:0.1">
-			<job-tracker>${jobTracker}</job-tracker>
-            <name-node>${nameNode}</name-node>
-            <master>${master}</master>
-            <name>SparkBatch</name>
-            <class>com.vimond.StorageArchitecture.App</class>
-            <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${jarName}</jar>
-            <spark-opts>--num-executors 2 --driver-memory 2g --executor-memory 3g --executor-cores 2</spark-opts>
-            <arg>${inputDir}</arg>
-            <arg>${frequency}</arg>
-		</spark>
-		<ok to="java-node"/>
-        <error to="fail"/>
-	</action>
-    <action name="java-node">
-        <java>
+    <action name='spark-node'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
             <job-tracker>${jobTracker}</job-tracker>
-            <name-node>${nameNode}</name-node>
-            <main-class>no.vimond.UtilsFunctions.UpdateRecords</main-class>
-            <arg>${inputDir}</arg>
-            <arg>${frequency}</arg>
-        </java>
-        <ok to="end"/>
-        <error to="fail"/>
+                <name-node>${nameNode}</name-node>
+                <master>${master}</master>
+                    <name>SparkBatch</name>
+                    <class>com.vimond.StorageArchitecture.App</class>
+                    <jar>${nameNode}/user/${wf:user()}/${batchAppFolder}/lib/${sparkJarName}</jar>
+                    <spark-opts>--executor-memory 4G --num-executors 2 --executor-cores 1</spark-opts>
+                <arg>${inputDir}</arg>
+                    <arg>${frequency}</arg>
+                        <arg>${es_address}</arg>
+        </spark>
+        <ok to="java-node"/>
+            <error to="fail"/>
     </action>
-	 <kill name="fail">
-        <message>Spark Job failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+        <action name="java-node">
+            <java>
+                    <job-tracker>${jobTracker}</job-tracker>
+                    <name-node>${nameNode}</name-node>
+                    <main-class>com.vimond.utils.functions.UpdateRecords</main-class>
+                    <arg>${inputDir}</arg>
+                    <arg>${frequency}</arg>
+            <arg>${es_address}</arg>
+            </java>
+            <ok to="end"/>
+            <error to="fail"/>
+        </action>
+    <kill name="fail">
+            <message>Spark Job failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
     </kill>
-    <end name="end"/> 
+        <end name="end"/>
 </workflow-app>
