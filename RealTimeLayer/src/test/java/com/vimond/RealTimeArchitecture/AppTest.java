@@ -23,6 +23,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vimond.utils.data.StormEvent;
 
 import de.javakaffee.kryoserializers.jodatime.JodaDateTimeSerializer;
+import eu.bitwalker.useragentutils.UserAgent;
 
 /**
  * Unit test for simple App.
@@ -81,5 +82,15 @@ public class AppTest extends TestCase
 		os = agent.getOperatingSystem().getName();
 		assertEquals("IE/11", browser);
 		assertEquals("Windows 7", os);
+	}
+	
+	public void testUserAgentNewLibrary()
+	{
+		final String oldUA = "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; FunWebProducts; BOIE9;ENUSMSCOM; rv:11.0) like Gecko";
+		final String newUA = "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; MASMJS; rv:11.0) like Gecko";
+
+		UserAgent ua = UserAgent.parseUserAgentString(newUA);
+		System.out.println(ua.getBrowser().getName());
+		System.out.println(ua.getOperatingSystem().getName());
 	}
 }

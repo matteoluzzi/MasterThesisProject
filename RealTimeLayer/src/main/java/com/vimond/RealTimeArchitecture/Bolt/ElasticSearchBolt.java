@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.elasticsearch.hadoop.EsHadoopException;
 import org.elasticsearch.hadoop.rest.InitializationUtils;
 import org.elasticsearch.hadoop.rest.RestService;
@@ -55,6 +54,7 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.UniformReservoir;
+import com.vimond.utils.data.StormEvent;
 
 /**
  * Implementation of bolt which writes record on an elasticsearch cluster.
@@ -164,44 +164,38 @@ public class ElasticSearchBolt implements IRichBolt
 			flush();
 			return;
 		}
-
-		input.getValues().remove(1);
+		
+		long initTime = (Long) input.getValues().remove(1);
+		StormEvent x = (StormEvent) input.getValue(0);
+		this.globalLatency.update(System.nanoTime() - initTime);
+		this.counter.mark();
+		
 		if (ackWrites)
 		{
 			inflightTuples.add(input);
+		}
+		
+		try
+		{
+			writer.repository.writeToIndex(input);
 
-			long initTime = (Long) input.getValues().remove(1);
-			if (ackWrites)
+			// manual flush in case of ack writes - handle it here.
+			if (numberOfEntries > 0 && inflightTuples.size() >= numberOfEntries)
 			{
-				inflightTuples.add(input);
-				this.globalLatency.update(System.nanoTime() - initTime);
-				this.counter.mark();
+				flush();
 			}
-			try
+
+			if (!ackWrites)
 			{
-				writer.repository.writeToIndex(input);
-
-				// manual flush in case of ack writes - handle it here.
-				if (numberOfEntries > 0 && inflightTuples.size() >= numberOfEntries)
-				{
-					flush();
-				}
-
-				if (!ackWrites)
-				{
-					collector.ack(input);
-
-					this.globalLatency.update(System.nanoTime() - initTime);
-					this.counter.mark();
-				}
-			} catch (RuntimeException ex)
-			{
-				if (!ackWrites)
-				{
-					collector.fail(input);
-				}
-				throw ex;
+				collector.ack(input);
 			}
+		} catch (RuntimeException ex)
+		{
+			if (!ackWrites)
+			{
+				collector.fail(input);
+			}
+			throw ex;
 		}
 
 	}

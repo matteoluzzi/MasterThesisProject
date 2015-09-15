@@ -16,7 +16,9 @@ import backtype.storm.topology.TopologyBuilder;
 
 import com.vimond.RealTimeArchitecture.Bolt.ElasticSearchBolt;
 import com.vimond.RealTimeArchitecture.Bolt.RouterBolt;
+import com.vimond.RealTimeArchitecture.Bolt.SerializerBolt;
 import com.vimond.RealTimeArchitecture.Bolt.UserAgentBolt;
+import com.vimond.RealTimeArchitecture.Bolt.UserAgentTest;
 import com.vimond.RealTimeArchitecture.Spout.SpoutCreator;
 import com.vimond.utils.config.AppProperties;
 import com.vimond.utils.data.Constants;
@@ -73,16 +75,16 @@ public class StormTopologyBuilder
 		/*
 		 * Bolt that breaks down the user agent into browser and os
 		 */
-		builder.setBolt(Constants.BOLT_USER_AGENT, new UserAgentBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_ROUTER, Constants.UA_STREAM);
+		builder.setBolt(Constants.BOLT_USER_AGENT, new UserAgentTest(), userAgent_tasks).shuffleGrouping(Constants.BOLT_ROUTER, Constants.UA_STREAM);
 		
-//		builder.setBolt(Constants.BOLT_GEOIP, new GeoLookUpBolt(), 6).shuffleGrouping(Constants.BOLT_ROUTER, Constants.IP_STREAM);
-
+		builder.setBolt("serializer", new SerializerBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM);
+		
 		/*
 		 * Bolt that writes the result tuple to elasticsearch cluster
 		 */
-		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
-		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
-		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 30 seconds
+//		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
+//		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
+//		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 30 seconds
 		
 		
 		LOG.info("Creating topology components DONE");
