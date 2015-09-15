@@ -30,7 +30,7 @@ kafka:
 consumer:
   topic: player-events
   mode: RELIABLE
-  consumerThreads: 2
+  consumerThreads: 1
   groupid: vimond_eventfetcher_consumers
   properties:
     consumer.timeout.ms: 100
@@ -42,8 +42,8 @@ consumer:
 processor:
   id: STRING
   config:
-    flushingTime: 600000
-    maxBatchMessages: 300000
+    flushingTime: 60000
+    maxBatchMessages: 150000
     HDFSPath: hdfs://localhost:9000/user/matteoremoluzzi/newDataset/master
     pailstructureTimeFrameInMin: 30
 

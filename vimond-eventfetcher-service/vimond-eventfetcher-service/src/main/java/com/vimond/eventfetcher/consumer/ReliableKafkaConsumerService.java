@@ -1,8 +1,10 @@
 package com.vimond.eventfetcher.consumer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -29,8 +31,11 @@ import org.slf4j.LoggerFactory;
 import com.backtype.hadoop.pail.Pail;
 import com.backtype.hadoop.pail.Pail.TypedRecordOutputStream;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.github.rholder.retry.RetryException;
@@ -47,9 +52,9 @@ import com.vimond.common.kafka07.consumer.KafkaConsumerConfig;
 import com.vimond.common.kafka07.consumer.MessageProcessor;
 import com.vimond.common.zkhealth.ZookeeperHealthCheck;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
-import com.vimond.pailStructure.TimeFramePailStructure;
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.util.Constants;
+import com.vimond.pailStructure.TimeFramePailStructure;
 
 /**
  * Reliable version of a KafkaConsumer. It processes the events in batch commits
@@ -78,7 +83,8 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 	protected long millsToSleepWhenError = 1000 * 5;
 	protected LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
 	protected long batchEndTime;
-
+	protected final CsvReporter reporter;
+	
 	protected String HDFSPathToLocation;
 	private int timeFrameInMinutes;
 
@@ -102,38 +108,14 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 
 		this.initializeTimeFramePail();
 		
-		setupHealthchecks(healthCheckRegistry, kafkaConfig);
-
-		// procedure for controlled shutdown
-		Runtime.getRuntime().addShutdownHook(new Thread()
-		{
-			public void run()
-			{
-				try
-				{
-					shutdown();
-				} catch (Exception e)
-				{
-					flushToHdfs();
-				}
-			}
-		});
-	}
-
-	public ReliableKafkaConsumerService(MetricRegistry metricRegistry, HealthCheckRegistry healthCheckRegistry, KafkaConfig kafkaConfig, KafkaConsumerConfig consumerConfig, MessageProcessor<T> messageProcessor)
-	{
-		this.metricRegistry = metricRegistry;
-		this.kafkaConfig = kafkaConfig;
-		this.consumerConfig = consumerConfig;
-		this.messageProcessor = messageProcessor;
-		this.name = "KafkaConsumer[" + consumerConfig.topic + "][" + consumerConfig.groupid + "]";
-		this.batchSize = Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
-		this.flushingTime = Constants.DEFAULT_FLUSH_TIME;
-		this.HDFSPathToLocation = Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
-		this.timeFrameInMinutes = Constants.DEFAULT_TIME_FRAME;
-		setupHealthchecks(healthCheckRegistry, kafkaConfig);
+		this.reporter = CsvReporter.forRegistry(metricRegistry)
+								.convertDurationsTo(TimeUnit.MILLISECONDS)
+								.convertRatesTo(TimeUnit.SECONDS)
+								.formatFor(Locale.ITALY)
+								.build(new File("/var/log/vimond-eventfetcher-service"));
+		this.reporter.start(1, TimeUnit.MINUTES);
 		
-		this.initializeTimeFramePail();
+		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 
 		// procedure for controlled shutdown
 		Runtime.getRuntime().addShutdownHook(new Thread()
@@ -284,7 +266,7 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 
 		for (final KafkaStream<T> stream : streams)
 		{
-			executor.submit(new KafkaStreamReader<T>(metrics, logger, name, millsToSleepWhenError, messageProcessor, stream, this, barrier));
+			executor.submit(new KafkaStreamReader<T>(metrics, reporter, logger, name, millsToSleepWhenError, messageProcessor, stream, this, barrier));
 		}
 		isRunning.set(true);
 	}
@@ -296,17 +278,19 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 
 	protected static class OurMetrics
 	{
-		public final Counter receivedMessages;
+		public final Meter receivedMessages;
 		public final Counter receivedMessagesWithError;
 		public final Counter retryCountWhenProcessingEvent;
 		public final Timer messageProcessingTime;
+		public final Timer hdfsWritingTime;
 
 		public OurMetrics(MetricRegistry metricsRegistry, String name)
 		{
-			receivedMessages = metricsRegistry.counter(name + "_kafka-consumer-receivedMessages");
+			receivedMessages = metricsRegistry.meter(name + "_kafka-consumer-receivedMessages");
 			receivedMessagesWithError = metricsRegistry.counter(name + "_kafka-consumer-receivedMessagesWithError");
 			retryCountWhenProcessingEvent = metricsRegistry.counter(name + "_kafka-consumer-retryCountWhenProcessingEvent");
 			messageProcessingTime = metricsRegistry.timer(name + "_kafka-consumer-messageProcessingTime");
+			hdfsWritingTime = metricsRegistry.timer(name + "_kafka-consumer-hdfsWritingTime");
 		}
 	}
 
@@ -393,7 +377,7 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 		private ConsumerIterator<T> it;
 		private final CyclicBarrier barrier;
 
-		public KafkaStreamReader(OurMetrics metrics, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, ReliableKafkaConsumerService<T> consumer, CyclicBarrier barrier)
+		public KafkaStreamReader(OurMetrics metrics, CsvReporter reporter, Logger logger, String name, long millsToSleepWhenError, MessageProcessor<T> messageProcessor, KafkaStream<T> stream, ReliableKafkaConsumerService<T> consumer, CyclicBarrier barrier)
 		{
 			this.metrics = metrics;
 			this.logger = logger;
@@ -421,7 +405,7 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 						if (it.hasNext())
 						{
 							MessageAndMetadata<T> msgAndMetadata = it.next();
-							metrics.receivedMessages.inc();
+							metrics.receivedMessages.mark();
 							final boolean processed = processMessage(msgAndMetadata.message());
 							if (msgAndMetadata.message() == null || !processed)
 								metrics.receivedMessagesWithError.inc();
@@ -436,7 +420,9 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 					{
 						try
 						{
+							Context ctx = metrics.hdfsWritingTime.time();
 							barrier.await(10, TimeUnit.MINUTES);
+							ctx.stop();
 							// after the barrier all thread are synchronized
 							// with the next batch execution
 							batchEndTime = this.consumer.getBatchEndTime();
