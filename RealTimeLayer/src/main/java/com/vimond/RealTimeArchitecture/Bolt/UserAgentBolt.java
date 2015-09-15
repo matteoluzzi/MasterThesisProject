@@ -69,7 +69,7 @@ public class UserAgentBolt implements IRichBolt
 		this.mapper = new ObjectMapper();
 		this.mapper.registerModule(new JodaModule());
 		this.userAgentParser = new UserAgentParser();
-		this.acking = (Boolean) stormConf.get("acking");
+//		this.acking = (Boolean) stormConf.get("acking");
 		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
 		this.reportPath = (String) stormConf.get("metric.report.path");
 		initializeMetricsReport();

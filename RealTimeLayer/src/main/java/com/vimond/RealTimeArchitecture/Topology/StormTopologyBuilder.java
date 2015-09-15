@@ -3,6 +3,7 @@ package com.vimond.RealTimeArchitecture.Topology;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,8 @@ import com.vimond.RealTimeArchitecture.Bolt.UserAgentBolt;
 import com.vimond.RealTimeArchitecture.Spout.SpoutCreator;
 import com.vimond.utils.config.AppProperties;
 import com.vimond.utils.data.Constants;
+
+import de.javakaffee.kryoserializers.jodatime.JodaDateTimeSerializer;
 
 /**
  * Utility class for building a topology and run it according to the executor mode specified in the configuration file
@@ -116,6 +119,7 @@ public class StormTopologyBuilder
 			topConfig.put("acking", acking);
 			topConfig.put("metric.report.interval", reportFrequency);
 			topConfig.put("metric.report.path", reportPath);
+			topConfig = registerSerializableClasses(topConfig);
 			
 			try
 			{
@@ -159,13 +163,21 @@ public class StormTopologyBuilder
 		conf.put("es.batch.size.entries", 25000);
 		conf.put("es.batch.size.bytes", "100mb");
 		conf.put("es.storm.bolt.tick.tuple.flush", "true");
-		
-		//custom serialization
+		conf = registerSerializableClasses(conf);
+		return conf;
+	}
+	
+	public static Config registerSerializableClasses(Config cfg)
+	{
 		List<String> customSerializationClasses = new ArrayList<String>();
 		customSerializationClasses.add("com.vimond.utils.data.StormEvent");
-		conf.put("topology.kryo.register",customSerializationClasses);
+		customSerializationClasses.add("java.util.LinkedHashMap");
+		cfg.put("topology.kryo.register",customSerializationClasses);
 		
-		return conf;
+		//custom serialization
+		cfg.registerSerialization(DateTime.class, JodaDateTimeSerializer.class);
+		
+		return cfg;
 	}
 
 }
