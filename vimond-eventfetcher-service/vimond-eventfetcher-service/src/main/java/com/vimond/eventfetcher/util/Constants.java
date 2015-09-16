@@ -10,6 +10,7 @@ public class Constants
 	public static final long DEFAULT_MAX_MESSAGES_INTO_FILE = 50000;
 	public static final int DEFAULT_CONSUMER_THREAD = 1;
 	public static final int DEFAULT_TIME_FRAME = 5;
+	public static final String DEFAULT_TIME_FRAME_TYPE = "timestamp";
 	public static final String DEFAULT_HDFS_PATH_TO_LOCATION = "hdfs://localhost:9000/user/matteoremoluzzi/dataset/master";
 	public static final String DEFAULT_FS_PATH_TO_LOCATION = "file:///home/vimond-eventfetcher-service/localFS/dataset";
 	

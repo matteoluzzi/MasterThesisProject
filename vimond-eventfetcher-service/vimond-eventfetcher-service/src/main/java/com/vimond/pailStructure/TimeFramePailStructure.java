@@ -87,7 +87,6 @@ public class TimeFramePailStructure implements PailStructure<String>
 	{
 		return String.class;
 	}
-
 	
 	public List<String> getCorrectFolder(int hours, int minutes)
 	{

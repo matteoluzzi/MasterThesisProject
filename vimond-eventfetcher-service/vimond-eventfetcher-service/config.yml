@@ -31,7 +31,7 @@ consumer:
   topic: player-events
   mode: RELIABLE
   consumerThreads: 1
-  groupid: vimond_eventfetcher_consumers
+  groupid: vimond_eventfetcher_consumers_local
   properties:
     consumer.timeout.ms: 100
 
@@ -44,8 +44,9 @@ processor:
   config:
     flushingTime: 60000
     maxBatchMessages: 150000
-    HDFSPath: hdfs://localhost:9000/user/matteoremoluzzi/newDataset/master
-    pailstructureTimeFrameInMin: 30
+    HDFSPath: hdfs://localhost:9000/user/matteoremoluzzi/testDataset1/master
+    pailstructureTimeFrameInMin: 5
+    pailStructureType: "current" #current or timestamp
 
 # Logging configuration 
 # https://dropwizard.github.io/dropwizard/manual/configuration.html#logging

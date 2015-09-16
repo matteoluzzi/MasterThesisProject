@@ -54,6 +54,7 @@ import com.vimond.common.zkhealth.ZookeeperHealthCheck;
 import com.vimond.eventfetcher.configuration.ProcessorConfiguration;
 import com.vimond.eventfetcher.processor.BatchProcessor;
 import com.vimond.eventfetcher.util.Constants;
+import com.vimond.pailStructure.TimeFrameCurrentTimePailStructure;
 import com.vimond.pailStructure.TimeFramePailStructure;
 
 /**
@@ -81,6 +82,7 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 	protected long batchSize;
 	protected long flushingTime;
 	protected long millsToSleepWhenError = 1000 * 5;
+	protected String pailStructureType;
 	protected LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<T>();
 	protected long batchEndTime;
 	protected final CsvReporter reporter;
@@ -105,15 +107,16 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 		this.batchSize = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
 		this.HDFSPathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
 		this.timeFrameInMinutes = conf.getConfig().get(Constants.TIME_FRAME_KEY) != null ? Integer.parseInt(conf.getConfig().get(Constants.TIME_FRAME_KEY)) : Constants.DEFAULT_TIME_FRAME;
-
-		this.initializeTimeFramePail();
+		this.pailStructureType = conf.getConfig().get("pailStructureType") != null ? conf.getConfig().get("pailStructureType") : Constants.DEFAULT_TIME_FRAME_TYPE;
+		
+		this.initializeTimeFramePail(this.pailStructureType);
 		
 		this.reporter = CsvReporter.forRegistry(metricRegistry)
 								.convertDurationsTo(TimeUnit.MILLISECONDS)
 								.convertRatesTo(TimeUnit.SECONDS)
 								.formatFor(Locale.ITALY)
 								.build(new File("/var/log/vimond-eventfetcher-service"));
-		this.reporter.start(1, TimeUnit.MINUTES);
+	//	this.reporter.start(1, TimeUnit.MINUTES);
 		
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 
@@ -550,7 +553,19 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 				logger.debug("Error when accessing pail: {}", e.getMessage());
 				try
 				{
-					pail = Pail.create(getHDFSPathToLocation(), new TimeFramePailStructure());
+					switch (this.pailStructureType)
+					{
+					case "current":
+						pail = Pail.create(getHDFSPathToLocation(), new TimeFrameCurrentTimePailStructure());
+					break;
+					case "timestamp":
+						pail = Pail.create(getHDFSPathToLocation(), new TimeFramePailStructure());
+						break;
+					default:
+						pail = Pail.create(getHDFSPathToLocation(), new TimeFramePailStructure());
+						break;
+					}
+					
 
 				} catch (IOException e1)
 				{
@@ -572,12 +587,21 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 			buffer.clear();
 			return true;
 		}
-		return false;
+		return true;
 	}
 	
-	public void initializeTimeFramePail()
+	public void initializeTimeFramePail(String type)
 	{
-		TimeFramePailStructure.initialize(getTimeFrameInMinutes());
+		switch (type)
+		{
+		case "timestamp":
+			TimeFramePailStructure.initialize(getTimeFrameInMinutes());
+			break;
+		case "current":
+			TimeFrameCurrentTimePailStructure.initialize(getTimeFrameInMinutes());
+			break;
+		}
+		
 	}
 
 }

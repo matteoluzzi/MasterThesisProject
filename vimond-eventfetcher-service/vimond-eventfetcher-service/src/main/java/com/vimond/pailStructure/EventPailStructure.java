@@ -16,7 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vimond.common.events.data.VimondEventAny;
 import com.vimond.common.shared.ObjectMapperConfiguration;
 
-
+/**
+ * PailStricture for storing events into a folder according to the current date. It deserialize the object. No longer needed: use TimeFramePailStructure or TimeFrameCurrentTimePailStructure instread
+ * @author matteoremoluzzi
+ *
+ */
+@Deprecated
 public class EventPailStructure implements PailStructure<VimondEventAny>
 {
 	private static final long serialVersionUID = 7869846567202993614L;
@@ -24,17 +29,12 @@ public class EventPailStructure implements PailStructure<VimondEventAny>
 	
 	private static ObjectMapper mapper = ObjectMapperConfiguration.configure();
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-	private int timeFrame;
+	private static int timeFrame;
 	
 	public EventPailStructure()
 	{
 	}
 	
-	public EventPailStructure(int timeFrame)
-	{
-		this.timeFrame = timeFrame;
-	}
-
 	public boolean isValidTarget(String... dirs)
 	{
 		return true;
@@ -84,5 +84,12 @@ public class EventPailStructure implements PailStructure<VimondEventAny>
 	public Class<VimondEventAny> getType()
 	{
 		return VimondEventAny.class;
+	}
+	
+	public static void initialize(int timeframe) {
+		if(60 % timeframe == 0 || 60 * 24 % timeframe == 0)
+			EventPailStructure.timeFrame = timeframe;
+		else
+			throw new IllegalArgumentException("Timeframe must be a divisor of the hour or of the day");
 	}
 }
