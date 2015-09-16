@@ -28,8 +28,8 @@ storm.local.dir: "/var/local/storm"
 # ##### These may optionally be filled in:
 #
 ## List of custom serializations
-topology.kryo.register:
-     - com.vimond.utils.data.StormEvent
+#topology.kryo.register:
+#     - com.vimond.utils.data.StormEvent
 #     - org.mycompany.MyType2: org.mycompany.MyType2Serializer
 #
 ## List of custom kryo decorators
@@ -45,10 +45,10 @@ es.index.auto.create: "true"
 es.nodes: "172.31.23.179"
 es.port: 9200
 es.input.json: "true"
-es.storm.bolt.flush.entries.size: 25000
-es.batch.size.entries: 25000
+es.storm.bolt.flush.entries.size: 10000
+es.batch.size.entries: 10000
 es.batch.size.bytes: "100mb"
-es.storm.bolt.tick.tuple.flush: "true"
+#es.storm.bolt.tick.tuple.flush: "true"
 
 topology.workers: 8
 topology.debug: false
@@ -61,8 +61,8 @@ ui.host: 52.19.142.246
 nimbus.childopts: "-Xmx1024m"
 
 #only for workers
-supervisor.childopts: "-Xmx1024m"
-worker.childopts: "-Xmx2048m"
+supervisor.childopts: "-Xmx512m"
+worker.childopts: "-Xmx2050m"
 
 supervisor.slots.ports:
     - 6700

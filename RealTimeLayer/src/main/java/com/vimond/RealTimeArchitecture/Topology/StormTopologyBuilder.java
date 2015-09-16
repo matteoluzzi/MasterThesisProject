@@ -60,6 +60,7 @@ public class StormTopologyBuilder
 		final int spout_tasks = this.props.getProperty("spout_tasks") != null ? Integer.parseInt(this.props.getProperty("spout_tasks")) : Constants.SPOUT_TASKS;
 	 	final int userAgent_tasks = this.props.getProperty("userAgent_tasks") != null ? Integer.parseInt(this.props.getProperty("userAgent_tasks")) : Constants.USER_AGENT_TASKS;
 		final int router_tasks = this.props.getProperty("router_tasks") != null ? Integer.parseInt(this.props.getProperty("router_tasks")) : Constants.ROUTER_TASKS;
+		final int serializer_tasks = this.props.getProperty("serializer_tasks") != null ? Integer.parseInt(this.props.getProperty("serializer_tasks")) : Constants.SERIALIZER_TASKS;
 		final int elasticsearch_tasks = this.props.getProperty("el_tasks") != null ? Integer.parseInt(this.props.getProperty("el_tasks")) : Constants.EL_TASKS;
 		
 		/*
@@ -77,14 +78,17 @@ public class StormTopologyBuilder
 		 */
 		builder.setBolt(Constants.BOLT_USER_AGENT, new UserAgentTest(), userAgent_tasks).shuffleGrouping(Constants.BOLT_ROUTER, Constants.UA_STREAM);
 		
-		builder.setBolt("serializer", new SerializerBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM);
+		/*
+		 * Bolt that serializes into a json string an augmented StormEvent
+		 */
+		builder.setBolt(Constants.BOLT_SERIALIZER, new SerializerBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM);
 		
 		/*
 		 * Bolt that writes the result tuple to elasticsearch cluster
 		 */
-//		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
-//		.shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM)
-//		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 30 seconds
+		builder.setBolt(Constants.BOLT_ES, new ElasticSearchBolt(es_index), elasticsearch_tasks)
+		.shuffleGrouping(Constants.BOLT_SERIALIZER, Constants.UA_STREAM)
+		.addConfiguration(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 120); //flush data into ES every 120 seconds
 		
 		
 		LOG.info("Creating topology components DONE");
@@ -169,6 +173,11 @@ public class StormTopologyBuilder
 		return conf;
 	}
 	
+	/**
+	 * Add classes to be serialized by kryo or by a custom serializer
+	 * @param cfg
+	 * @return 
+	 */
 	public static Config registerSerializableClasses(Config cfg)
 	{
 		List<String> customSerializationClasses = new ArrayList<String>();

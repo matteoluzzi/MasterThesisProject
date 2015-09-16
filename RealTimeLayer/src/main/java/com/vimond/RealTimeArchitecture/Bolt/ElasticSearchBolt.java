@@ -54,7 +54,6 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.UniformReservoir;
-import com.vimond.utils.data.StormEvent;
 
 /**
  * Implementation of bolt which writes record on an elasticsearch cluster.
@@ -86,6 +85,7 @@ public class ElasticSearchBolt implements IRichBolt
 	private transient int numberOfEntries = 0;
 	private transient OutputCollector collector;
 
+	private boolean acking;
 	private long reportFrequency;
 	private String reportPath;
 
@@ -139,6 +139,8 @@ public class ElasticSearchBolt implements IRichBolt
 
 		this.reportFrequency = (Long) conf.get("metric.report.interval");
 		this.reportPath = (String) conf.get("metric.report.path");
+		// this.acking = (Boolean) stormConf.get("acking");
+		this.acking = false;
 		initializeMetricsReport();
 
 	}
@@ -166,7 +168,6 @@ public class ElasticSearchBolt implements IRichBolt
 		}
 		
 		long initTime = (Long) input.getValues().remove(1);
-		StormEvent x = (StormEvent) input.getValue(0);
 		this.globalLatency.update(System.nanoTime() - initTime);
 		this.counter.mark();
 		
@@ -187,13 +188,15 @@ public class ElasticSearchBolt implements IRichBolt
 
 			if (!ackWrites)
 			{
-				collector.ack(input);
+				if(acking)
+					collector.ack(input);
 			}
 		} catch (RuntimeException ex)
 		{
 			if (!ackWrites)
 			{
-				collector.fail(input);
+				if(acking)
+					collector.fail(input);
 			}
 			throw ex;
 		}

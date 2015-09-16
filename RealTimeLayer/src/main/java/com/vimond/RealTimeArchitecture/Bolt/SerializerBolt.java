@@ -25,7 +25,6 @@ public class SerializerBolt implements IRichBolt
 {
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOG = LogManager.getLogger(SerializerBolt.class);
-	private final static Marker ERROR = MarkerManager.getMarker("REALTIME-ERRORS");
 
 	private transient ObjectMapper mapper;
 
@@ -75,7 +74,7 @@ public class SerializerBolt implements IRichBolt
 	}
 	public void declareOutputFields(OutputFieldsDeclarer declarer)
 	{
-		declarer.declare(new Fields("event", "initTime"));
+		declarer.declareStream(Constants.UA_STREAM, new Fields("event", "initTime"));
 		
 	}
 	public Map<String, Object> getComponentConfiguration()

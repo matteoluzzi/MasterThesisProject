@@ -23,12 +23,14 @@ package com.vimond.RealTimeArchitecture.Kafka.kafkalibrary;
  * The code was originally copied from https://github.com/nathanmarz/storm-contrib/tree/master/storm-kafka/src/jvm/storm/kafka
  */
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import kafka.message.Message;
 
@@ -51,6 +53,9 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.vimond.RealTimeArchitecture.Kafka.kafkalibrary.PartitionManager.KafkaMessageId;
 
 // TODO: need to add blacklisting
@@ -77,10 +82,6 @@ public class KafkaSpout extends BaseRichSpout
 	}
 
 	public static final Logger LOG = LoggerFactory.getLogger(KafkaSpout.class);
-	// log4j2 for monitoring purposes
-	private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(KafkaSpout.class);
-	private static final Marker ACK = MarkerManager.getMarker("PERFORMANCES-ACK");
-	private static final Marker FAIL = MarkerManager.getMarker("PERFORMANCES-FAIL");
 
 	String _uuid = UUID.randomUUID().toString();
 	SpoutConfig _spoutConfig;
@@ -88,6 +89,12 @@ public class KafkaSpout extends BaseRichSpout
 	PartitionCoordinator _coordinator;
 	DynamicPartitionConnections _connections;
 	ZkState _state;
+	
+	private transient MetricRegistry metricRegistry;
+	private long reportFrequency;
+	private String reportPath;
+    
+	private transient Meter counter;
 
 	long _lastUpdateMs = 0;
 
@@ -146,7 +153,7 @@ public class KafkaSpout extends BaseRichSpout
 				return _kafkaOffsetMetric.getValueAndReset();
 			}
 		}, 60);
-
+		
 		context.registerMetric("kafkaPartition", new IMetric()
 		{
 			public Object getValueAndReset()
@@ -160,7 +167,27 @@ public class KafkaSpout extends BaseRichSpout
 				return concatMetricsDataMaps;
 			}
 		}, 60);
+		
+		this.metricRegistry = new MetricRegistry();
+		this.reportFrequency = (Long) conf.get("metric.report.interval");
+		this.reportPath = (String) conf.get("metric.report.path");
+        initializeMetricsReport();
+    }
+    
+    public void initializeMetricsReport()
+	{
+		final MetricRegistry metricRegister = new MetricRegistry();	
+		
+		//register the meter metric
+		this.counter = metricRegister.meter(MetricRegistry.name(KafkaSpout.class, Thread.currentThread().getName() + "events_sec"));
+		
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
+				.convertRatesTo(TimeUnit.SECONDS)
+				.convertDurationsTo(TimeUnit.NANOSECONDS)
+				.build(new File(this.reportPath));
+		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
 	}
+	
 
 	@Override
 	public void close()
@@ -185,6 +212,7 @@ public class KafkaSpout extends BaseRichSpout
 			{
 				break;
 			}
+			
 		}
 
 		long now = System.currentTimeMillis();
@@ -197,6 +225,7 @@ public class KafkaSpout extends BaseRichSpout
 	@Override
 	public void ack(Object msgId)
 	{
+		counter.mark();
 		KafkaMessageId id = (KafkaMessageId) msgId;
 		PartitionManager m = _coordinator.getManager(id.partition);
 		if (m != null)

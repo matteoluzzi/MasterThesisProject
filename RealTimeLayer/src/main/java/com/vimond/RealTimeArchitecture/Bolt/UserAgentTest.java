@@ -65,7 +65,6 @@ public class UserAgentTest implements IRichBolt
 		this.acking = false;
 		this.mapper = new ObjectMapper();
 		this.mapper.registerModule(new JodaModule());
-		// this.acking = (Boolean) stormConf.get("acking");
 		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
 		this.reportPath = (String) stormConf.get("metric.report.path");
 		initializeMetricsReport();
@@ -113,8 +112,6 @@ public class UserAgentTest implements IRichBolt
 			OperatingSystem os = userAgent.getOperatingSystem();
 
 			String os_str = os.getName();
-
-			// TODO handle new user agent from internet explorer 11
 
 			String browser_str = userAgent.getBrowser().getName();
 
