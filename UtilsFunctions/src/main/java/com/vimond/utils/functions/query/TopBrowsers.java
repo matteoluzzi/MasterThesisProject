@@ -16,7 +16,12 @@ import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 
 public class TopBrowsers extends Query
 {
-
+	public TopBrowsers()
+	{
+		super();
+		this.name = "TopBrowser";
+	}
+	
 	@Override
 	public void execute(Client esClient, String index, boolean verbose)
 	{
@@ -50,7 +55,6 @@ public class TopBrowsers extends Query
 		if(verbose)
 			printResult();
 		
-		
 	}
 
 	@Override
@@ -67,6 +71,12 @@ public class TopBrowsers extends Query
 				System.out.println(t.getKey() + " " + sum.getValue());
 			}
 		});
+	}
+	
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
 	}
 
 }

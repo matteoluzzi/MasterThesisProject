@@ -20,6 +20,7 @@ public abstract class Query
 	protected ExecutorService executor;
 	protected SummaryStatistics stats;
 	protected static final Logger LOG = LoggerFactory.getLogger(Query.class);
+	protected String name;
 	
 	
 	public Query()
@@ -39,7 +40,7 @@ public abstract class Query
 				{
 					execute(c, index, verbose);
 					long time = getTimeExecution();
-					LOG.info("Execution: " + time + " ms" + " " + new DateTime());
+					LOG.info(name +" execution: " + time + " ms" + " " + new DateTime());
 					stats.addValue(time);
 				}
 			});
@@ -66,10 +67,7 @@ public abstract class Query
 		else return -1;
 	}
 	
-	private void printQueryStatistics()
-	{
-		LOG.info("Results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
-	}
+	protected abstract void printQueryStatistics();
 	
 	protected abstract void execute(Client c, String index, boolean verbose);
 	

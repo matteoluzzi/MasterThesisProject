@@ -19,6 +19,7 @@ public class TopPlayerEndEventsPerAsset extends Query
 	public TopPlayerEndEventsPerAsset()
 	{
 		super();
+		this.name = "TopPlayerEndEventsPerAsset";
 	}
 
 	@Override
@@ -72,4 +73,9 @@ public class TopPlayerEndEventsPerAsset extends Query
 		});
 	}
 
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
+	}
 }

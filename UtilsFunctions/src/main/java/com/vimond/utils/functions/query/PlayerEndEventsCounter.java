@@ -11,6 +11,11 @@ import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
 
 public class PlayerEndEventsCounter extends Query
 {
+	public PlayerEndEventsCounter()
+	{
+		super();
+		this.name = "PlayerEndEventsCounter";
+	}
 
 	@Override
 	public void execute(Client esClient, String index, boolean verbose)
@@ -49,6 +54,12 @@ public class PlayerEndEventsCounter extends Query
 		Sum sum = this.searchResponse.getAggregations().get("sum_of_counter");
 		System.out.println("Number of player-end events = " + sum.getValue());
 		
+	}
+
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
 	}
 
 }

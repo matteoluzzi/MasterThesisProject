@@ -20,6 +20,7 @@ public class TopPlayerStartEventsPerAsset extends Query
 	public TopPlayerStartEventsPerAsset()
 	{
 		super();
+		this.name = "TopPlayerStartEventsPerAsset";
 	}
 
 	@Override
@@ -69,5 +70,11 @@ public class TopPlayerStartEventsPerAsset extends Query
 				System.out.println(t.getKey() + " " + sum.getValue());
 			}
 		});
+	}
+	
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
 	}
 }

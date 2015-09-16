@@ -16,7 +16,12 @@ import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 
 public class TopOs extends Query
 {
-
+	public TopOs()
+	{
+		super();
+		this.name = "TopOs";
+	}
+	
 	@Override
 	public void execute(Client esClient, String index, boolean verbose)
 	{
@@ -67,6 +72,12 @@ public class TopOs extends Query
 				System.out.println(t.getKey() + " " + sum.getValue());
 			}
 		});
+	}
+	
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
 	}
 
 }
