@@ -51,6 +51,8 @@ public class SerializerBolt implements IRichBolt
 		this.acking = false;
 		this.mapper = new ObjectMapper();
 		this.mapper.registerModule(new JodaModule());
+		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
+		this.reportPath = (String) stormConf.get("metric.report.path");
 		initializeMetricsReport();
 
 	}

@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>RealTimeLayer</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.1.1-SNAPSHOT-userAgent</version>
 
 	<name>RealTimeLayer</name>
 	<url>http://maven.apache.org</url>
