@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import com.backtype.hadoop.pail.PailStructure;
 
 /**
@@ -53,7 +55,7 @@ public class TimeFrameCurrentTimePailStructure implements PailStructure<String>
 	public List<String> getTarget(String object)
 	{
 		List<String> path = new ArrayList<String>();
-		DateTime now = new DateTime();
+		DateTime now = new DateTime(DateTimeZone.forID("Europe/Oslo"));
 		path.add(formatter.format(now.toDate()));
 		path.addAll(getCorrectFolder(now.getHourOfDay(), now.getMinuteOfHour()));
 		return path;
