@@ -28,8 +28,8 @@ storm.local.dir: "/var/local/storm"
 # ##### These may optionally be filled in:
 #
 ## List of custom serializations
-topology.kryo.register:
-     - com.vimond.utils.data.StormEvent
+#topology.kryo.register:
+#     - com.vimond.utils.data.StormEvent
 #     - org.mycompany.MyType2: org.mycompany.MyType2Serializer
 #
 ## List of custom kryo decorators
@@ -45,9 +45,9 @@ es.index.auto.create: "true"
 es.nodes: "172.31.23.179"
 es.port: 9200
 es.input.json: "true"
-es.storm.bolt.flush.entries.size: 25000
-es.batch.size.entries: 25000
-es.batch.size.bytes: "100mb"
+es.storm.bolt.flush.entries.size: 1500
+es.batch.size.entries: 1500
+es.batch.size.bytes: "30mb"
 es.storm.bolt.tick.tuple.flush: "true"
 
 topology.workers: 8
@@ -55,14 +55,14 @@ topology.debug: false
 topology.acker.executors: 0
 topology.message.timeout.secs: 30
 topology.max.spout.pending: 10000
-topology.fall.back.on.java.serialization: "false"
+topology.fall.back.on.java.serialization: false
 
 #only for master
 ui.host: 52.19.142.246
 nimbus.childopts: "-Xmx1024m"
 
 #only for workers
-supervisor.childopts: "-Xmx1024m"
+supervisor.childopts: "-Xmx512m"
 worker.childopts: "-Xmx2048m"
 
 supervisor.slots.ports:
