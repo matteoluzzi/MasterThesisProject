@@ -33,6 +33,7 @@ public class SpoutCreator
 {
 	private static Logger LOG = LoggerFactory.getLogger(SpoutCreator.class);
 
+	@SuppressWarnings("deprecation")
 	public static IRichSpout create(AppProperties props)
 	{
 		KafkaAPI api_version = (props.get("kafka_api_version") != null) ? KafkaAPI.valueOf((String) props.get("kafka_api_version")) : KafkaAPI.DEFAULT;

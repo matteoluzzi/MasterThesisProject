@@ -18,7 +18,6 @@ import com.vimond.RealTimeArchitecture.Bolt.ElasticSearchBolt;
 import com.vimond.RealTimeArchitecture.Bolt.RouterBolt;
 import com.vimond.RealTimeArchitecture.Bolt.SerializerBolt;
 import com.vimond.RealTimeArchitecture.Bolt.UserAgentBolt;
-import com.vimond.RealTimeArchitecture.Bolt.UserAgentTest;
 import com.vimond.RealTimeArchitecture.Spout.SpoutCreator;
 import com.vimond.utils.config.AppProperties;
 import com.vimond.utils.data.Constants;
@@ -76,12 +75,12 @@ public class StormTopologyBuilder
 		/*
 		 * Bolt that breaks down the user agent into browser and os
 		 */
-		builder.setBolt(Constants.BOLT_USER_AGENT, new UserAgentTest(), userAgent_tasks).shuffleGrouping(Constants.BOLT_ROUTER, Constants.UA_STREAM);
+		builder.setBolt(Constants.BOLT_USER_AGENT, new UserAgentBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_ROUTER, Constants.UA_STREAM);
 		
 		/*
 		 * Bolt that serializes into a json string an augmented StormEvent
 		 */
-		builder.setBolt(Constants.BOLT_SERIALIZER, new SerializerBolt(), userAgent_tasks).shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM);
+		builder.setBolt(Constants.BOLT_SERIALIZER, new SerializerBolt(), serializer_tasks).shuffleGrouping(Constants.BOLT_USER_AGENT, Constants.UA_STREAM);
 		
 		/*
 		 * Bolt that writes the result tuple to elasticsearch cluster

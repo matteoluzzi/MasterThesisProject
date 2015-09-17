@@ -79,7 +79,7 @@ public class RouterBolt implements IRichBolt
 
 	public void cleanup()
 	{
-		LOG.debug("Going to sleep now");
+		LOG.info("Going to shutdown!");
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer)

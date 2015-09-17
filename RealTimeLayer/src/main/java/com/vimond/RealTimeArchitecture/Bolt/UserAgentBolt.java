@@ -5,10 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import net.sf.uadetector.OperatingSystem;
-import net.sf.uadetector.ReadableUserAgent;
-import net.sf.uadetector.UserAgentStringParser;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -23,8 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.vimond.utils.data.Constants;
 import com.vimond.utils.data.StormEvent;
-import com.vimond.utils.functions.UserAgentParser;
 
+import eu.bitwalker.useragentutils.OperatingSystem;
+import eu.bitwalker.useragentutils.UserAgent;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
@@ -48,13 +45,13 @@ public class UserAgentBolt implements IRichBolt
 	private final static Marker ERROR = MarkerManager.getMarker("REALTIME-ERRORS");
 
 	private transient ObjectMapper mapper;
-	private transient UserAgentStringParser userAgentParser;
+	private transient UserAgent userAgent;
 
 	private OutputCollector collector;
 	private boolean acking;
 	private long reportFrequency;
 	private String reportPath;
-	
+
 	private transient Meter counter;
 
 	public UserAgentBolt()
@@ -68,33 +65,28 @@ public class UserAgentBolt implements IRichBolt
 		this.acking = false;
 		this.mapper = new ObjectMapper();
 		this.mapper.registerModule(new JodaModule());
-		this.userAgentParser = new UserAgentParser();
-//		this.acking = (Boolean) stormConf.get("acking");
 		this.reportFrequency = (Long) stormConf.get("metric.report.interval");
 		this.reportPath = (String) stormConf.get("metric.report.path");
 		initializeMetricsReport();
 
 	}
-	
+
 	public void initializeMetricsReport()
 	{
-		final MetricRegistry metricRegister = new MetricRegistry();	
-		
-		//register the meter metric
+		final MetricRegistry metricRegister = new MetricRegistry();
+
+		// register the meter metric
 		this.counter = metricRegister.meter(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "-events_sec"));
-		
-		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister)
-				.convertRatesTo(TimeUnit.SECONDS)
-				.convertDurationsTo(TimeUnit.NANOSECONDS)
-				.build(new File(this.reportPath));
+
+		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister).convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.NANOSECONDS).build(new File(this.reportPath));
 		reporter.start(this.reportFrequency, TimeUnit.SECONDS);
-		
+
 	}
 
 	public void execute(Tuple input)
 	{
 		this.counter.mark();
-		
+
 		String jsonEvent = input.getString(0);
 		long initTime = input.getLong(1);
 
@@ -115,15 +107,13 @@ public class UserAgentBolt implements IRichBolt
 			event.setCounter();
 			String userAgentString = event.getUserAgent();
 
-			ReadableUserAgent userAgent = userAgentParser.parse(userAgentString);
+			this.userAgent = UserAgent.parseUserAgentString(userAgentString);
 
 			OperatingSystem os = userAgent.getOperatingSystem();
 
-			String os_str = os.getName() + " " + os.getVersionNumber().getMajor();
+			String os_str = os.getName();
 
-			// TODO handle new user agent from internet explorer 11
-
-			String browser_str = userAgent.getName() + "/" + userAgent.getVersionNumber().getMajor();
+			String browser_str = userAgent.getBrowser().getName();
 
 			event.setBrowser(browser_str);
 			event.setOs(os_str);
@@ -156,7 +146,7 @@ public class UserAgentBolt implements IRichBolt
 
 	public void cleanup()
 	{
-		userAgentParser.shutdown();
+		LOG.info("Going to shutdown!");
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer)
