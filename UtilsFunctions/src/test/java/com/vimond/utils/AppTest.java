@@ -1,5 +1,7 @@
 package com.vimond.utils;
 
+import java.util.concurrent.CyclicBarrier;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -37,7 +39,7 @@ public class AppTest
     	
     	Query q = QueryFactory.getFactory().createQuery(QueryType.MATCH_ALL);
     	
-    	q.executeMultiple(e.getClient(), "vimond-realtime", 1000, 1, false);
+    	q.executeMultiple(e, "vimond-realtime", 1000, 1, false, new CyclicBarrier(1));
     	
     	long hits = q.getHits();
     	

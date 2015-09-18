@@ -13,9 +13,13 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopPlayerEndEventsPerAsset extends Query
 {
+	private static final Logger fileLog = LoggerFactory.getLogger("top_end_asset");
+	
 	public TopPlayerEndEventsPerAsset()
 	{
 		super();
@@ -52,6 +56,7 @@ public class TopPlayerEndEventsPerAsset extends Query
 					.setPostFilter(fb)
 					.addAggregation(aggregations).get();
 		}
+		fileLog.info(String.valueOf(this.searchResponse.getTookInMillis()));
 		if(verbose)
 			printResult();
 		
@@ -73,4 +78,10 @@ public class TopPlayerEndEventsPerAsset extends Query
 		});
 	}
 
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + " ms\nMax time: " + stats.getMax() + " ms\nMin time: " + stats.getMin() + " ms");
+		fileLog.info(name + " results: \nAvg time = " + stats.getMean() + " ms\nMax time: " + stats.getMax() + " ms\nMin time: " + stats.getMin() + " ms");
+	}
 }

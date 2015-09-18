@@ -1,5 +1,6 @@
 package com.vimond.utils.functions;
 
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,8 +30,11 @@ public class ElasticSearchQueryInterface
 {
 	private static final Logger LOG = LoggerFactory.getLogger(UpdateRecords.class);
 
-	private Client esClient;
-	private ExecutorService executor;
+	public Client esClient;
+	public ExecutorService executor;
+
+	public long endBatch;
+	public long interval;
 
 	public ElasticSearchQueryInterface(String address)
 	{
@@ -76,10 +80,12 @@ public class ElasticSearchQueryInterface
 		String address = props.getProperty("elasticsearch_address", "localhost");
 		
 		ElasticSearchQueryInterface esqi = new ElasticSearchQueryInterface(address);
+		esqi.interval = interval;
 		if(queriesList.length > 0)
 		{
 			esqi.executor = Executors.newFixedThreadPool(queriesList.length);
-			
+			CyclicBarrier barrier = new CyclicBarrier(queriesList.length, esqi.new UpdateInterval(esqi));
+			esqi.endBatch = System.currentTimeMillis() + esqi.interval;
 			for(String query : queriesList)
 			{
 				try
@@ -92,7 +98,7 @@ public class ElasticSearchQueryInterface
 						@Override
 						public void run()
 						{
-							q.executeMultiple(esqi.esClient, index, interval, numberOfExecution, verbose);
+							q.executeMultiple(esqi, index, interval, numberOfExecution, verbose, barrier);
 							
 						}
 					});
@@ -109,8 +115,34 @@ public class ElasticSearchQueryInterface
 			LOG.error("Missing queries in the properties file");
 	}
 	
+	public long getEndBatch()
+	{
+		return this.endBatch;
+	}
+	
+	public void updateEndBatch(long interval)
+	{
+		this.endBatch += interval;
+	}
+	
 	public Client getClient()
 	{
 		return this.esClient;
+	}
+	
+	private class UpdateInterval implements Runnable
+	{
+		private ElasticSearchQueryInterface e;
+		
+		public UpdateInterval(ElasticSearchQueryInterface e)
+		{
+			this.e = e;
+		}
+		
+		@Override
+		public void run()
+		{
+			e.updateEndBatch(interval);
+		}
 	}
 }

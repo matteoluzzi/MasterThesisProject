@@ -1,25 +1,110 @@
 <configuration>
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
-  
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>logs/query.log</file>
-    <encoder>
-      <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
-    </encoder>
-  </appender>
-  
-  <logger name="results" level="info">
-    <appender-ref ref="FILE" />
-  </logger>
-  
-  <root level="debug">
-    <appender-ref ref="STDOUT" />
-     <appender-ref ref="FILE" />
-  </root>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder 
+			by default -->
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="MATCH_ALL" class="ch.qos.logback.core.FileAppender">
+		<file>logs/MATCH_ALL.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="PLAYER_ENDS_COUNTER" class="ch.qos.logback.core.FileAppender">
+		<file>logs/PLAYER_ENDS_COUNTER.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="PLAYER_STARTS_COUNTER" class="ch.qos.logback.core.FileAppender">
+		<file>logs/PLAYER_STARTS_COUNTER.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="TOP_BROWSER" class="ch.qos.logback.core.FileAppender">
+		<file>logs/TOP_BROWSER.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="TOP_OS" class="ch.qos.logback.core.FileAppender">
+		<file>logs/TOP_OS.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="TOP_VIDEO_FORMAT" class="ch.qos.logback.core.FileAppender">
+		<file>logs/TOP_VIDEO_FORMAT.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="TOP_START_ASSETS" class="ch.qos.logback.core.FileAppender">
+		<file>logs/TOP_START_ASSETS.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<appender name="TOP_END_ASSETS" class="ch.qos.logback.core.FileAppender">
+		<file>logs/TOP_END_ASSETS.log</file>
+		<encoder>
+			<pattern>%date %msg%n</pattern>
+		</encoder>
+		<append>false</append>
+	</appender>
+
+	<logger name="top_end_asset" level="info" additivity="false">
+		<appender-ref ref="TOP_END_ASSETS" />
+	</logger>
+
+	<logger name="top_start_assets" level="info" additivity="false">
+		<appender-ref ref="TOP_START_ASSETS" />
+	</logger>
+
+	<logger name="top_video_format" level="info" additivity="false">
+		<appender-ref ref="TOP_VIDEO_FORMAT" />
+	</logger>
+
+	<logger name="top_os" level="info" additivity="false">
+		<appender-ref ref="TOP_OS" />
+	</logger>
+
+	<logger name="top_browser" level="info" additivity="false">
+		<appender-ref ref="TOP_BROWSER" />
+	</logger>
+
+	<logger name="match_all" level="info" additivity="false">
+		<appender-ref ref="MATCH_ALL" />
+	</logger>
+	
+	<logger name="player_ends_counter" level="info" additivity="false">
+		<appender-ref ref="PLAYER_ENDS_COUNTER" />
+	</logger>
+	
+	<logger name="player_starts_counter" level="info" additivity="false">
+		<appender-ref ref="PLAYER_STARTS_COUNTER" />
+	</logger>
+	
+	<root level="debug" additivity="false">
+		<appender-ref ref="STDOUT" />
+	</root>
 </configuration>

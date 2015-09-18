@@ -8,9 +8,13 @@ import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PlayerStartEventsCounter extends Query
 {
+	private static final Logger fileLog = LoggerFactory.getLogger("player_starts_counter");
+	
 	public PlayerStartEventsCounter()
 	{
 		super();
@@ -43,6 +47,7 @@ public class PlayerStartEventsCounter extends Query
 					.setPostFilter(fb)
 					.addAggregation(aggregation).get();
 		}
+		fileLog.info(String.valueOf(this.searchResponse.getTookInMillis()));
 		if(verbose)
 			printResult();
 								
@@ -54,6 +59,13 @@ public class PlayerStartEventsCounter extends Query
 		Sum sum = this.searchResponse.getAggregations().get("sum_of_counter");
 		LOG.info("Number of player-start events = " + sum.getValue());
 		
+	}
+	
+	@Override
+	protected void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + " ms\nMax time: " + stats.getMax() + " ms\nMin time: " + stats.getMin() + " ms");
+		fileLog.info(name + " results: \nAvg time = " + stats.getMean() + " ms\nMax time: " + stats.getMax() + " ms\nMin time: " + stats.getMin() + " ms");
 	}
 
 }
