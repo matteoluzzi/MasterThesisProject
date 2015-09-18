@@ -91,11 +91,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>net.sf.uadetector</groupId>
-			<artifactId>uadetector-resources</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
 			<artifactId>geoip2</artifactId>
 		</dependency>

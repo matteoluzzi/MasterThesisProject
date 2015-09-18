@@ -62,7 +62,7 @@ public class SerializerBolt implements IRichBolt
 		final MetricRegistry metricRegister = new MetricRegistry();
 
 		// register the meter metric
-		this.counter = metricRegister.meter(MetricRegistry.name(UserAgentBolt.class, Thread.currentThread().getName() + "-events_sec"));
+		this.counter = metricRegister.meter(MetricRegistry.name(SerializerBolt.class, Thread.currentThread().getName() + "-events_sec"));
 
 		final CsvReporter reporter = CsvReporter.forRegistry(metricRegister).convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.NANOSECONDS).build(new File(this.reportPath));
 		reporter.start(this.reportFrequency, TimeUnit.SECONDS);

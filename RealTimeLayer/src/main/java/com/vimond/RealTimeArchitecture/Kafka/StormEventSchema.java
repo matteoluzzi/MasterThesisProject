@@ -23,7 +23,7 @@ public class StormEventSchema implements Scheme
 	public List<Object> deserialize(byte[] ser)
 	{
 		String e = new String(ser);
-		long timestamp = System.nanoTime();
+		long timestamp = System.currentTimeMillis();
 		
 		return new Values(e, timestamp);
 	}

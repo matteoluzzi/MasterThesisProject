@@ -168,7 +168,7 @@ public class ElasticSearchBolt implements IRichBolt
 		}
 		
 		long initTime = (Long) input.getValues().remove(1);
-		this.globalLatency.update(System.nanoTime() - initTime);
+		this.globalLatency.update(System.currentTimeMillis() - initTime);
 		this.counter.mark();
 		
 		if (ackWrites)
