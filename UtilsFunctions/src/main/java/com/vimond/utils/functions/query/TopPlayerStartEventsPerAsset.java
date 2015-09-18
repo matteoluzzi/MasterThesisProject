@@ -67,14 +67,9 @@ public class TopPlayerStartEventsPerAsset extends Query
 			public void accept(Bucket t)
 			{
 				Sum sum = t.getAggregations().get("sum");
-				System.out.println(t.getKey() + " " + sum.getValue());
+				LOG.info(t.getKey() + " " + sum.getValue());
 			}
 		});
 	}
-	
-	@Override
-	protected void printQueryStatistics()
-	{
-		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
-	}
+
 }

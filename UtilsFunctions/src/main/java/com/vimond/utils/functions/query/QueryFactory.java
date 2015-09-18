@@ -31,6 +31,8 @@ public class QueryFactory
 			return new PlayerEndEventsCounter();
 		case TOP_ASSET_END:
 			return new TopPlayerEndEventsPerAsset();
+		case MATCH_ALL:
+			return new MatchAll();
 		default:
 		break;
 		}

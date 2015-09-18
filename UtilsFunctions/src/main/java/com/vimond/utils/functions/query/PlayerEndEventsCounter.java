@@ -52,14 +52,7 @@ public class PlayerEndEventsCounter extends Query
 	protected void printResult()
 	{
 		Sum sum = this.searchResponse.getAggregations().get("sum_of_counter");
-		System.out.println("Number of player-end events = " + sum.getValue());
+		LOG.info("Number of player-end events = " + sum.getValue());
 		
 	}
-
-	@Override
-	protected void printQueryStatistics()
-	{
-		LOG.info(name + " results: \nAvg time = " + stats.getMean() + "\nMax time: " + stats.getMax() + "\nMin time: " + stats.getMin());
-	}
-
 }

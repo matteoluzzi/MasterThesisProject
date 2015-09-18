@@ -108,4 +108,9 @@ public class ElasticSearchQueryInterface
 		else
 			LOG.error("Missing queries in the properties file");
 	}
+	
+	public Client getClient()
+	{
+		return this.esClient;
+	}
 }

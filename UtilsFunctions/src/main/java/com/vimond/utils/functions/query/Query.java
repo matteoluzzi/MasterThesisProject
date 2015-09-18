@@ -67,7 +67,20 @@ public abstract class Query
 		else return -1;
 	}
 	
-	protected abstract void printQueryStatistics();
+	public long getHits()
+	{
+		if(this.searchResponse != null)
+		{
+			return this.searchResponse.getHits().totalHits();
+		}
+		else
+			return 0;
+	}
+	
+	public void printQueryStatistics()
+	{
+		LOG.info(name + " results: \nAvg time = " + stats.getMean() + " ms\nMax time: " + stats.getMax() + " ms\nMin time: " + stats.getMin() + " ms");
+	}
 	
 	protected abstract void execute(Client c, String index, boolean verbose);
 	
