@@ -17,7 +17,7 @@ public class MatchAll extends Query
 	@Override
 	protected void execute(Client esClient, String index, boolean verbose)
 	{
-		this.searchResponse = esClient.prepareSearch(index)
+		this.searchResponse = esClient.prepareSearch()
 		.setQuery(org.elasticsearch.index.query
 		.QueryBuilders.matchAllQuery())
 		.get();

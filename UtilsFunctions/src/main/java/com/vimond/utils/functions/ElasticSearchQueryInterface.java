@@ -49,7 +49,7 @@ public class ElasticSearchQueryInterface
 
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("RealTimeArchitecture");
 
-		parser.addArgument("-conf", "--configuration").help("Configuration time").type(String.class).required(true).dest("cfg");
+		parser.addArgument("-conf", "--configuration").help("Configuration file").type(String.class).required(true).dest("cfg");
 
 		try
 		{
@@ -92,14 +92,12 @@ public class ElasticSearchQueryInterface
 				{
 					QueryType type = QueryType.valueOf(query);
 					Query q = QueryFactory.getFactory().createQuery(type);
-					// q.executeMultiple(esqi.esClient, "", 30000, 90, true);
 					esqi.executor.submit(new Runnable()
 					{
 						@Override
 						public void run()
 						{
 							q.executeMultiple(esqi, index, interval, numberOfExecution, verbose, barrier);
-							
 						}
 					});
 				}
