@@ -6,21 +6,17 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import scala.Tuple2;
 
 import com.codahale.metrics.CsvReporter;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
-import com.vimond.StorageArchitecture.HDFS.DataPoller;
-import com.vimond.StorageArchitecture.Utils.Utility;
 import com.vimond.utils.config.AppProperties;
 
 public class App
@@ -39,16 +35,17 @@ public class App
 		AppProperties props = null;
 		String path = null;
 		String freq = null;
-		String es_addr = null;
+		String es_address = null;
 
 		try
 		{
 			path = args[0];
 			freq = args[1];
-			es_addr = args[2];
+			es_address = args[2];
 
 			LOG.info("Folder: " + path);
 			LOG.info("Frequency: " + freq);
+			LOG.info("Es address: " + es_address);
 
 			props = new AppProperties();
 
@@ -56,7 +53,8 @@ public class App
 			// of the program
 			props.addOrUpdateProperty("path", path);
 			props.addOrUpdateProperty("freq", freq);
-			props.addOrUpdateProperty("es.nodes", es_addr);
+			props.addOrUpdateProperty("es.nodes", es_address);
+			
 		} catch (Exception e)
 		{
 			LOG.error("Error while parsing input arguments: {}, {}", e.getClass(), e.getMessage());
@@ -101,10 +99,10 @@ public class App
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-		cfg.setMaster("local");
-		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
-		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
+//		cfg.setMaster("local");
+//		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+//		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
+//		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
 
 		// // ES settings
 		cfg.set("es.index.auto.create", "true");
@@ -124,18 +122,16 @@ public class App
 
 	private class Metrics
 	{
-		public transient Meter counter;
 		public transient Timer timer;
 		public transient CsvReporter reporter;
 
 		public Metrics(AppProperties props)
 		{
-			String metricsPath = props.getProperty("metrics.path", "/var/log/spark");
+			String metricsPath = props.getProperty("metrics.path", "/var/log/hadoop-2.7.0");
 
 			MetricRegistry registry = new MetricRegistry();
 
-			this.timer = registry.timer("executionTime");
-			this.counter = registry.meter("throughput");
+			this.timer = registry.timer(new DateTime(DateTimeZone.forID("Europe/Oslo")).toString() + "executionTime");
 
 			reporter = CsvReporter.forRegistry(registry).convertDurationsTo(TimeUnit.MILLISECONDS).convertRatesTo(TimeUnit.SECONDS).build(new File(metricsPath));
 		}
