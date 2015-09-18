@@ -67,7 +67,6 @@ public class StartEventsPerAssetJob extends WorkingJob<EventInfo>
 				return result;
 			}
 		});
-
 		JavaEsSpark.saveToEs(result, "vimond-batch/batch-startEventsByAsset");
 	}
 

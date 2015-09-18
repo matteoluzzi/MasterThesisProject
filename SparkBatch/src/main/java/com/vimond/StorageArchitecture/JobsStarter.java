@@ -72,8 +72,8 @@ public class JobsStarter implements Serializable
 		// submit worker jobs to the executor
 
 		//submit one-step jobs
-		this.submittedJobs.add(this.submitJob(JobName.COUNTER_EVENT_TYPE, data_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.COUNTER_END_BY_ASSET, data_rdd));
+//		this.submittedJobs.add(this.submitJob(JobName.COUNTER_EVENT_TYPE, data_rdd));
+//		this.submittedJobs.add(this.submitJob(JobName.COUNTER_END_BY_ASSET, data_rdd));
 		
 		StartEventsJob startEventJob = (StartEventsJob) this.jobFactory.createJob(JobName.START_EVENTS, this.prop, data_rdd);
 		startEventJob.run(this.ctx);
@@ -81,9 +81,9 @@ public class JobsStarter implements Serializable
 		JavaRDD<EventInfo> start_events_rdd = startEventJob.getFilteredRDD();
 		
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_START_BY_ASSET, start_events_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.TOP_BROWSER, start_events_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.TOP_OS, start_events_rdd));
-		this.submittedJobs.add(this.submitJob(JobName.TOP_VIDEOFORMAT, start_events_rdd));
+//		this.submittedJobs.add(this.submitJob(JobName.TOP_BROWSER, start_events_rdd));
+//		this.submittedJobs.add(this.submitJob(JobName.TOP_OS, start_events_rdd));
+//		this.submittedJobs.add(this.submitJob(JobName.TOP_VIDEOFORMAT, start_events_rdd));
 		
 
 		// close the executor

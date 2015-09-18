@@ -49,11 +49,6 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>net.sf.uadetector</groupId>
-			<artifactId>uadetector-resources</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch-spark_2.10</artifactId>
 		</dependency>
@@ -67,6 +62,11 @@
 					<artifactId>vimond-shared</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-core</artifactId>
 		</dependency>
 		
 		<dependency>
@@ -134,6 +134,13 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
+		<dependency>
+			<groupId>eu.bitwalker</groupId>
+			<artifactId>UserAgentUtils</artifactId>
+			<version>1.17</version>
+		</dependency>
+		
 	</dependencies>
 
 

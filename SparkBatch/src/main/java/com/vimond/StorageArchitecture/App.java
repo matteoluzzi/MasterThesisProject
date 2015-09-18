@@ -1,6 +1,8 @@
 package com.vimond.StorageArchitecture;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -12,6 +14,11 @@ import org.slf4j.LoggerFactory;
 
 import scala.Tuple2;
 
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.vimond.StorageArchitecture.HDFS.DataPoller;
 import com.vimond.StorageArchitecture.Utils.Utility;
 import com.vimond.utils.config.AppProperties;
@@ -55,42 +62,28 @@ public class App
 			LOG.error("Error while parsing input arguments: {}, {}", e.getClass(), e.getMessage());
 			System.exit(-1);
 		}
+
+		// initialize the context
+			JavaSparkContext ctx = App.initializeSparkContext(props);
+
 		
-		//initialize the context
-		JavaSparkContext ctx = App.initializeSparkContext(props);
-
-		DataPoller dataInit = new DataPoller(props);
-
-		if (dataInit.getMasterPail() != null)
-		{
-			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm").withZone(DateTimeZone.forID("Europe/Oslo"));
-
-			String folder_path = Utility.extractDate(path);
-			props.addOrUpdateProperty("timestamp", formatter.parseDateTime(folder_path));
-			props.addOrUpdateProperty("timewindow", freq);
-			
-
-			//String dataPath = dataInit.ingestNewData();
-
-			String dataPath = path;
-
-			if (dataPath != null)
-				props.addOrUpdateProperty("dataPath", dataPath);
+			if (path != null)
+				props.addOrUpdateProperty("dataPath", path);
 			else
 			{
 				LOG.error("Error while moving data into the snapshot directory");
 				System.exit(0);
 			}
+			
+			App a = new App();
+			
+			Metrics metrics = a.new Metrics(props);
 
+			Context ctxTimer = metrics.timer.time();
 			JobsStarter starter = new JobsStarter(ctx, props);
 			starter.startJobs();
-		}
-
-		else
-		{
-			LOG.error("Data not aligned with batch program");
-			System.exit(0);
-		}
+			ctxTimer.stop();
+			metrics.reporter.report();
 	}
 
 	/**
@@ -102,25 +95,49 @@ public class App
 	 */
 	public static JavaSparkContext initializeSparkContext(AppProperties props)
 	{
-		
+
 		final String appName = "SparkBatch";
 
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
+		cfg.setMaster("local");
 		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
 		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
-		
-//		// ES settings
+
+		// // ES settings
 		cfg.set("es.index.auto.create", "true");
 		cfg.set("es.nodes", (String) props.getOrDefault("es.nodes", "localhost"));
 		cfg.set("es.input.json", "true");
-		for(Tuple2<String, String> prop : cfg.getAll())
+		for (Tuple2<String, String> prop : cfg.getAll())
 			LOG.info(prop._1() + " = " + prop._2());
-		
+
 		return new JavaSparkContext(cfg);
 
 	}
 
+	public void initializeMetrics(AppProperties props)
+	{
+
+	}
+
+	private class Metrics
+	{
+		public transient Meter counter;
+		public transient Timer timer;
+		public transient CsvReporter reporter;
+
+		public Metrics(AppProperties props)
+		{
+			String metricsPath = props.getProperty("metrics.path", "/var/log/spark");
+
+			MetricRegistry registry = new MetricRegistry();
+
+			this.timer = registry.timer("executionTime");
+			this.counter = registry.meter("throughput");
+
+			reporter = CsvReporter.forRegistry(registry).convertDurationsTo(TimeUnit.MILLISECONDS).convertRatesTo(TimeUnit.SECONDS).build(new File(metricsPath));
+		}
+	}
 }
