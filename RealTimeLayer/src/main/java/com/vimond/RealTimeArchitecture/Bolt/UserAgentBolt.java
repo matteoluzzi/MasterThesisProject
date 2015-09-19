@@ -9,6 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.Meter;
@@ -104,6 +106,9 @@ public class UserAgentBolt implements IRichBolt
 
 		if (event != null)
 		{
+			//for testing purposes
+			event.setTimestamp(new DateTime(DateTimeZone.forID("Europe/Oslo")));
+			
 			event.setCounter();
 			String userAgentString = event.getUserAgent();
 
