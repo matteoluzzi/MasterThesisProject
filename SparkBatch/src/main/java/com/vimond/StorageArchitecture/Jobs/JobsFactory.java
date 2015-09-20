@@ -28,14 +28,7 @@ public class JobsFactory
 		
 		switch (job_name)
 		{
-		case SIMPLE_TOP_COUNTRIES:
-			return new SimpleTopCountriesJob(rdd, timestamp, timewindow);
-		case SIMPLE_TOP_ASSETS:
-			return new SimpleTopAssetsJob(rdd, timestamp, timewindow);
-		case SIMPLE_CONTENT_LOCATION:
-			return new ContentLocalizationJob(rdd, timestamp, timewindow);
-		case SIMPLE_TOP_APP:
-			return new SimpleTopAppJob(rdd, timestamp, timewindow);
+		
 		case SIMPLE_DATA_LOADER:
 			return new LoadDataJob<SparkEvent>(props, SparkEvent.class);
 		case COUNTER_END_BY_ASSET:

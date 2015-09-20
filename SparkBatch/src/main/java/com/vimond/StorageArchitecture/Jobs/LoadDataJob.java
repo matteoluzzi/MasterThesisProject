@@ -83,7 +83,6 @@ public class LoadDataJob<T extends VimondEventAny> implements Job
 		//calculate the distinct values over the dataset due to "at-least-once" message semantic of kafka.
 		this.inputDataset = inputDataset.distinct();
 				
-		this.inputDataset = inputDataset.map((Function<T, T>) new ExtractGeoIPInfo(dbLite));
 	}
 
 	public JavaRDD<? extends VimondEventAny> getLoadedRDD()

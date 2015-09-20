@@ -67,7 +67,7 @@ public class JobsStarter implements Serializable
 		JavaRDD<SparkEvent> data_rdd = (JavaRDD<SparkEvent>) loadDataJob.getLoadedRDD();
 		
 		//keep in memory the input dataset for better performances
-		data_rdd.cache();
+
 		
 		// submit worker jobs to the executor
 
@@ -79,6 +79,7 @@ public class JobsStarter implements Serializable
 		startEventJob.run(this.ctx);
 		
 		JavaRDD<EventInfo> start_events_rdd = startEventJob.getFilteredRDD();
+		start_events_rdd.cache();
 		
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_START_BY_ASSET, start_events_rdd));
 		this.submittedJobs.add(this.submitJob(JobName.TOP_BROWSER, start_events_rdd));
