@@ -8,6 +8,8 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,7 @@ import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
+import com.vimond.StorageArchitecture.Utils.Utility;
 import com.vimond.utils.config.AppProperties;
 
 public class App
@@ -73,6 +76,12 @@ public class App
 				System.exit(0);
 			}
 			
+			DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm");
+			String folder_path = Utility.extractDate(path);
+			props.addOrUpdateProperty("timestamp", formatter.parseDateTime(folder_path));
+			props.addOrUpdateProperty("timewindow", freq);
+			
+			
 			App a = new App();
 			
 			Metrics metrics = a.new Metrics(props);
@@ -99,7 +108,7 @@ public class App
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-//		cfg.setMaster("local");
+		cfg.setMaster("local");
 //		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 //		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
 //		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
