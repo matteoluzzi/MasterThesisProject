@@ -116,7 +116,7 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 								.convertRatesTo(TimeUnit.SECONDS)
 								.formatFor(Locale.ITALY)
 								.build(new File("/var/log/vimond-eventfetcher-service"));
-	//	this.reporter.start(1, TimeUnit.MINUTES);
+		this.reporter.start(1, TimeUnit.MINUTES);
 		
 		setupHealthchecks(healthCheckRegistry, kafkaConfig);
 

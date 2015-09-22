@@ -9,7 +9,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>vimond-eventfetcher-service</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.6-SNAPSHOT</version>
 
 	<dependencies>
 
@@ -39,6 +39,7 @@
 			<version>3.1.0</version>
 			<scope>runtime</scope>
 		</dependency>
+		
 		<dependency>
 			<groupId>io.dropwizard.metrics</groupId>
 			<artifactId>metrics-healthchecks</artifactId>
@@ -125,31 +126,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.ecyrd.speed4j</groupId>
-			<artifactId>speed4j</artifactId>
-			<version>0.12</version>
-		</dependency>
-
-
-		<dependency>
 			<groupId>io.dropwizard</groupId>
 			<artifactId>dropwizard-testing</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.3</version>
-		</dependency>
-
-
-
+		
 	</dependencies>
 
 	<build>
