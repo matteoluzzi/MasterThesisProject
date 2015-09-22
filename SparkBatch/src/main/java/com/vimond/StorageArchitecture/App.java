@@ -108,7 +108,7 @@ public class App
 		// Spark settings
 		SparkConf cfg = new SparkConf();
 		cfg.setAppName(appName);
-		cfg.setMaster("local");
+//		cfg.setMaster("local");
 //		cfg.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 //		cfg.set("spark.kyro.registrator", "com.vimond.StorageArchitecture.Utils.ClassRegistrator");
 //		cfg.set("spark.scheduler.allocation.file", "/var/files/batch/poolScheduler.xml");
