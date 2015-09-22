@@ -1,7 +1,9 @@
 package com.vimond.utils.functions;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,12 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
+
 /**
  * Utility class for deleting records from elasticsearch belonging to an index within a timeframe.<br>
  * Must be invoked by oozie coordinator when a batch process for the given timeframe has been correcty executed.
@@ -39,13 +47,20 @@ public class UpdateRecords
 	
 	private Client esClient;
 	private DateTimeFormatter formatter;
-
+	final MetricRegistry registry;
+	final CsvReporter reporter;
+	
 	public UpdateRecords(String es_address) throws Exception
 	{
 		@SuppressWarnings("resource")
 		TransportClient transportClient = new TransportClient();
 		this.esClient = transportClient.addTransportAddress(new InetSocketTransportAddress(es_address, 9300));
 		this.formatter = DateTimeFormat.forPattern("yyyy-MM-dd/HH/mm").withZone(DateTimeZone.forID("Europe/Oslo"));
+		this.registry = new MetricRegistry();
+		this.reporter = CsvReporter.forRegistry(registry)
+						.convertDurationsTo(TimeUnit.MILLISECONDS)
+						.convertRatesTo(TimeUnit.SECONDS)
+						.build(new File("/var/files/batch"));
 	}
 
 	public static void main(String[] args)
@@ -56,7 +71,6 @@ public class UpdateRecords
 		}
 		else
 		{
-			
 			String path = args[0]; //something like hdfs://localhost:9000/user/matteoremoluzzi/dataset/master/YYYY-MM-DD/HH/mm
 			int batchTimeInMinutes = Integer.parseInt(args[1]);
 			
@@ -71,7 +85,12 @@ public class UpdateRecords
 				try
 				{
 					UpdateRecords ur = new UpdateRecords(es_address);
-					ur.deleteRecordsFromES(path, batchTimeInMinutes);
+					Metrics metrics = ur.new Metrics(ur.registry);
+					
+					Context ctx = metrics.timeForDeletion.time();		
+					ur.deleteRecordsFromES(metrics, path, batchTimeInMinutes);
+					ctx.stop();
+					ur.reporter.report();
 				}
 				catch(Exception e)
 				{
@@ -83,7 +102,7 @@ public class UpdateRecords
 		}
 	}
 
-	public void deleteRecordsFromES(String path, int timeFrameInMinutes) throws Exception
+	public void deleteRecordsFromES(Metrics metrics, String path, int timeFrameInMinutes) throws Exception
 	{
 		//Usage of Search API to identify the matching ids and then perform bulk delete operations
 		
@@ -108,6 +127,7 @@ public class UpdateRecords
 					.get();
 			
 			LOG.info("Search request completed in : " + sr.getTook()  + " "+ sr.getHits().getTotalHits());
+			metrics.deleteRecords.inc(sr.getHits().totalHits());
 			
 			//scroll the result
 			boolean scroll = true;
@@ -193,5 +213,17 @@ public class UpdateRecords
 		if(m.find())
 			return m.group();
 		else return null;
+	}
+	
+	public class Metrics
+	{
+		final Timer timeForDeletion;
+		final Counter deleteRecords;
+		
+		public Metrics(MetricRegistry registry)
+		{
+			this.deleteRecords = registry.counter(MetricRegistry.name(UpdateRecords.class, "records_deleted"));
+			this.timeForDeletion = registry.timer(MetricRegistry.name(UpdateRecords.class, "time_for_deletion"));
+		}
 	}
 }

@@ -29,8 +29,8 @@ import com.vimond.pailStructure.TimeFramePailStructure;
  */
 public class UnreliableKafkaConsumerService<T> extends KafkaConsumerService<T> implements KafkaConsumerEventFetcher<T>
 {
-	private LinkedBlockingQueue<Object> buffer;
-	private List<Object> flush_buffer;
+	private LinkedBlockingQueue<T> buffer;
+	private List<T> flush_buffer;
 	private Timer flushTimer;
 
 	private long flushingTime;
@@ -46,8 +46,8 @@ public class UnreliableKafkaConsumerService<T> extends KafkaConsumerService<T> i
 		// bind message processor to this
 		fsProcessor.setEventsKafkaConsumer(this);
 		this.flushTimer = new Timer();
-		this.buffer = new LinkedBlockingQueue<Object>();
-		this.flush_buffer = new ArrayList<Object>();
+		this.buffer = new LinkedBlockingQueue<T>();
+		this.flush_buffer = new ArrayList<T>();
 		this.flushingTime = conf.getConfig().get(Constants.FLUSHING_TIME_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.FLUSHING_TIME_KEY)) : Constants.DEFAULT_FLUSH_TIME;
 		this.batchSize = conf.getConfig().get(Constants.MAX_MESSAGES_KEY) != null ? Long.parseLong(conf.getConfig().get(Constants.MAX_MESSAGES_KEY)) : Constants.DEFAULT_MAX_MESSAGES_INTO_FILE;
 		this.HDFSPathToLocation = conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) != null ? conf.getConfig().get(Constants.HDFS_PATH_TO_LOCATION_KEY) : Constants.DEFAULT_HDFS_PATH_TO_LOCATION;
@@ -67,7 +67,7 @@ public class UnreliableKafkaConsumerService<T> extends KafkaConsumerService<T> i
 		});
 	}
 
-	public LinkedBlockingQueue<Object> getBuffer()
+	public LinkedBlockingQueue<T> getBuffer()
 	{
 		return buffer;
 	}
@@ -117,7 +117,7 @@ public class UnreliableKafkaConsumerService<T> extends KafkaConsumerService<T> i
 		this.flushTimer.cancel();
 	}
 
-	public List<Object> getMessages()
+	public List<T> getMessages()
 	{
 		return flush_buffer;
 	}

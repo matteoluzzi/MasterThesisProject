@@ -40,14 +40,17 @@ public class JobsStarter implements Serializable
 	private JavaSparkContext ctx;
 	private Properties prop;
 	private ExecutorService pool;
+	@SuppressWarnings("rawtypes")
 	private List<Future> submittedJobs;
+	private JobsFactory jobFactory;
 	
+	@SuppressWarnings("rawtypes")
 	public JobsStarter(JavaSparkContext ctx, Properties prop)
 	{
 		this.ctx = ctx;
 		this.prop = prop;
 		this.submittedJobs = new ArrayList<Future>();
-
+		this.jobFactory = JobsFactory.getFactory();
 		
 		final int poolSize = Integer.parseInt(this.prop.getProperty(Constants.POOL_SIZE_KEY));
 		this.pool = Executors.newFixedThreadPool(poolSize);
@@ -65,8 +68,8 @@ public class JobsStarter implements Serializable
 
 		JavaRDD<SparkEvent> data_rdd = (JavaRDD<SparkEvent>) loadDataJob.getLoadedRDD();
 		
-		//keep in memory the input dataset for better performances
 		data_rdd.cache();
+
 		
 		// submit worker jobs to the executor
 
@@ -74,10 +77,12 @@ public class JobsStarter implements Serializable
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_EVENT_TYPE, data_rdd));
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_END_BY_ASSET, data_rdd));
 		
-		StartEventsJob startEventJob = (StartEventsJob) JobsFactory.getFactory().createJob(JobName.START_EVENTS, this.prop, data_rdd);
+		data_rdd.unpersist();
+		StartEventsJob startEventJob = (StartEventsJob) this.jobFactory.createJob(JobName.START_EVENTS, this.prop, data_rdd);
 		startEventJob.run(this.ctx);
 		
 		JavaRDD<EventInfo> start_events_rdd = startEventJob.getFilteredRDD();
+		start_events_rdd.cache();
 		
 		this.submittedJobs.add(this.submitJob(JobName.COUNTER_START_BY_ASSET, start_events_rdd));
 		this.submittedJobs.add(this.submitJob(JobName.TOP_BROWSER, start_events_rdd));

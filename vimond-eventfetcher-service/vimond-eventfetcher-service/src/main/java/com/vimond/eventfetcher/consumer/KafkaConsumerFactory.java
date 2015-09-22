@@ -11,6 +11,7 @@ import com.vimond.eventfetcher.processor.BatchProcessor;
 
 /**
  * Factory for crating a new KafkaConsumer. It s a MessageConsumer instance
+ * 
  * @author matteoremoluzzi
  *
  */

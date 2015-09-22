@@ -8,7 +8,9 @@ public class Constants
 	public static final String DEFAULT_CONSUMER_GROUP_RT = "kafka-consumer-group_rt";
 	public static final Boolean DEFAULT_LOCAL_MODE = false;
 	public static final String DEFAULT_ZK_BROKER_PATH = "zookeeper.brokerPath";
-	public static String DEFAULT_ES_INDEX = "vimond-realtime/realtime-player-events";
+	public static final String DEFAULT_ES_INDEX = "vimond-realtime/realtime-player-events";
+	public static final int DEFAULT_METRIC_FREQUENCY = 30;
+	public static final String DEFAULT_METRIC_PATH = "/Users/matteoremoluzzi/report";
 	public static final boolean DEFAULT_ACKING_MODE = false;
 	
 	public static final String PROPERTIES_FILE = "app.properties";
@@ -35,6 +37,7 @@ public class Constants
 	public static final String BOLT_GEOIP = "geoip-bolt";
 	public static final String BOLT_ES = "es-bolt";
 	public static final String BOLT_USER_AGENT = "useragent-bolt";
+	public static final String BOLT_SERIALIZER = "serializer-bolt";
 	
 	public static final String APP_NAME_KEY = "app.name";
 	public static final String DB_LITE_KEY = "MaxMindLiteVersion";
@@ -49,13 +52,6 @@ public class Constants
 	public static final int EL_TASKS = 3;
 	public static final int ROUTER_TASKS = 2;
 	public static final int USER_AGENT_TASKS = 2;
-	
-	
-	
-	
-
-
-	
-	
+	public static final int SERIALIZER_TASKS = 2;
 	
 }

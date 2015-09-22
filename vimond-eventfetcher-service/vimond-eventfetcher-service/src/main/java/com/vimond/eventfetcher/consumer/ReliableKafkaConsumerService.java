@@ -163,9 +163,9 @@ public class ReliableKafkaConsumerService<T> implements KafkaConsumerEventFetche
 	}
 
 	@Override
-	public List<Object> getMessages()
+	public List<T> getMessages()
 	{
-		return new ArrayList<Object>(this.buffer);
+		return new ArrayList<T>(this.buffer);
 	}
 
 	private void setBatchEndTime(long endTime)

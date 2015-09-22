@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration name="EventFetcherLayer">
+	<Appenders>
+		<Socket name="socketAppender" host="localhost" port="4560" immediateFlush="false">
+			<filters>
+				<MarkerFilter marker="PERFORMANCES-BATCH-THROUGHPUT" onMatch="ACCEPT" onMismatch="DENY" />
+			</filters>
+			<SerializedLayout />
+		</Socket>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="socketAppender" />
+		</Root>
+	</Loggers>
+</Configuration>

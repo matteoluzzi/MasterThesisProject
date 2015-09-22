@@ -17,6 +17,7 @@
         <ok to="java-node"/>
             <error to="fail"/>
     </action>
+
         <action name="java-node">
             <java>
                     <job-tracker>${jobTracker}</job-tracker>
@@ -29,6 +30,7 @@
             <ok to="end"/>
             <error to="fail"/>
         </action>
+        
     <kill name="fail">
             <message>Spark Job failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
     </kill>

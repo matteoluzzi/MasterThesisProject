@@ -2,12 +2,18 @@ package com.vimond.eventfetcher;
 
 import java.io.IOException;
 import java.util.Arrays;
+
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vimond.pailStructure.TimeFrameCurrentTimePailStructure;
@@ -52,5 +58,25 @@ public class EventFetcherTest extends TestCase
 		List<String> expected = Arrays.asList(new String[] { "2015-09-17", "11", "00" });
 
 		assertEquals(expected, folder);
+	}
+	
+	public void testReport()
+	{
+		MetricRegistry registry = new MetricRegistry();
+		
+		Meter meter = registry.meter("test-meter");
+		
+		ConsoleReporter reporter = ConsoleReporter.forRegistry(registry)
+									.convertRatesTo(TimeUnit.SECONDS)
+									.convertDurationsTo(TimeUnit.MILLISECONDS)
+									.build();
+		
+		for(int i=0; i< 100; i++)
+		{
+			meter.mark();
+		}
+		
+		reporter.report();
+		
 	}
 }

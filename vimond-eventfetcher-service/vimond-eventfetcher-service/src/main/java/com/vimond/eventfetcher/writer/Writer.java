@@ -36,7 +36,7 @@ public class Writer<T> extends TimerTask
 	{
 		LOG.info("Going to flush the buffer into file now!");
 
-		List<Object> messages = this.consumer.getMessages();
+		List<T> messages = this.consumer.getMessages();
 		String location = null;
 
 		location = this.consumer.getHDFSPathToLocation();
